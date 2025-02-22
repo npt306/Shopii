@@ -47,7 +47,8 @@ jobs:
           username: ${{ secrets.GCE_USERNAME }}
           key: ${{ secrets.GCE_SSH_KEY }}
           script: |
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/frontend-buyer:latest
             docker stop frontend-buyer || true
             docker rm frontend-buyer || true
+            docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/frontend-buyer:latest || true
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/frontend-buyer:latest
             docker run -d --name frontend-buyer -p 8000:8000 ${{ secrets.DOCKERHUB_USERNAME }}/frontend-buyer:latest
