@@ -57,4 +57,4 @@ jobs:
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/frontend-seller:latest
             docker stop frontend-seller || true
             docker rm frontend-seller || true
-            docker run -d --name frontend-seller -p 80:8000 ${{ secrets.DOCKERHUB_USERNAME }}/frontend-seller:latest
+            docker run -d --name frontend-seller -p 8000:8000 ${{ secrets.DOCKERHUB_USERNAME }}/frontend-seller:latest
