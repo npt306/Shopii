@@ -2,8 +2,8 @@ name: Build and Deploy frontend seller
 
 on:
   push:
-    paths-ignore:
-      - '.github/**'
+    # paths-ignore:
+    #   - '.github/**'
     paths:
       - 'frontend/seller/**'
   workflow_dispatch:
