@@ -17,7 +17,7 @@ export const Header = () => {
             <div className="px-30 py-3 flex justify-between items-center">
                 <div className="flex items-center gap-4">
                     <div>Kênh người bán</div>
-                    <div>Tải ứng dụng</div>
+                    <div>Dowload app</div>
                     <div className="flex items-center gap-2">
                         <p>Kết nối</p>
                         <div className='flex flex-row pt-0.75 gap-1'>
