@@ -48,7 +48,7 @@ jobs:
           project_id: ${{ secrets.PROJECT_ID }}
 
       - name: Deploy to VM
-        uses: appleboy/ssh-action@v1
+        uses: appleboy/ssh-action@v1.2.1
         with:
           host: ${{ secrets.GCE_HOST }}
           username: ${{ secrets.GCE_USERNAME }}
