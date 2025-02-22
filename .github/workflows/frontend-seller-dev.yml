@@ -6,6 +6,8 @@ on:
     #   - '.github/**'
     paths:
       - 'frontend/seller/**'
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -26,7 +28,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: ./frontend/seller
           file: ./frontend/seller/Dockerfile
