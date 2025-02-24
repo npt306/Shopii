@@ -1,0 +1,99 @@
+.CAysXD {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    position: relative
+}
+
+.dT8Y7r {
+    padding: 15px 25px
+}
+
+.nEmyrP {
+    padding: 10px 0
+}
+
+.B7gGv {
+    align-items: center;
+    display: flex
+}
+
+._1adxB {
+    flex: 1;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent
+}
+
+label {
+    cursor: default
+}
+
+.QRoDAL.LQ01C8 {
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 32px
+}
+
+.QRoDAL {
+    color: rgba(0,0,0,.87);
+    margin-bottom: 4px
+}
+
+.XQAdNM {
+    color: rgba(0,0,0,.4);
+    font-size: 14px;
+    line-height: 20px
+}
+
+._3jPok {
+    display: inline-block;
+    flex: 0 0 auto;
+    margin-left: .75rem
+}
+
+.A832Ob,._3jPok {
+    position: relative
+}
+
+input[type=radio],nput[type=checkbox] {
+    box-sizing: border-box;
+    padding: 0
+}
+
+._3pPCj {
+    appearance: none;
+    background-color: rgba(0,0,0,.09);
+    border-radius: .875rem;
+    display: block;
+    height: 1.75rem;
+    margin: 0;
+    outline: 0;
+    transition: background-color .2s,border .2s;
+    width: 3rem
+}
+
+._2IQS1 {
+    background: #fff;
+    border-radius: .75rem;
+    box-shadow: 0 .125rem .1875rem rgba(0,0,0,.2);
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    display: block;
+    height: 1.5rem;
+    left: .125rem;
+    pointer-events: none;
+    position: absolute;
+    top: .125rem;
+    width: 1.5rem
+}
+
+._3pPCj:checked {
+    background-color: #30b566;
+    background-color: var(--nc-success, #30b566);
+    border-color: transparent
+}
+
+._3pPCj:checked~._2IQS1 {
+    -webkit-transform: translateX(20px);
+    transform: translateX(20px)
+}

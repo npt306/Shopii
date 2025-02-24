@@ -289,7 +289,7 @@ export const Purchase = () => {
                                       <div className="mZ1OWk">
                                         <div className="dJaa92">
                                           <img
-                                            src="../../assets/logo_shopee_1.png"
+                                            src="../../src/assets/logo_shopee_1.png"
                                             className="gQuHsZ"
                                             alt=""
                                             tabIndex={0}
@@ -818,7 +818,7 @@ export const Purchase = () => {
                             <p className="bVaMks">Đã giao</p>
                             <p>Giao hàng thành công</p>
                             <div>
-                                <span>Người nhận hàng: Uyên Phương--. </span>
+                                <span>Người nhận hàng: User--. </span>
                             </div>
                             <p />
                             </div>

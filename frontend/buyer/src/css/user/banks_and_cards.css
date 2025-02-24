@@ -1,0 +1,92 @@
+.CAysXD,.my-account-section {
+    display: flex;
+    flex-direction: column
+}
+
+.CAysXD {
+    min-height: 100%;
+    position: relative
+}
+
+.my-account-section {
+    background: #fff;
+    overflow: visible;
+    padding: 0 30px 20px
+}
+
+.my-account-section__header {
+    align-items: center;
+    border-bottom: 1px solid #efefef;
+    box-sizing: border-box;
+    display: flex;
+    height: 80px;
+    padding: 22px 0
+}
+
+.my-account-section__header-left {
+    flex: 1
+}
+
+.my-account-section__header-title {
+    color: #333;
+    font-size: 1.125rem;
+    font-weight: 500;
+    line-height: 1.5rem;
+    text-transform: capitalize
+}
+
+.my-account-section__header-subtitle {
+    color: rgba(0,0,0,.65);
+    font-size: .875rem;
+    line-height: 1.0625rem;
+    margin-top: 8px
+}
+
+.my-account-section__header-button {
+    margin-left: 10px
+}
+
+.shopee-button-solid--bacc-tab,shopee-button-solid--address-tab {
+    font-size: 14px;
+    font-weight: 400;
+    height: 40px;
+    padding: 0 20px;
+    text-transform: capitalize
+}
+
+.shopee-button-solid--primary {
+    background: #ee4d2d;
+    outline: 0;
+    overflow: visible;
+    position: relative
+}
+
+.button-with-icon {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    width: 100%
+}
+
+.button-with-icon__icon {
+    align-items: center;
+    display: flex;
+    margin-right: 10px
+}
+
+.shopee-svg-icon {
+    display: inline-block;
+    height: 1em;
+    width: 1em;
+    fill: currentColor;
+    position: relative
+}
+
+.bacc-centered-msg {
+    color: #555;
+    font-size: 1.125rem;
+    padding: 90px 0;
+    text-align: center;
+    white-space: break-spaces;
+    width: 100%
+}
