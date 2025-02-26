@@ -487,7 +487,7 @@ const AddProduct = () => {
                             {/* Product Code */}
                             <div ref={DesRef} className="mb-4" onClick={() => handleRatioChangeDes()}>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    <span className="text-red-500">*</span> Mã sản phẩm
+                                    <span className="text-red-500">*</span> Mô tả sản phẩm
                                 </label>
                                 <input
                                     type="text"
