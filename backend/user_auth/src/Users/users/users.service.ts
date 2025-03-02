@@ -16,6 +16,7 @@ export class UsersService {
     try {
       // 1. Create the user in Firebase
       const userRecord = await admin.auth().createUser({
+        phoneNumber: data.phoneNumber,
         email: data.email,
         password: data.password,
       });
@@ -31,6 +32,8 @@ export class UsersService {
         phoneNumber: data.phoneNumber,
         address: data.address,
         sex: data.sex,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
       const savedUser = await this.userRepository.save(user);
 
