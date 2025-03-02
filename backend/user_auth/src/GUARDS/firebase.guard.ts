@@ -9,9 +9,7 @@ import admin from '../FIREBASE/firebase.admin';
 @Injectable() 
 export class FirebaseAuthGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
-        console.log('FirebaseAuthGuard');
         const request = context.switchToHttp().getRequest();
-        console.log("Incoming Request:", request.headers);
         const authHeader = request.headers.authorization;
 
         if(!authHeader || !authHeader.startsWith('Bearer ')) {

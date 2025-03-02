@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { UsersController } from './Users/users/users.controller';
-import { UsersService } from './Users/users/users.service';
 import { UsersModule } from './Users/users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -25,7 +23,8 @@ import { join } from 'path';
     }),
     UsersModule,
   ],
-  controllers: [UsersController],
-  providers: [UsersService],
+  // Remove controllers and providers that are already in UsersModule:
+  controllers: [],
+  providers: [],
 })
-export class AppModule { }
+export class AppModule {}
