@@ -2,24 +2,45 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { CartsService } from './carts.service';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
+import { DeleteCartDto } from './dto/delete-cart.dto';
 
 @Controller('carts')
 export class CartsController {
-  constructor(private readonly cartsService: CartsService) {}
+  constructor(private readonly cartsService: CartsService) { }
 
-  @Post()
-  create(@Body() createCartDto: CreateCartDto) {
-    return this.cartsService.create(createCartDto);
+  @Post('/add-to-cart')
+  addToCart(@Body() createCartDto: CreateCartDto) {
+    return this.cartsService.addToCart(createCartDto);
   }
 
-  @Get()
-  findAll() {
-    return this.cartsService.findAll();
+  @Post('/delete-from-cart')
+  deleteFromCart(@Body() deleteCartDto: DeleteCartDto) {
+    return this.cartsService.deleteFromCart(deleteCartDto);
+  }
+
+  @Post('/update-cart')
+  updateCart(@Body() updateCartDto: UpdateCartDto) {
+    return this.cartsService.updateCart(updateCartDto);
+  }
+
+  @Get(':customerId')
+  getCart(@Param('customerId') customerId: string) {
+    return this.cartsService.getCart(+customerId);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.cartsService.findOne(+id);
+  }
+
+  @Post()
+  create(@Body() createCartDto: CreateCartDto) {
+    return this.cartsService.addToCart(createCartDto);
+  }
+
+  @Get()
+  findAll() {
+    return this.cartsService.findAll();
   }
 
   @Patch(':id')

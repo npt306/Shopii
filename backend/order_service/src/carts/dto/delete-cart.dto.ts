@@ -1,5 +1,5 @@
-export class CreateCartDto {
+export class DeleteCartDto {
     customerId: number;
     productTypeId: number;
-    quantity: number;  
 }
+    
