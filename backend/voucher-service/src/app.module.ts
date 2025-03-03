@@ -21,7 +21,7 @@ import { Voucher } from './vouchers/entities/voucher.entity';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
         entities: [Voucher, join(__dirname, '**', '*.entity.{ts,js}')],
-        synchronize: false,
+        synchronize: true,
       }),
     }),
     VouchersModule,

@@ -45,10 +45,6 @@ export class CreateVoucherDto {
   @IsOptional()
   total_usage_limit?: number = 100;
 
-  @IsEnum(VoucherConditionType)
-  @IsOptional()
-  condition_type?: VoucherConditionType = VoucherConditionType.NONE;
-
   @IsInt()
   @Min(0)
   @ValidateIf((o) => o.condition_type === VoucherConditionType.MIN_ORDER)
@@ -59,11 +55,9 @@ export class CreateVoucherDto {
   @ValidateIf((o) => o.condition_type === VoucherConditionType.MIN_PRODUCTS)
   min_products?: number;
 
-  @IsArray()
-  @ArrayMinSize(1)
-  @IsInt({ each: true })
-  @ValidateIf((o) => o.condition_type === VoucherConditionType.SPECIFIC_PRODUCTS)
-  product_ids?: number[]; // IDs of specific products
+  @IsEnum(VoucherConditionType)
+  @IsOptional()
+  condition_type?: VoucherConditionType = VoucherConditionType.NONE;
 
   @IsEnum(VoucherActionType)
   @IsOptional()
@@ -83,6 +77,12 @@ export class CreateVoucherDto {
   )
   discount_percentage?: number;
 
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsInt({ each: true })
+  @ValidateIf((o) => o.condition_type === VoucherConditionType.SPECIFIC_PRODUCTS)
+  product_ids?: number[]; // IDs of specific products
+  
   @IsInt()
   @Min(0)
   @ValidateIf((o) => o.action_type === VoucherActionType.FREE_SHIPPING)
