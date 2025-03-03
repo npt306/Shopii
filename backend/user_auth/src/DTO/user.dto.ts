@@ -31,6 +31,10 @@ export class UserDto {
     @IsString()
     address?: string;
 
+    @IsOptional()
+    @IsString()
+    avatar?: string;
+
     @IsString()
     sex?: string;
   }

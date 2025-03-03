@@ -14,29 +14,36 @@ export class UsersService {
 
   async registerUser(data: UserDto, role: 'buyer' | 'seller' | 'admin') {
     try {
-      // 1. Create the user in Firebase
-      const userRecord = await admin.auth().createUser({
-        phoneNumber: data.phoneNumber,
+      // Build payload for Firebase createUser dynamically:
+      const createUserPayload: any = {
         email: data.email,
         password: data.password,
-      });
-
+      };
+      
+      if (data.phoneNumber) {
+        createUserPayload.phoneNumber = data.phoneNumber;
+      }
+  
+      // Create the user in Firebase
+      const userRecord = await admin.auth().createUser(createUserPayload);
+  
       // Set custom claims for role-based access control:
       await admin.auth().setCustomUserClaims(userRecord.uid, { role });
-
-      // 2. Create and save user data in PostgreSQL
+  
+      // Create and save user data in PostgreSQL
       const user = this.userRepository.create({
         email: data.email,
         username: data.username,
         date_of_birth: data.date_of_birth,
         phoneNumber: data.phoneNumber,
         address: data.address,
+        avatar: data.avatar,
         sex: data.sex,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
       const savedUser = await this.userRepository.save(user);
-
+  
       return {
         firebase: userRecord,
         postgres: savedUser,
@@ -45,6 +52,7 @@ export class UsersService {
       throw new BadGatewayException(error.message);
     }
   }
+  
 
   async getProtectedData(uid: string) {
     try {

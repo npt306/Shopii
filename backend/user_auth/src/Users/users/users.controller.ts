@@ -12,6 +12,7 @@ export class UsersController {
 
     @Post('register')
     async register(@Body() data: UserDto, @Query('role') role: 'buyer' | 'seller' | 'admin') {
+        console.log('Received Data:', data); // Debug log
         if (!role || !['buyer', 'seller', 'admin'].includes(role)) {
             throw new BadRequestException('Invalid role. Choose buyer, seller, or admin.');
         }

@@ -11,6 +11,9 @@ export class User {
   @Column()
   username: string;
 
+  @Column()
+  avatar: string;
+
   @Column({ type: 'date'})
   date_of_birth: Date;
 

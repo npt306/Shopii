@@ -23,7 +23,7 @@ import { join } from 'path';
     }),
     UsersModule,
   ],
-  // Remove controllers and providers that are already in UsersModule:
+  // Controllers and providers are already in UsersModule
   controllers: [],
   providers: [],
 })
