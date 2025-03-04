@@ -25,6 +25,9 @@ export class User {
 
   @Column({ nullable: true })
   sex: string;
+
+  @Column()
+  status: string;
   
   @CreateDateColumn()
   createdAt: Date;

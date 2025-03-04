@@ -10,6 +10,7 @@ export class CreateUsersTable1740969319428 implements MigrationInterface {
                 "username" character varying NOT NULL,
                 "avatar" character varying NOT NULL,
                 "date_of_birth" date NOT NULL,
+                "status" character varying,
                 "phoneNumber" character varying,
                 "address" character varying,
                 "sex" character varying,

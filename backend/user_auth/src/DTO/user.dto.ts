@@ -29,6 +29,9 @@ export class UserDto {
     phoneNumber?: string;
 
     @IsString()
+    status?: string;
+
+    @IsString()
     address?: string;
 
     @IsOptional()
