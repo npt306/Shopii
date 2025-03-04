@@ -5,6 +5,7 @@ import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto'; // Import DTO
 import { ProductClassificationType } from './entities/product-classification-type.entity';
 import { ProductDetailType } from './entities/product-detail-type.entity';
+import { ProductDimensions } from './entities/product-dimensions.entity';
 
 @Injectable()
 export class ProductService {
@@ -15,6 +16,8 @@ export class ProductService {
     private readonly productClassificationRepository: Repository<ProductClassificationType>,
     @InjectRepository(ProductDetailType)
     private readonly productDetailRepository: Repository<ProductDetailType>,
+    @InjectRepository(ProductDimensions)
+    private readonly productDimensionsRepository: Repository<ProductDimensions>,
   ) { }
 
   async findOne(id: number): Promise<Product | null> {
@@ -53,12 +56,18 @@ export class ProductService {
     }
 
     if (details) {
-      const detailEntities = details.map(detail => {
+      const detailEntities = await Promise.all(details.map(async detail => {
+        const { Dimension, ...detailData } = detail;
+
+        const dimensionEntity = this.productDimensionsRepository.create(Dimension);
+        const savedDimension = await this.productDimensionsRepository.save(dimensionEntity);
+
         return this.productDetailRepository.create({
-          ...detail,
+          ...detailData,
           ProductID: savedProduct.ProductID,
+          Dimension: savedDimension,
         });
-      });
+      }));
       await this.productDetailRepository.save(detailEntities);
     }
 

@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
 import { ProductClassificationType } from './entities/product-classification-type.entity';
 import { ProductDetailType } from './entities/product-detail-type.entity';
+import { ProductDimensions } from './entities/product-dimensions.entity';
 
 @Module({
   imports: [
@@ -12,9 +13,10 @@ import { ProductDetailType } from './entities/product-detail-type.entity';
       Product,
       ProductClassificationType,
       ProductDetailType,
+      ProductDimensions,
     ]),
   ],
   controllers: [ProductController],
   providers: [ProductService],
 })
-export class ProductModule {}
+export class ProductModule { }

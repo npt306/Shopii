@@ -4,8 +4,10 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  OneToOne,
 } from 'typeorm';
 import { Product } from './product.entity';
+import { ProductDimensions } from './product-dimensions.entity';
 
 @Entity('ProductDetailType')
 export class ProductDetailType {
@@ -30,8 +32,9 @@ export class ProductDetailType {
   @Column()
   Quantity: number;
 
-  @Column()
-  Dimension: number;
+  @OneToOne(() => ProductDimensions)
+  @JoinColumn({ name: 'Dimension' })
+  Dimension: ProductDimensions;
 
   @ManyToOne(() => Product, (product) => product.details)
   @JoinColumn({ name: 'ProductID' })

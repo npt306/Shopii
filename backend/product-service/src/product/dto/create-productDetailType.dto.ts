@@ -1,4 +1,6 @@
-import { IsString, IsOptional, IsNumber } from 'class-validator';
+import { IsString, IsOptional, IsNumber, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+import { CreateProductDimensionsDto } from './create-product-dimensions.dto';
 
 export class CreateProductDetailTypeDto {
     @IsOptional()
@@ -22,7 +24,7 @@ export class CreateProductDetailTypeDto {
     @IsNumber()
     Quantity: number;
 
-    @IsOptional()
-    @IsNumber()
-    Dimension?: number;
+    @ValidateNested()
+    @Type(() => CreateProductDimensionsDto)
+    Dimension: CreateProductDimensionsDto;
 }
