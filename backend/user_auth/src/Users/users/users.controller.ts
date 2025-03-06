@@ -74,7 +74,8 @@ export class UsersController {
     //Save data to database -> seller, buyer, .... table
 
     //if register using gmail -> check if account exist
-    //
+    //if register using phone -> check if account exist
+    //if update phone number -> login using phone number instead of gmail and password (sms code)
 
     @Post('login')
     async login(@Body() body: { email: string, password: string }): Promise<any> {
