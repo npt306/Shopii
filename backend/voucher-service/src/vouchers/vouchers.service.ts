@@ -4,8 +4,6 @@ import { Repository } from 'typeorm';
 import { CreateVoucherDto } from './dto/create-voucher.dto';
 import { UpdateVoucherDto } from './dto/update-voucher.dto';
 import { Voucher } from './entities/voucher.entity';
-import { validate } from 'class-validator';
-import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class VouchersService {
@@ -15,15 +13,6 @@ export class VouchersService {
   ) {}
 
   async create(createVoucherDto: CreateVoucherDto): Promise<Voucher> {
-      // Convert DTO to entity instance for validation
-      const voucherEntity = plainToClass(Voucher, createVoucherDto);
-
-      // Validate the entity
-      const errors = await validate(voucherEntity);
-      if (errors.length > 0) {
-        throw new BadRequestException(errors);
-      }
-
       // Check if a voucher with the same code already exists
       const existingVoucher = await this.vouchersRepository.findOne({
         where: { code: createVoucherDto.code },
@@ -32,7 +21,8 @@ export class VouchersService {
         throw new BadRequestException('A voucher with this code already exists.');
       }
 
-    return this.vouchersRepository.save(createVoucherDto);
+      const voucher = this.vouchersRepository.create(createVoucherDto); // Use create
+      return this.vouchersRepository.save(voucher);
   }
 
   async findAll(): Promise<Voucher[]> {
@@ -59,14 +49,6 @@ export class VouchersService {
               throw new BadRequestException('A voucher with this code already exists.');
           }
       }
-        // Convert DTO to entity instance for validation
-        const voucherEntity = plainToClass(Voucher, updateVoucherDto);
-
-        // Validate the entity
-        const errors = await validate(voucherEntity);
-        if (errors.length > 0) {
-          throw new BadRequestException(errors);
-        }
       Object.assign(voucher, updateVoucherDto);
       return this.vouchersRepository.save(voucher);
   }

@@ -16,7 +16,7 @@ const mockVoucherRepository = () => ({
   findOne: jest.fn(),
   findOneBy: jest.fn(),
   delete: jest.fn(),
-  create: jest.fn(),
+  create: jest.fn(), // Add this line
 });
 
 type MockType<T> = {
@@ -61,10 +61,11 @@ describe('VouchersService', () => {
       const savedVoucher = { id: 1, ...createVoucherDto };
       repositoryMock.save.mockResolvedValue(savedVoucher);
       repositoryMock.findOne.mockResolvedValue(null); // Simulate no existing voucher
-      repositoryMock.create.mockReturnValue(createVoucherDto);
+      repositoryMock.create.mockReturnValue(savedVoucher); // Mock the create method
 
       expect(await service.create(createVoucherDto)).toEqual(savedVoucher);
-      expect(repositoryMock.save).toHaveBeenCalledWith(createVoucherDto);
+      expect(repositoryMock.save).toHaveBeenCalledWith(savedVoucher); // Expect save to be called with the created entity
+      expect(repositoryMock.create).toHaveBeenCalledWith(createVoucherDto); // Expect create to be called
     });
 
     it('should throw BadRequestException if voucher code already exists', async () => {
@@ -73,6 +74,8 @@ describe('VouchersService', () => {
         code: 'TESTCODE',
         starts_at: new Date().toISOString(),
         ends_at: new Date(Date.now() + 86400000).toISOString(),
+        condition_type: VoucherConditionType.NONE, //Need to add this
+        action_type: VoucherActionType.FIXED_AMOUNT, //Need to add this
       };
 
       repositoryMock.findOne.mockResolvedValue({ id: 1, ...createVoucherDto }); // Simulate existing voucher
@@ -87,6 +90,8 @@ describe('VouchersService', () => {
           code: 'TESTCODE',
           starts_at: new Date().toISOString(),
           ends_at: new Date(Date.now() + 86400000).toISOString(),
+          condition_type: VoucherConditionType.NONE, //Need to add this
+          action_type: VoucherActionType.FIXED_AMOUNT, //Need to add this
         };
         repositoryMock.create.mockReturnValue(invalidDto);
 
@@ -109,6 +114,7 @@ describe('VouchersService', () => {
           action_type: VoucherActionType.FIXED_AMOUNT,
           created_at: new Date(),
           updated_at: new Date(),
+          discount_amount: 100, //Need to add this
         },
         {
           id: 2,
@@ -145,6 +151,7 @@ describe('VouchersService', () => {
         action_type: VoucherActionType.FIXED_AMOUNT,
         created_at: new Date(),
         updated_at: new Date(),
+        discount_amount: 100, //Need to add this
       };
       repositoryMock.findOneBy.mockResolvedValue(mockVoucher);
       expect(await service.findOne(1)).toEqual(mockVoucher);
@@ -156,7 +163,7 @@ describe('VouchersService', () => {
     });
   });
 
-  describe('update', () => {
+    describe('update', () => {
     it('should update a voucher', async () => {
         const voucherId = 1;
         const updateVoucherDto: UpdateVoucherDto = {
@@ -174,6 +181,7 @@ describe('VouchersService', () => {
             action_type: VoucherActionType.FIXED_AMOUNT,
             created_at: new Date(),
             updated_at: new Date(),
+            discount_amount: 100, //Need to add this, otherwise, it will become null
         };
 
         const updatedVoucher = { ...existingVoucher, ...updateVoucherDto };
@@ -197,8 +205,8 @@ describe('VouchersService', () => {
         const updateVoucherDto: UpdateVoucherDto = {
             code: 'DUPLICATECODE',
         };
-        const existingVoucher: Voucher = { ...new Voucher(), id: voucherId, code: 'ORIGINAL' };
-        const duplicateVoucher: Voucher = { ...new Voucher(), id: 2, code: 'DUPLICATECODE' };
+        const existingVoucher: Voucher = { ...new Voucher(), id: voucherId, code: 'ORIGINAL' ,  discount_amount: 100,};
+        const duplicateVoucher: Voucher = { ...new Voucher(), id: 2, code: 'DUPLICATECODE',  discount_amount: 100, };
 
         repositoryMock.findOneBy.mockResolvedValue(existingVoucher);
         repositoryMock.findOne.mockResolvedValue(duplicateVoucher); // Simulate another voucher with the same code

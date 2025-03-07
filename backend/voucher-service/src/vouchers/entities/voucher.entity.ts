@@ -8,7 +8,7 @@ import {
   import { VoucherConditionType } from '../../common/enums/voucher-condition-type.enum';
   import { VoucherActionType } from '../../common/enums/voucher-action-type.enum';
   
-  @Entity({ name: 'vouchers' })
+  @Entity({ name: 'Vouchers' })
   export class Voucher {
     @PrimaryGeneratedColumn()
     id: number;
