@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Upload, PenLine } from 'lucide-react';
+import { Camera, Upload, PenLine, X, ChevronRight, Search } from 'lucide-react';
 
 // Define types for tab data
 type TabId = 'basic' | 'sales' | 'shipping' | 'other';
@@ -18,6 +18,246 @@ interface Step {
     ref: React.RefObject<HTMLDivElement>;
 }
 
+interface Category {
+    id: number;
+    name: string;
+    options: { name: string; subOptions: string[] }[];
+    maxOptions: number;
+    currentOptions: number;
+}
+
+interface UpdateOptionParams {
+    categoryId: number;
+    index: number;
+    value: string;
+}
+
+interface AddOptionParams {
+    categoryId: number;
+    value: string;
+}
+
+interface RemoveOptionParams {
+    categoryId: number;
+    index: number;
+}
+
+interface CategoryType {
+    mainCategory: string;
+    subCategory: string;
+    tertiaryCategory: string;
+}
+
+
+const categoryData: {
+    mainCategories: string[];
+    subCategories: {
+        'Thời Trang Nữ': string[];
+        'Thời Trang Nam': string[];
+        'Phụ Kiện Thời Trang': string[];
+        'Sắc Đẹp': string[];
+        'Sức Khỏe': string[];
+        'Thiết Bị Điện Gia Dụng': string[];
+        'Giầy Dép Nam': string[];
+        'Điện Thoại & Phụ Kiện': string[];
+        'Du lịch & Hành lý': string[];
+        'Tư Vị Nữ': string[];
+    };
+    tertiaryCategories: {
+        [key: string]: string[]; // Add an index signature
+        'Áo': string[];
+        'Nhẫn': string[];
+    };
+} = {
+    mainCategories: [
+        'Thời Trang Nữ',
+        'Thời Trang Nam',
+        'Sắc Đẹp',
+        'Sức Khỏe',
+        'Phụ Kiện Thời Trang',
+        'Thiết Bị Điện Gia Dụng',
+        'Giầy Dép Nam',
+        'Điện Thoại & Phụ Kiện',
+        'Du lịch & Hành lý',
+        'Tư Vị Nữ'
+    ],
+    subCategories: {
+        'Thời Trang Nữ': ['Áo', 'Quần', 'Váy', 'Đầm'],
+        'Thời Trang Nam': ['Quần jean', 'Hoodie & Áo nỉ', 'Áo khoác'],
+        'Phụ Kiện Thời Trang': ['Nhẫn', 'Bông tai', 'Dây chuyền'],
+        'Sắc Đẹp': ['Chăm sóc tay, chân & móng', 'Chăm sóc tóc', 'Nước hoa', 'Trang điểm', 'Dưỡng da'],
+        'Sức Khỏe': ['Thực phẩm chức năng', 'Dụng cụ y tế', 'Chăm sóc cá nhân'],
+        'Thiết Bị Điện Gia Dụng': ['Máy giặt', 'Tủ lạnh', 'Bếp điện', 'Lò vi sóng'],
+        'Giầy Dép Nam': ['Giày thể thao', 'Giày tây', 'Sandal', 'Dép'],
+        'Điện Thoại & Phụ Kiện': ['Điện thoại', 'Ốp lưng', 'Tai nghe', 'Sạc dự phòng'],
+        'Du lịch & Hành lý': ['Vali', 'Balo', 'Túi xách du lịch'],
+        'Tư Vị Nữ': ['Đồ lót', 'Đồ ngủ', 'Trang phục bơi']
+    },
+    tertiaryCategories: {
+        'Áo': ['Áo thun', 'Áo sơ mi', 'Áo polo', 'Áo len'],
+        'Quần': ['Quần legging', 'Quần dài', 'Quần short', 'Quần jogger'],
+        'Váy': ['Váy ngắn', 'Váy maxi', 'Váy xòe'],
+        'Đầm': ['Đầm công sở', 'Đầm dạ hội', 'Đầm suông'],
+        'Hoodie & Áo nỉ': ['Áo Hoodie', 'Áo nỉ', 'Áo len'],
+        'Áo khoác': ['Áo khoác da', 'Áo khoác dạ', 'Áo khoác bomber'],
+        'Chăm sóc tay, chân & móng': ['Mặt nạ cho tay', 'Xà phòng rửa tay', 'Dưỡng móng'],
+        'Chăm sóc tóc': ['Dầu gội', 'Dầu xả', 'Serum dưỡng tóc'],
+        'Nước hoa': ['Nước hoa nữ', 'Nước hoa nam', 'Nước hoa unisex'],
+        'Trang điểm': ['Son môi', 'Phấn phủ', 'Kem nền'],
+        'Dưỡng da': ['Kem dưỡng ẩm', 'Toner', 'Mặt nạ dưỡng da'],
+        'Thực phẩm chức năng': ['Vitamin', 'Collagen', 'Sữa bột dinh dưỡng'],
+        'Dụng cụ y tế': ['Máy đo huyết áp', 'Nhiệt kế', 'Máy massage'],
+        'Chăm sóc cá nhân': ['Bàn chải điện', 'Máy cạo râu', 'Máy tăm nước'],
+        'Nhẫn': ['Nhẫn bạc', 'Nhẫn vàng', 'Nhẫn đá quý'],
+        'Bông tai': ['Bông tai vàng', 'Bông tai bạc', 'Bông tai đá quý'],
+        'Dây chuyền': ['Dây chuyền bạc', 'Dây chuyền vàng', 'Dây chuyền ngọc trai'],
+        'Điện thoại': ['iPhone', 'Samsung', 'Xiaomi'],
+        'Ốp lưng': ['Ốp silicon', 'Ốp nhựa cứng', 'Ốp chống sốc'],
+        'Tai nghe': ['Tai nghe có dây', 'Tai nghe Bluetooth', 'Tai nghe gaming'],
+        'Sạc dự phòng': ['Sạc 10.000mAh', 'Sạc 20.000mAh', 'Sạc nhanh'],
+        'Vali': ['Vali nhựa', 'Vali vải', 'Vali xách tay'],
+        'Balo': ['Balo du lịch', 'Balo laptop', 'Balo chống nước'],
+        'Túi xách du lịch': ['Túi xách nam', 'Túi xách nữ', 'Túi chống nước'],
+        'Đồ lót': ['Áo lót', 'Quần lót', 'Bộ đồ lót'],
+        'Đồ ngủ': ['Váy ngủ', 'Pijama', 'Áo choàng ngủ'],
+        'Trang phục bơi': ['Bikini', 'Đồ bơi liền mảnh', 'Đồ bơi nam']
+    }
+};
+
+
+
+interface CategorySelectorModalProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    onConfirm: (category: CategoryType) => void;
+}
+
+const CategorySelectorModal = ({ open, onOpenChange, onConfirm }: CategorySelectorModalProps) => {
+    const [selectedMainCategory, setSelectedMainCategory] = useState<'Thời Trang Nữ' | 'Thời Trang Nam' | 'Sắc Đẹp' | 'Sức Khỏe' | 'Phụ Kiện Thời Trang' | 'Thiết Bị Điện Gia Dụng' | 'Giầy Dép Nam' | 'Điện Thoại & Phụ Kiện' | 'Du lịch & Hành lý' | 'Tư Vị Nữ' | null>(null);
+    const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);
+    const [selectedTertiaryCategory, setSelectedTertiaryCategory] = useState<string | null>(null);
+
+    if (!open) return null;
+
+    const handleConfirm = () => {
+        if (selectedMainCategory && selectedSubCategory && selectedTertiaryCategory) {
+            const category: CategoryType = {
+                mainCategory: selectedMainCategory,
+                subCategory: selectedSubCategory,
+                tertiaryCategory: selectedTertiaryCategory
+            };
+            onConfirm(category);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+            <div className="bg-white w-[800px] h-[600px] rounded-lg shadow-xl flex flex-col border border-gray-200">
+                {/* Header */}
+                <div className="flex justify-between items-center p-4 border-b border-gray-200">
+                    <h2 className="text-lg font-semibold text-black">Chỉnh sửa ngành hàng</h2>
+                    <button
+                        onClick={() => onOpenChange(false)}
+                        className="bg-white text-black hover:bg-gray-100 rounded-full p-1 transition-colors"
+                    >
+                        <X className="w-6 h-6" />
+                    </button>
+                </div>
+
+                {/* Search Input */}
+                <div className="flex border-b border-gray-200">
+                    <div className="relative flex-grow">
+                        <input
+                            type="text"
+                            placeholder="Vui lòng nhập tối thiểu 1 ký tự"
+                            className="w-full p-2 pl-10 border-r border-gray-200 outline-none text-black bg-white placeholder-gray-600"
+                        />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-700" />
+                    </div>
+                </div>
+
+                {/* Categories */}
+                <div className="flex flex-grow overflow-hidden">
+                    {/* Main Categories Column */}
+                    <div className="w-1/3 border-r border-gray-200 overflow-y-auto">
+                        {categoryData.mainCategories.map((category) => (
+                            <div
+                                key={category}
+                                className={`p-2 flex items-center justify-between cursor-pointer hover:bg-gray-100 ${selectedMainCategory === category ? 'bg-gray-200' : ''}`}
+                                onClick={() => {
+                                    setSelectedMainCategory(category as 'Thời Trang Nữ' | 'Thời Trang Nam' | 'Sắc Đẹp' | 'Sức Khỏe' | 'Phụ Kiện Thời Trang' | 'Thiết Bị Điện Gia Dụng' | 'Giầy Dép Nam' | 'Điện Thoại & Phụ Kiện' | 'Du lịch & Hành lý' | 'Tư Vị Nữ');
+                                    setSelectedSubCategory(null);
+                                    setSelectedTertiaryCategory(null);
+                                }}
+                            >
+                                <span className={`text-black ${selectedMainCategory === category ? 'font-semibold' : ''}`}>
+                                    {category}
+                                </span>
+                                <ChevronRight className="text-gray-500" size={16} />
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Sub Categories Column */}
+                    <div className="w-1/3 border-r border-gray-200 overflow-y-auto">
+                        {selectedMainCategory && categoryData.subCategories[selectedMainCategory]?.map((subCategory) => (
+                            <div
+                                key={subCategory}
+                                className={`p-2 flex items-center justify-between cursor-pointer hover:bg-gray-100 ${selectedSubCategory === subCategory ? 'bg-gray-200' : ''}`}
+                                onClick={() => {
+                                    setSelectedSubCategory(subCategory);
+                                    setSelectedTertiaryCategory(null);
+                                }}
+                            >
+                                <span className={`text-black ${selectedSubCategory === subCategory ? 'font-semibold' : ''}`}>
+                                    {subCategory}
+                                </span>
+                                <ChevronRight className="text-gray-500" size={16} />
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Tertiary Categories Column */}
+                    <div className="w-1/3 overflow-y-auto">
+                        {selectedSubCategory && categoryData.tertiaryCategories[selectedSubCategory as keyof typeof categoryData.tertiaryCategories]?.map((tertiaryCategory) => (
+                            <div
+                                key={tertiaryCategory}
+                                className={`p-2 cursor-pointer hover:bg-gray-100 ${selectedTertiaryCategory === tertiaryCategory ? 'bg-gray-200' : ''}`}
+                                onClick={() => setSelectedTertiaryCategory(tertiaryCategory)}
+                            >
+                                <span className={`text-black ${selectedTertiaryCategory === tertiaryCategory ? 'font-semibold' : ''}`}>
+                                    {tertiaryCategory}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Footer Buttons */}
+                <div className="flex justify-end p-4 border-t border-gray-200">
+                    <button
+                        className="mr-4 text-black bg-white border border-gray-300 hover:bg-gray-100 px-4 py-2 rounded transition-colors"
+                        onClick={() => onOpenChange(false)}
+                    >
+                        Hủy
+                    </button>
+                    <button
+                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        disabled={!selectedMainCategory || !selectedSubCategory || !selectedTertiaryCategory}
+                        onClick={() => {
+                            handleConfirm();
+                            onOpenChange(false); // Đóng modal sau khi xác nhận
+                        }}
+                    >
+                        Xác nhận
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 const AddProduct = () => {
     const [activeStep, setActiveStep] = useState<StepId>('Image');
     const [activeTab, setActiveTab] = useState<TabId>('basic');
@@ -29,6 +269,14 @@ const AddProduct = () => {
     const [hasSelectedIndustry, setHasSelectedIndustry] = useState<boolean>(false);
     const [hasSelectedDes, setHasSelectedDes] = useState<boolean>(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState<CategoryType | null>(null);
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [selectedFileOne, setSelectedFileOne] = useState<File[]>([]);
+    const [charCount, setCharCount] = useState(0);
+    const [inputValue, setInputValue] = useState("");
+    const [useCustomSettings, setUseCustomSettings] = useState(false);
+
     const navigate = useNavigate();
 
     // Create refs for each section
@@ -37,7 +285,6 @@ const AddProduct = () => {
     const NameRef = useRef<HTMLDivElement>(null);
     const DesRef = useRef<HTMLDivElement>(null);
     const AddRef = useRef<HTMLDivElement>(null);
-
 
     const steps: Step[] = [
         { id: 'Image', label: 'Thêm ít nhất 3 hình ảnh', ref: ImageRef },
@@ -60,6 +307,8 @@ const AddProduct = () => {
         { id: 'shipping', label: 'Vận chuyển', ref: shippingRef },
         { id: 'other', label: 'Thông tin khác', ref: otherRef }
     ];
+
+
 
     const handleTabClick = (tabId: TabId) => {
         setActiveTab(tabId);
@@ -92,6 +341,7 @@ const AddProduct = () => {
         setHasSelectedProduct(false);
         setHasSelectedIndustry(true);
         setHasSelectedDes(false);
+        setIsCategoryModalOpen(true)
     };
 
     const handleRatioChangeDes = () => {
@@ -111,6 +361,177 @@ const AddProduct = () => {
 
     const handleConfirmClick = () => {
         navigate('/portal/product/list/all');
+    };
+
+    const [categories, setCategories] = useState<Category[]>([
+        {
+            id: 1,
+            name: "",
+            options: [
+                {
+                    name: "",
+                    subOptions: [],
+                },
+            ],
+            maxOptions: 14,
+            currentOptions: 0,
+        },
+    ]);
+
+
+    const handleConfirm = (category: CategoryType) => {
+        setSelectedCategory(category);
+        setIsModalOpen(false);
+    };
+
+
+    // Thêm nhóm phân loại mới
+    const addNewCategory = () => {
+        setCategories([
+            ...categories,
+            {
+                id: categories.length + 1,
+                name: "",
+                options: [
+                    {
+                        name: "",
+                        subOptions: [],
+                    },
+                ],
+                maxOptions: 14,
+                currentOptions: 0,
+            }
+        ]);
+    };
+
+
+
+    const updateCategoryName = (id: number, value: string) => {
+        setCategories(
+            categories.map((cat: Category) =>
+                cat.id === id ? { ...cat, name: value } : cat
+            )
+        );
+    };
+
+    const updateOption = ({ categoryId, index, value }: UpdateOptionParams) => {
+        setCategories(
+            categories.map((cat: Category) => {
+                if (cat.id === categoryId) {
+                    const newOptions = [...cat.options];
+                    newOptions[index] = { ...newOptions[index], name: value };
+                    return { ...cat, options: newOptions };
+                }
+                return cat;
+            })
+        );
+    };
+
+    const addOption = ({ categoryId, value }: AddOptionParams) => {
+        if (!value) return;
+
+        setCategories(
+            categories.map((cat: Category) => {
+                if (cat.id === categoryId && cat.currentOptions < cat.maxOptions) {
+                    return {
+                        ...cat,
+                        options: [...cat.options, { name: value, subOptions: [] }],
+                        currentOptions: cat.currentOptions + 1
+                    };
+                }
+                return cat;
+            })
+        );
+    };
+
+    const removeOption = ({ categoryId, index }: RemoveOptionParams) => {
+        setCategories(
+            categories.map((cat: Category) => {
+                if (cat.id === categoryId) {
+                    const newOptions = [...cat.options];
+                    newOptions.splice(index, 1);
+                    return {
+                        ...cat,
+                        options: newOptions,
+                        currentOptions: cat.currentOptions - 1
+                    };
+                }
+                return cat;
+            })
+        );
+    };
+    // Xóa phân loại
+    const removeCategory = (id: number) => {
+        setCategories(categories.filter(cat => cat.id !== id));
+    };
+
+    const generateCombinations = (): string[][] => {
+        if (categories.length === 0) return [];
+
+        if (categories.length === 1) {
+            return categories[0].options.map(option => [option.name]);
+        }
+
+        const combinations: string[][] = [];
+        categories[0].options.forEach(option1 => {
+            if (categories.length > 1) {
+                categories[1].options.forEach(option2 => {
+                    combinations.push([option1.name, option2.name]);
+                });
+            } else {
+                combinations.push([option1.name]);
+            }
+        });
+
+        return combinations;
+    };
+
+    const combinations: string[][] = generateCombinations();
+
+
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newFiles = Array.from(event.target.files || []);
+        const combinedFiles = [...selectedFiles, ...newFiles].slice(0, 9); // Giới hạn tối đa 9 ảnh
+        setSelectedFiles(combinedFiles);
+    };
+
+    const handleRemoveFile = (index: number) => {
+        const updatedFiles = selectedFiles.filter((_, i) => i !== index);
+        setSelectedFiles(updatedFiles);
+    };
+
+    const handleOneFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newFiles = Array.from(event.target.files || []);
+        const combinedFiles = [...selectedFileOne, ...newFiles].slice(0, 1); // Giới hạn tối đa 9 ảnh
+        setSelectedFileOne(combinedFiles);
+    };
+
+    const handleRemoveOneFile = (index: number) => {
+        const updatedFiles = selectedFileOne.filter((_, i) => i !== index);
+        setSelectedFileOne(updatedFiles);
+    };
+
+    const [selectedManyFiles, setSelectedManyFiles] = useState<(File | null)[][]>(combinations.map(() => []));
+
+    const handleManyFileChange = (event: React.ChangeEvent<HTMLInputElement>, idx: number) => {
+        const newFiles = Array.from(event.target.files || []);
+        const updatedFiles = [...selectedManyFiles];
+        updatedFiles[idx] = [...updatedFiles[idx], ...newFiles];
+        setSelectedManyFiles(updatedFiles);
+    };
+
+    const handleRemoveManyFile = (optionIdx: number, fileIdx: number) => {
+        const updatedFiles = [...selectedManyFiles];
+        updatedFiles[optionIdx].splice(fileIdx, 1);
+        setSelectedManyFiles(updatedFiles);
+    };
+    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const { value } = event.target;
+        if (value.length <= 20) { // Giới hạn tối đa 20 ký tự
+            setCharCount(value.length);
+            setInputValue(value);
+        }
     };
 
     useEffect(() => {
@@ -202,7 +623,6 @@ const AddProduct = () => {
                     </div>
                 </div>
             )}
-
 
             {/* Suggestion Section Name Products */}
             {hasSelectedProduct && (
@@ -372,35 +792,32 @@ const AddProduct = () => {
                                             Hình ảnh tỷ lệ 1:1
                                         </span>
                                     </label>
-
-                                    {/* Tỷ lệ 3:4 */}
-                                    <label className="flex items-center cursor-pointer space-x-2">
-                                        <input
-                                            type="radio"
-                                            name="imageRatio"
-                                            value="3:4"
-                                            checked={selectedRatio === "3:4"}
-                                            onChange={() => setSelectedRatio("3:4")}
-                                            onClick={() => handleRatioChangeInf()}
-                                            className="peer hidden"
-                                        />
-                                        <div className="w-5 h-5 border-2 border-gray-400 rounded-full flex items-center justify-center peer-checked:border-orange-500">
-                                            <div className="w-3 h-3 bg-transparent rounded-full peer-checked:bg-orange-500"></div>
-                                        </div>
-                                        <span className={`text-sm font-medium ${selectedRatio === "3:4" ? "text-orange-500" : "text-gray-700"}`}>
-                                            Hình ảnh tỷ lệ 3:4
-                                        </span>
-                                    </label>
-
-                                    <a href="#" className="text-blue-600" onClick={() => handleRatioChangeInf()} >Ví dụ</a>
                                 </div>
 
                                 {/* Upload Button */}
                                 <label className="cursor-pointer flex items-center px-4 py-2 bg-gray-100 text-blue-600 rounded w-48" onClick={() => handleRatioChangeInf()} >
                                     <Upload className="mr-2 h-5 w-5" />
                                     Thêm hình ảnh (0/9)
-                                    <input type="file" multiple className="hidden" />
+                                    <input type="file" multiple className="hidden" onChange={handleFileChange} />
                                 </label>
+                                <div className="mt-4 flex flex-wrap">
+                                    {selectedFiles.map((file, index) => (
+                                        <div key={index} className="relative w-32 h-32 m-2">
+                                            <img
+                                                src={URL.createObjectURL(file)}
+                                                alt={`Upload preview ${index + 1}`}
+                                                className="w-full h-full object-cover"
+                                                style={{ aspectRatio: "1 / 1" }} // Đảm bảo tỉ lệ 1:1
+                                            />
+                                            <button
+                                                className="absolute top-0 right-0 bg-red-600 text-white rounded-full p-1"
+                                                onClick={() => handleRemoveFile(index)}
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
 
                             {/* Cover Image */}
@@ -411,8 +828,26 @@ const AddProduct = () => {
                                 <label className="cursor-pointer flex items-center px-4 py-2 bg-gray-100 text-blue-600 rounded w-48" onClick={() => handleRatioChangeInf()}>
                                     <Camera className="mr-2 h-5 w-5" />
                                     Thêm hình ảnh (0/1)
-                                    <input type="file" className="hidden" />
+                                    <input type="file" className="hidden" onChange={handleOneFileChange} />
                                 </label>
+                                <div className="mt-4 flex flex-wrap">
+                                    {selectedFileOne.map((file, index) => (
+                                        <div key={index} className="relative w-32 h-32 m-2">
+                                            <img
+                                                src={URL.createObjectURL(file)}
+                                                alt={`Upload preview ${index + 1}`}
+                                                className="w-full h-full object-cover"
+                                                style={{ aspectRatio: "1 / 1" }} // Đảm bảo tỉ lệ 1:1
+                                            />
+                                            <button
+                                                className="absolute top-0 right-0 bg-red-600 text-white rounded-full p-1"
+                                                onClick={() => handleRemoveOneFile(index)}
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
                                 <small className="text-gray-500 text-xs">
                                     • Tải lên hình ảnh 1:1.<br></br> • Ảnh sẽ được hiển thị tại các trang Kết quả tìm kiếm, Gợi ý hôm nay... Việc sử dụng ảnh bìa đẹp sẽ thu hút thêm lượt truy cập vào sản phẩm của bạn
                                 </small>
@@ -479,7 +914,7 @@ const AddProduct = () => {
                                     <span className="text-red-500">*</span> Ngành hàng
                                 </label>
                                 <div className="flex justify-between items-center border rounded px-3 py-2">
-                                    <span className="text-gray-500">Chọn ngành hàng</span>
+                                    <span className="text-gray-500">{selectedCategory ? `${selectedCategory.mainCategory} > ${selectedCategory.subCategory} > ${selectedCategory.tertiaryCategory}` : 'Chọn ngành hàng'}</span>
                                     <PenLine className="text-blue-600 cursor-pointer" size={20} />
                                 </div>
                             </div>
@@ -512,18 +947,351 @@ const AddProduct = () => {
                         </div>
 
                         {/* Sales Information Section */}
-                        <div id="sales" ref={salesRef} className="p-6">
-                            <h2 className="text-lg font-semibold mb-4">Thông tin bán hàng</h2>
-                            <div className="p-4 bg-gray-50 rounded">
-                                <p className="text-gray-500">Có thể điều chỉnh sau khi chọn ngành hàng</p>
+                        <div className="max-w-screen-xl mx-auto">
+                            <h2 className="text-xl font-medium mb-4">Thông tin bán hàng</h2>
+
+                            {/* Phân loại hàng */}
+                            <div className="mb-6">
+                                <div className="flex items-center mb-4">
+                                    <div className="w-2 h-2 rounded-full bg-red-500 mr-2"></div>
+                                    <span className="font-medium">Phân loại hàng</span>
+                                </div>
+
+                                <div className="bg-gray-50 p-4 rounded-md mb-4">
+                                    {categories.map((category, categoryIndex) => (
+                                        <div key={category.id} className="mb-4">
+                                            <div className="flex border-b pb-2">
+                                                <div className="w-1/4 px-4 py-2 bg-gray-100 font-medium text-center">
+                                                    Phân loại {category.id}
+                                                </div>
+                                                <div className="w-3/4 px-4 py-2 flex items-center">
+                                                    <input
+                                                        type="text"
+                                                        value={category.name}
+                                                        onChange={(e) => updateCategoryName(category.id, e.target.value)}
+                                                        placeholder="Nhập tên phân loại"
+                                                        className="outline-none bg-transparent flex-grow"
+                                                    />
+                                                    <span className="text-gray-500 ml-2 text-sm">{category.currentOptions}/{category.maxOptions}</span>
+                                                    {categoryIndex > 0 && (
+                                                        <button
+                                                            className="ml-2 text-gray-500"
+                                                            onClick={() => removeCategory(category.id)}
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                                            </svg>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className="flex py-2">
+                                                <div className="w-1/4 px-4 py-2 font-medium">
+                                                    Tùy chọn
+                                                </div>
+                                                <div className="w-3/4 flex">
+                                                    <div className="flex-1 px-1">
+                                                        {category.options.map((option, index) => (
+                                                            <div key={index} className="flex justify-between mb-1">
+                                                                <input
+                                                                    type="text"
+                                                                    value={option.name}
+                                                                    onChange={(e) => updateOption({ categoryId: category.id, index, value: e.target.value })}
+                                                                    className="outline-none bg-transparent"
+                                                                />
+                                                                <div className="flex items-center">
+                                                                    <button
+                                                                        className="ml-1 text-gray-400"
+                                                                        onClick={() => removeOption({ categoryId: category.id, index })}
+                                                                    >
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                                        </svg>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex py-2 bg-white text-black">
+                                                <div className="w-1/4 px-4 py-2"></div>
+                                                <div className="w-3/4">
+                                                    <form
+                                                        onSubmit={(e) => {
+                                                            e.preventDefault();
+                                                            const input = (e.target as HTMLFormElement).elements.namedItem('newOption') as HTMLInputElement;
+                                                            if (input.value.trim() !== '') {
+                                                                addOption({ categoryId: category.id, value: input.value });
+                                                                input.value = '';
+                                                                setCharCount(0); // Reset character count after form submission
+                                                                setInputValue(''); // Reset input value after form submission
+                                                            }
+                                                        }}
+                                                    >
+                                                        <div className="border border-gray-300 rounded flex items-center bg-white">
+                                                            <input
+                                                                type="text"
+                                                                name="newOption"
+                                                                placeholder="Nhập"
+                                                                className="w-full px-4 py-2 outline-none rounded bg-white text-black"
+                                                                onInput={handleInputChange}
+                                                                value={inputValue}
+                                                                maxLength={20}
+                                                            />
+                                                            <span className="pr-4 text-gray-500 text-sm">{charCount}/20</span>
+                                                        </div>
+                                                    </form>
+
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Thêm nhóm phân loại */}
+                                <button
+                                    onClick={addNewCategory}
+                                    className="border border-dashed border-orange-400 text-orange-500 bg-white px-4 py-2 rounded flex items-center justify-center w-full sm:w-auto"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                                    </svg>
+                                    Thêm nhóm phân loại {categories.length + 1}
+                                </button>
                             </div>
+
+                            {/* Danh sách phân loại hàng */}
+                            <div className="mb-6 mt-8">
+                                <div className="flex justify-between mb-4">
+                                    <h3 className="font-medium">Danh sách phân loại hàng</h3>
+                                </div>
+
+                                {combinations.length > 0 ? (
+                                    <div className="border rounded overflow-hidden">
+                                        <table className="w-full">
+                                            <thead>
+                                                <tr className="bg-gray-50">
+                                                    {categories.map((category, index) => (
+                                                        <th key={index} className="text-left py-3 px-4 font-medium border-b border-r">{category.name}</th>
+                                                    ))}
+                                                    <th className="text-left py-3 px-4 font-medium border-b border-r">Giá</th>
+                                                    <th className="text-left py-3 px-4 font-medium border-b border-r">Kho hàng</th>
+
+                                                    {/* Thêm cột cân nặng khi toggle bật */}
+                                                    {useCustomSettings && (
+                                                        <>
+                                                            <th className="text-left py-3 px-4 font-medium border-b border-r">
+                                                                <div className="flex items-center">
+                                                                    <span className="text-red-500 mr-1">*</span>
+                                                                    Cân nặng (Sau khi đóng gói)
+                                                                </div>
+                                                            </th>
+                                                            <th className="text-left py-3 px-4 font-medium border-b border-r">
+                                                                Kích thước đóng gói (Phí vận chuyển thực tế sẽ thay đổi nếu bạn nhập sai kích thước)
+                                                            </th>
+                                                        </>
+                                                    )}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {combinations.map((combination, index) => (
+                                                    <tr key={index}>
+                                                        {combination.map((option, optionIndex) => (
+                                                            <td key={optionIndex} className={`border-r p-4 ${optionIndex > 0 ? 'border-t' : ''}`}>
+                                                                <div className="flex items-center">
+                                                                    <label className="w-14 h-14 border flex items-center justify-center mr-3 cursor-pointer">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                                                                            <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                                                                        </svg>
+                                                                        <input type="file" multiple className="hidden" onChange={(e) => handleManyFileChange(e, index * combinations[0].length + optionIndex)} />
+                                                                    </label>
+                                                                    <span>{option}</span>
+                                                                </div>
+                                                                <div className="flex flex-wrap mt-2">
+                                                                    {selectedManyFiles[index * combinations[0].length + optionIndex]?.map((file, fileIndex) => (
+                                                                        file && (
+                                                                            <div key={fileIndex} className="relative w-24 h-24 m-2">
+                                                                                <img
+                                                                                    src={URL.createObjectURL(file)}
+                                                                                    alt={`Upload preview ${fileIndex + 1}`}
+                                                                                    className="w-full h-full object-cover"
+                                                                                    style={{ aspectRatio: '1 / 1' }}
+                                                                                />
+                                                                                <button
+                                                                                    className="absolute top-0 right-0 bg-red-600 text-white rounded-full p-1"
+                                                                                    onClick={() => handleRemoveManyFile(index * combinations[0].length + optionIndex, fileIndex)}
+                                                                                >
+                                                                                    <X className="h-4 w-4" />
+                                                                                </button>
+                                                                            </div>
+                                                                        )
+                                                                    ))}
+                                                                </div>
+                                                            </td>
+                                                        ))}
+                                                        <td className={`border-r p-4 ${index > 0 ? 'border-t' : ''}`}>
+                                                            <div className="relative">
+                                                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">₫</span>
+                                                                <input
+                                                                    type="number"
+                                                                    className="pl-8 pr-4 py-2 border rounded w-full bg-white text-black"
+                                                                    placeholder="Nhập vào"
+                                                                    min="0"
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === '-' || e.key === 'e') e.preventDefault();
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                        <td className={`border-r p-4 ${index > 0 ? 'border-t' : ''}`}>
+                                                            <input
+                                                                type="number"
+                                                                className="px-4 py-2 border rounded w-full bg-white text-black"
+                                                                placeholder="0"
+                                                                min="0"
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === '-' || e.key === 'e') e.preventDefault();
+                                                                }}
+                                                            />
+                                                        </td>
+
+                                                        {/* Thêm cột cân nặng và kích thước khi toggle bật */}
+                                                        {useCustomSettings && (
+                                                            <>
+                                                                <td className={`border-r p-4 ${index > 0 ? 'border-t' : ''}`}>
+                                                                    <div className="flex items-center">
+                                                                        <input
+                                                                            type="text"
+                                                                            className="border rounded p-2 w-32 bg-white text-black"
+                                                                            placeholder="Nhập vào"
+                                                                            pattern="[0-9]*"
+                                                                        />
+                                                                        <span className="ml-2 text-gray-600">gr</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className={`border-r p-4 ${index > 0 ? 'border-t' : ''}`}>
+                                                                    <div className="flex items-center space-x-2">
+                                                                        <input
+                                                                            type="text"
+                                                                            className="border rounded p-2 w-16 bg-white text-black"
+                                                                            placeholder="R"
+                                                                            pattern="[0-9]*"
+                                                                        />
+                                                                        <span className="text-gray-600 whitespace-nowrap">cm</span>
+
+                                                                        <span className="text-gray-600 mx-1">×</span>
+
+                                                                        <input
+                                                                            type="text"
+                                                                            className="border rounded p-2 w-16 bg-white text-black"
+                                                                            placeholder="D"
+                                                                            pattern="[0-9]*"
+                                                                        />
+                                                                        <span className="text-gray-600 whitespace-nowrap">cm</span>
+
+                                                                        <span className="text-gray-600 mx-1">×</span>
+
+                                                                        <input
+                                                                            type="text"
+                                                                            className="border rounded p-2 w-16 bg-white text-black"
+                                                                            placeholder="C"
+                                                                            pattern="[0-9]*"
+                                                                        />
+                                                                        <span className="text-gray-600 whitespace-nowrap">cm</span>
+                                                                    </div>
+                                                                </td>
+                                                            </>
+                                                        )}
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <div className="border rounded p-8 text-center text-gray-500 mt-16">
+                                        Thêm các tùy chọn vào phân loại để hiển thị bảng phân loại hàng
+                                    </div>
+                                )}
+                            </div>
+
                         </div>
 
                         {/* Shipping Section */}
-                        <div id="shipping" ref={shippingRef} className="p-6">
+                        <div id="shipping" className="p-6">
                             <h2 className="text-lg font-semibold mb-4">Vận chuyển</h2>
-                            <div className="p-4 bg-gray-50 rounded">
-                                <p className="text-gray-500">Có thể điều chỉnh sau khi chọn ngành hàng</p>
+
+                            <div className="space-y-4">
+                                {/* Toggle switch */}
+                                <div className="flex items-center justify-between">
+                                    <span className="text-gray-700">Thiết lập cân nặng & kích thước cho từng phân loại</span>
+                                    <button
+                                        className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 ${useCustomSettings ? 'bg-green-500' : 'bg-gray-300'}`}
+                                        onClick={() => setUseCustomSettings(!useCustomSettings)}
+                                    >
+                                        <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${useCustomSettings ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                                    </button>
+                                </div>
+
+                                {/* Inputs - only show when toggle is OFF */}
+                                {!useCustomSettings && (
+                                    <>
+                                        {/* Cân nặng */}
+                                        <div className="flex items-center">
+                                            <div className="w-1/3 flex items-center">
+                                                <span className="text-red-500 mr-1">*</span>
+                                                <span className="text-gray-700">Cân nặng (Sau khi đóng gói)</span>
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <div className="flex items-center">
+                                                    <input
+                                                        type="text"
+                                                        className="border rounded p-2 w-32 bg-white text-black border-red-500"
+                                                        placeholder="Nhập vào"
+                                                    />
+                                                    <span className="ml-2 text-gray-600">gr</span>
+                                                </div>
+                                                <span className="text-red-500 text-sm mt-1">Không được để trống ô</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Kích thước đóng gói */}
+                                        <div className="flex items-start">
+                                            <div className="w-1/3">
+                                                <span className="text-gray-700">Kích thước đóng gói (Phí vận chuyển thực tế sẽ thay đổi nếu bạn nhập sai kích thước)</span>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <input
+                                                    type="text"
+                                                    className="border rounded p-2 w-20 bg-white text-black"
+                                                    placeholder="R"
+                                                />
+                                                <span className="text-gray-600">cm</span>
+
+                                                <span className="text-gray-600 mx-1">×</span>
+
+                                                <input
+                                                    type="text"
+                                                    className="border rounded p-2 w-20 bg-white text-black"
+                                                    placeholder="D"
+                                                />
+                                                <span className="text-gray-600">cm</span>
+
+                                                <span className="text-gray-600 mx-1">×</span>
+
+                                                <input
+                                                    type="text"
+                                                    className="border rounded p-2 w-20 bg-white text-black"
+                                                    placeholder="C"
+                                                />
+                                                <span className="text-gray-600">cm</span>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -557,6 +1325,7 @@ const AddProduct = () => {
                     </div>
                 </div>
             )}
+            <CategorySelectorModal open={isCategoryModalOpen} onOpenChange={setIsCategoryModalOpen} onConfirm={handleConfirm} />
         </div>
     );
 };
