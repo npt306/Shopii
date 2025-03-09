@@ -3,28 +3,40 @@ import { UsersModule } from './Users/users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
+import { keycloakConfigAsync } from './CONFIG/keycloak.config';
+import { PermissionsGuard } from './GUARDS/permission.guard';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    
+    // Keycloak Authentication Module
+    keycloakConfigAsync,
+
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: configService => ({
+      useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         host: configService.get('DB_HOST'),
         port: +configService.get('DB_PORT'),
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
-        entities: [join(process.cwd(), 'dist/**/*.entity{.ts,.js}')],
+        entities: [join(__dirname, '**', '*.entity.{ts,js}')], 
         synchronize: false,
       }),
     }),
+
     UsersModule,
   ],
-  // Controllers and providers are already in UsersModule
   controllers: [],
-  providers: [],
+  providers: [    
+    {
+      provide: APP_GUARD,
+      useClass: PermissionsGuard,
+    },
+  ],
 })
 export class AppModule {}

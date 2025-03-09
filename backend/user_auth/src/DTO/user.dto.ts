@@ -1,43 +1,62 @@
 import {
-    IsEmail,
-    IsNotEmpty,
-    IsOptional,
-    IsString,
-    MinLength,
-    IsDateString,
-    IsPhoneNumber,
-  } from 'class-validator';
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
+  IsDateString,
+  IsPhoneNumber,
+} from 'class-validator';
 
 export class UserDto {
-    @IsEmail()
-    @IsNotEmpty()
-    email: string;
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
 
-    @IsString()
-    @MinLength(6)
-    @IsNotEmpty()
-    password: string;
+  @IsString()
+  @MinLength(6)
+  @IsNotEmpty()
+  password: string;
 
-    @IsString()
-    @IsNotEmpty()
-    username: string;
+  @IsString()
+  @IsNotEmpty()
+  username: string;
 
-    @IsDateString()
-    date_of_birth?: string;
+  // New required fields: firstName and lastName
+  @IsString()
+  @IsNotEmpty()
+  firstName: string;
 
-    @IsPhoneNumber()
-    phoneNumber?: string;
+  @IsString()
+  @IsNotEmpty()
+  lastName: string;
 
-    @IsString()
-    status?: string;
+  @IsDateString()
+  @IsOptional()
+  date_of_birth?: string;
 
-    @IsString()
-    address?: string;
+  @IsOptional()
+  @IsPhoneNumber(undefined, { message: 'phoneNumber must be a valid phone number' })
+  phoneNumber?: string;
 
-    @IsOptional()
-    @IsString()
-    avatar?: string;
+  @IsOptional()
+  @IsString()
+  status?: string;
 
-    @IsString()
-    sex?: string;
-  }
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @IsOptional()
+  @IsString()
+  avatar?: string;
+
+  @IsOptional()
+  @IsString()
+  sex?: string;
+
+  // Accept multiple roles as an array of strings
+  @IsOptional()
+  @IsString({ each: true })
+  roles?: string[];
+}

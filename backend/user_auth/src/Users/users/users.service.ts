@@ -1,209 +1,349 @@
-import { Injectable, BadGatewayException } from '@nestjs/common';
-import admin from 'src/FIREBASE/firebase.admin';
-import { UserDto } from 'src/DTO/user.dto';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Injectable, HttpException, HttpStatus, UnauthorizedException, Inject } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { User } from 'src/DB TABLE/user.entity';
-import axios from 'axios';
+import { InjectRepository } from '@nestjs/typeorm';
+import * as jwt from 'jsonwebtoken';
+import { HttpService } from '@nestjs/axios';
+import { UserDto } from 'src/DTO/user.dto';
+import { firstValueFrom } from 'rxjs';
+import { User } from 'src/ENTITY/user.entity';
 
 @Injectable()
 export class UsersService {
+  private keycloakBaseUrl = process.env.KEYCLOAK_BASE_URL || 'http://localhost:8080';
+  private realm = process.env.KEYCLOAK_REALM || 'shopii';
+  private adminUsername = process.env.KEYCLOAK_ADMIN_USERNAME || 'admin';
+  private adminPassword = process.env.KEYCLOAK_ADMIN_PASSWORD || 'admin';
+  private adminClientId = process.env.KEYCLOAK_ADMIN_CLIENT_ID || 'admin-cli';
+  private clientId = process.env.KEYCLOAK_CLIENT_ID || 'your-client-id';
+  private clientSecret = process.env.KEYCLOAK_CLIENT_SECRET || '';
+
   constructor(
+    private readonly httpService: HttpService,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) { }
+  ) {}
 
-  async registerUser(data: UserDto, roles: ('buyer' | 'seller' | 'admin')[]) {
-    try {
-      // Validate that at least one role is provided
-      if (!roles || !Array.isArray(roles) || roles.length === 0) {
-        throw new BadGatewayException('At least one role must be provided.');
-      }
-  
-      // Optional: Validate that each role is one of the allowed values
-      const allowedRoles = ['buyer', 'seller', 'admin'];
-      const invalidRoles = roles.filter(role => !allowedRoles.includes(role));
-      if (invalidRoles.length) {
-        throw new BadGatewayException(`Invalid role(s) provided: ${invalidRoles.join(', ')}`);
-      }
-  
-      // Build payload for Firebase createUser dynamically:
-      const createUserPayload: any = {
-        email: data.email,
-        password: data.password,
-      };
-  
-      if (data.phoneNumber) {
-        createUserPayload.phoneNumber = data.phoneNumber;
-      }
-  
-      // Create the user in Firebase
-      const userRecord = await admin.auth().createUser(createUserPayload);
-  
-      // Set custom claims for role-based access control using an array of roles
-      await admin.auth().setCustomUserClaims(userRecord.uid, { roles });
-  
-      // Generate email verification link using Firebase Admin SDK
-      const actionCodeSettings = {
-        // Replace with the URL you want users to be redirected to after verification
-        url: 'http://localhost/verify?email=' + data.email,
-        handleCodeInApp: true,
-      };
-  
-      const verificationLink = await admin
-        .auth()
-        .generateEmailVerificationLink(data.email, actionCodeSettings);
-  
-      console.log('Email verification link:', verificationLink);
-  
-      // Create and save user data in PostgreSQL
-      const user = this.userRepository.create({
-        email: data.email,
-        username: data.username,
-        date_of_birth: data.date_of_birth,
-        phoneNumber: data.phoneNumber,
-        address: data.address,
-        avatar: data.avatar,
-        status: data.status,
-        sex: data.sex,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-      const savedUser = await this.userRepository.save(user);
-  
-      return {
-        firebase: userRecord,
-        postgres: savedUser,
-        message: 'User registered successfully! Please check your email to verify your account.',
-        // For debugging; don't return the link in production
-        verificationLink,
-      };
-    } catch (error) {
-      throw new BadGatewayException(error.message);
-    }
-  }
-  
+  async getAdminToken(): Promise<string> {
+    const url = `${this.keycloakBaseUrl}/realms/master/protocol/openid-connect/token`;
+    const params = new URLSearchParams();
+    params.append('grant_type', 'password');
+    params.append('client_id', this.adminClientId);
+    params.append('username', this.adminUsername);
+    params.append('password', this.adminPassword);
 
-  async getProtectedData(uid: string) {
     try {
-      const userRecord = await admin.auth().getUser(uid);
-      return userRecord; // Returns user details from Firebase
+      const response = await firstValueFrom(
+        this.httpService.post(url, params.toString(), {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        }),
+      );
+      return response.data.access_token;
     } catch (error) {
-      throw new BadGatewayException(error.message);
+      throw new HttpException('Failed to obtain admin token', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-  async refreshIdToken(refreshToken: string): Promise<any> {
-    const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY;
-    const url = `https://securetoken.googleapis.com/v1/token?key=${FIREBASE_API_KEY}`;
+  async register(userDto: UserDto): Promise<any> {
+    const adminToken = await this.getAdminToken();
+    const createUserUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users`;
 
-    // Create a URL-encoded form body
+    // Prepare payload for Keycloak registration
+    const userPayload = {
+      username: userDto.username,
+      email: userDto.email,
+      firstName: userDto.firstName,
+      lastName: userDto.lastName,
+      enabled: true,
+      attributes: {
+        phoneNumber: userDto.phoneNumber,
+      },
+      credentials: [
+        {
+          type: 'password',
+          value: userDto.password,
+          temporary: false,
+        },
+      ],
+    };
+
+    try {
+      await firstValueFrom(
+        this.httpService.post(createUserUrl, userPayload, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+        }),
+      );
+    } catch (error) {
+      throw new HttpException('User registration failed', HttpStatus.BAD_REQUEST);
+    }
+
+    // Retrieve the created user from Keycloak to get the user ID
+    const searchUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users?email=${userDto.email}`;
+    const searchResponse = await firstValueFrom(
+      this.httpService.get(searchUrl, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      }),
+    );
+    if (!searchResponse.data || searchResponse.data.length === 0) {
+      throw new HttpException('User not found after registration', HttpStatus.BAD_REQUEST);
+    }
+    const createdUser = searchResponse.data[0];
+    const userId = createdUser.id;
+
+    // Determine roles to assign (default to ['buyer'] if not provided)
+    const rolesToAssign: string[] = userDto.roles && userDto.roles.length > 0 ? userDto.roles : ['buyer'];
+
+    // Loop through each role and assign to user in Keycloak
+    for (const roleName of rolesToAssign) {
+      const roleUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/roles/${roleName}`;
+      let roleResponse;
+      try {
+        roleResponse = await firstValueFrom(
+          this.httpService.get(roleUrl, {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          }),
+        );
+      } catch (error) {
+        throw new HttpException(`Role ${roleName} not found in Keycloak`, HttpStatus.BAD_REQUEST);
+      }
+      const roleRepresentation = roleResponse.data;
+
+      const mappingUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users/${userId}/role-mappings/realm`;
+      try {
+        await firstValueFrom(
+          this.httpService.post(mappingUrl, [roleRepresentation], {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${adminToken}`,
+            },
+          }),
+        );
+      } catch (error) {
+        throw new HttpException(`Failed to assign role ${roleName}`, HttpStatus.BAD_REQUEST);
+      }
+    }
+
+    // Trigger the email verification
+    await this.triggerVerificationEmail(userId);
+
+    // Save additional user information into PostgreSQL
+    const userRecord = this.userRepository.create({
+      email: userDto.email,
+      username: userDto.username,
+      avatar: userDto.avatar || '', // Default to empty string if not provided
+      date_of_birth: userDto.date_of_birth ? new Date(userDto.date_of_birth) : undefined,
+      phoneNumber: userDto.phoneNumber,
+      address: userDto.address,
+      sex: userDto.sex,
+      status: userDto.status || 'active', // Default status if not provided
+    });
+    await this.userRepository.save(userRecord);
+
+    return { 
+      message: `User registered successfully and assigned roles: ${rolesToAssign.join(', ')}`,
+      userId,
+    };
+  }
+  
+
+  async login(username: string, password: string): Promise<any> {
+    const url = `${this.keycloakBaseUrl}/realms/${this.realm}/protocol/openid-connect/token`;
+    const params = new URLSearchParams();
+    params.append('grant_type', 'password');
+    params.append('client_id', this.clientId);
+    if (this.clientSecret) {
+      params.append('client_secret', this.clientSecret);
+    } else {
+      throw new HttpException('Client secret is not defined', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    params.append('username', username);
+    params.append('password', password);
+  
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(url, params.toString(), {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        }),
+      );
+      return response.data;
+    } catch (error) {
+      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+    }
+  }
+  
+  // New method: automatically exchange standard token for an RPT
+  async loginAndExchange(username: string, password: string, permissions: string[]): Promise<any> {
+    // Get the standard access token via login
+    const tokenData = await this.login(username, password);
+    const standardAccessToken = tokenData.access_token;
+
+    const decoded = jwt.decode(standardAccessToken) as any;
+    if (!decoded.email_verified) {
+      throw new UnauthorizedException('Email is not verified.');
+    }
+    
+    // Automatically request an RPT token with the required permissions.
+    const rptData = await this.getRequestingPartyToken(standardAccessToken);
+    
+    // Return both tokens and other relevant data.
+    return {
+      standardAccessToken,
+      rptAccessToken: rptData.access_token,
+      rptPermissions: rptData.authorization?.permissions,
+      expires_in: rptData.expires_in,
+      refresh_token: tokenData.refresh_token,
+    };
+  }
+
+  async refreshToken(refreshToken: string): Promise<any> {
+    const url = `${this.keycloakBaseUrl}/realms/${this.realm}/protocol/openid-connect/token`;
     const params = new URLSearchParams();
     params.append('grant_type', 'refresh_token');
+    params.append('client_id', this.clientId);
+    if (this.clientSecret) {
+      params.append('client_secret', this.clientSecret);
+    } else {
+      throw new HttpException('Client secret is not defined', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
     params.append('refresh_token', refreshToken);
-
-    // Make the POST request
-    const response = await axios.post(url, params);
-
-    // The response will include a new idToken, new refreshToken, and other info
-    return response.data;
-  }
-
-  async findById(id: string): Promise<User> {
+  
     try {
-      const user = await this.userRepository.findOne({ where: { id: Number(id) } });
-      if (!user) {
-        throw new BadGatewayException('User not found');
-      }
-      return user;
-    } catch (error) {
-      throw new BadGatewayException(error.message);
+      // First, get a new standard token using the refresh token.
+      const response = await firstValueFrom(
+        this.httpService.post(url, params.toString(), {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        }),
+      );
+      const tokenData = response.data;
+      const standardAccessToken = tokenData.access_token;
+      
+      // Automatically request an RPT token with the required permission(s)
+      // Here, we're requesting "User Management#view". Adjust as needed.
+      const rptData = await this.getRequestingPartyToken(standardAccessToken);
+      
+      // Return both tokens and related details.
+      return {
+        standardAccessToken,
+        rptAccessToken: rptData.access_token,
+        rptPermissions: rptData.authorization?.permissions,
+        expires_in: rptData.expires_in,
+        refresh_token: tokenData.refresh_token,
+      };
+    } catch (error: any) {
+      console.error('Refresh token error:', error.response?.data || error.message);
+      throw new HttpException('Failed to refresh token', HttpStatus.UNAUTHORIZED);
     }
   }
 
-  async updateUserStatus(id: string, status: 'normal' | 'banned'): Promise<User> {
+  async triggerVerificationEmail(userId: string): Promise<void> {
+    const adminToken = await this.getAdminToken();
+    const clientId = this.clientId;
+    const redirectUri = 'http://localhost:3000'; // Adjust accordingly
+    const executeActionsUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users/${userId}/execute-actions-email?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+  
     try {
-      const user = await this.userRepository.findOne({ where: { id: Number(id) } });
-      if (!user) {
-        throw new BadGatewayException('User not found');
-      }
-
-      user.status = status;
-      user.updatedAt = new Date();
-
-      return await this.userRepository.save(user);
+      await firstValueFrom(
+        this.httpService.put(
+          executeActionsUrl,
+          ["VERIFY_EMAIL"],
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${adminToken}`,
+            },
+          }
+        )
+      );
     } catch (error) {
-      throw new BadGatewayException(error.message);
+      console.log("hello")
+      console.log('Error triggering verification email:', error.response ? error.response.data : error);
+      throw new HttpException('Failed to trigger email verification', HttpStatus.BAD_REQUEST);
     }
   }
 
-  async fetchUser(role: 'buyer' | 'seller' | 'admin'): Promise<Partial<User>[]> {
+  async getEntitlement(userAccessToken: string): Promise<any> {
+    const url = `${this.keycloakBaseUrl}/realms/${this.realm}/protocol/openid-connect/token/entitlement/${this.clientId}`;
     try {
-      const users = await this.userRepository.find();
-
-      if (role === 'admin') {
-        return users; // Return all user details for admin
-      }
-
-      // Return limited user details for buyer or seller
-      return users.map(user => ({
-        username: user.username,
-        email: user.email,
-        address: user.address,
-        phoneNumber: user.phoneNumber,
-      }));
-    } catch (error) {
-      throw new BadGatewayException(error.message);
+      const response = await firstValueFrom(
+        this.httpService.post(url, null, {  // No body is required
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${userAccessToken}`,
+          },
+        }),
+      );
+      return response.data; // Expecting an object with a "permissions" field
+    } catch (error: any) {
+      console.error('Error fetching entitlement:', error.response?.data || error.message);
+      throw new HttpException('Failed to fetch permissions', HttpStatus.UNAUTHORIZED);
     }
   }
-
-  async updateUser(id: string, updateData: Partial<UserDto>): Promise<User> {
+  
+  async getRequestingPartyToken(userAccessToken: string): Promise<any> {
+    const url = `${this.keycloakBaseUrl}/realms/${this.realm}/protocol/openid-connect/token`;
+    const params = new URLSearchParams();
+    params.append('grant_type', 'urn:ietf:params:oauth:grant-type:uma-ticket');
+    params.append('client_id', this.clientId);
+    if (this.clientSecret) {
+      params.append('client_secret', this.clientSecret);
+    } else {
+      throw new HttpException('Client secret is not defined', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    params.append('audience', this.clientId);
+    // Note: Do NOT append any explicit 'permission' parameter.
+    
     try {
-      const user = await this.userRepository.findOne({ where: { id: Number(id) } });
-      if (!user) {
-        throw new BadGatewayException('User not found');
-      }
-
-      // Update user fields with provided data
-      Object.assign(user, updateData);
-      user.updatedAt = new Date();
-
-      return await this.userRepository.save(user);
-    } catch (error) {
-      throw new BadGatewayException(error.message);
+      const response = await firstValueFrom(
+        this.httpService.post(url, params.toString(), {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Bearer ${userAccessToken}`,
+          },
+        }),
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('Error obtaining RPT:', error.response?.data || error.message);
+      throw new HttpException('Failed to obtain RPT', HttpStatus.UNAUTHORIZED);
     }
   }
-
-  // async findByFirebaseUid(uid: string): Promise<User> {
-  //   try {
-  //     const user = await this.userRepository.findOne({ where: { firebaseUid: uid } });
-  //     if (!user) {
-  //       throw new BadGatewayException('User not found');
-  //     }
-  //     return user;
-  //   } catch (error) {
-  //     throw new BadGatewayException(error.message);
-  //   }
-  // }
-
-  // async createUser(uid: string){
-  //   try {
-  //     const data = await admin.auth().getUser(uid);
-  //     const user = this.userRepository.create({
-  //       email: data.email,
-  //       username: data.username,
-  //       date_of_birth: data.date_of_birth,
-  //       phoneNumber: data.phoneNumber,
-  //       address: data.address,
-  //       avatar: data.avatar,
-  //       status: data.status,
-  //       sex: data.sex,
-  //       createdAt: new Date(),
-  //       updatedAt: new Date(),
-  //     });
-  //     return await this.userRepository.save(user);
-  //   } catch (error) {
-  //     throw new BadGatewayException(error.message);
-  //   }
-  // }
+  
+  async addSellerRole(userId: string): Promise<any> {
+    const adminToken = await this.getAdminToken();
+    const roleName = 'seller'; 
+  
+    console.log('About to request role');
+    // Get the seller role representation from Keycloak
+    const roleUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/roles/${roleName}`;
+    let roleResponse;
+    try {
+      roleResponse = await firstValueFrom(
+        this.httpService.get(roleUrl, {
+          headers: { Authorization: `Bearer ${adminToken}` },
+        }),
+      );
+    } catch (error) {
+      throw new HttpException(`Role ${roleName} not found in Keycloak`, HttpStatus.BAD_REQUEST);
+    }
+    const roleRepresentation = roleResponse.data;
+  
+    // Map the role to the user
+    const mappingUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users/${userId}/role-mappings/realm`;
+    try {
+      await firstValueFrom(
+        this.httpService.post(mappingUrl, [roleRepresentation], {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+        }),
+      );
+    } catch (error) {
+      throw new HttpException(`Failed to assign role ${roleName} to user`, HttpStatus.BAD_REQUEST);
+    }
+  
+    return { message: `Role ${roleName} assigned successfully to user ${userId}` };
+  }
 }
