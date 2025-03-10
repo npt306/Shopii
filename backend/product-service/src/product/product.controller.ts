@@ -17,6 +17,11 @@ export class ProductController {
     return this.productService.getProductDetails(+id);
   }
 
+  @Get()
+  async getProducts() {
+    return this.productService.getProductList();
+  }
+
   @Post()
   async addProduct(
     @Body() createProductDto: CreateProductDto,

@@ -7,6 +7,7 @@ import { ProductClassificationType } from './entities/product-classification-typ
 import { ProductDetailType } from './entities/product-detail-type.entity';
 import { ProductDimensions } from './entities/product-dimensions.entity';
 
+import { Categories } from './entities/category.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -14,6 +15,7 @@ import { ProductDimensions } from './entities/product-dimensions.entity';
       ProductClassificationType,
       ProductDetailType,
       ProductDimensions,
+      Categories,
     ]),
   ],
   controllers: [ProductController],
