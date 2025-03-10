@@ -4,8 +4,8 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Voucher } from './entities/voucher.entity';
 import { Repository } from 'typeorm';
 import { CreateVoucherDto } from './dto/create-voucher.dto';
-import { VoucherConditionType } from '../../common/enums/voucher-condition-type.enum';
-import { VoucherActionType } from '../../common/enums/voucher-action-type.enum';
+import { VoucherConditionType } from '../common/enums/voucher-condition-type.enum';
+import { VoucherActionType } from '../common/enums/voucher-action-type.enum';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { UpdateVoucherDto } from './dto/update-voucher.dto';
 
@@ -17,6 +17,7 @@ const mockVoucherRepository = () => ({
   findOneBy: jest.fn(),
   delete: jest.fn(),
   create: jest.fn(), // Add this line
+  merge: jest.fn(),
 });
 
 type MockType<T> = {
@@ -76,6 +77,7 @@ describe('VouchersService', () => {
         ends_at: new Date(Date.now() + 86400000).toISOString(),
         condition_type: VoucherConditionType.NONE, //Need to add this
         action_type: VoucherActionType.FIXED_AMOUNT, //Need to add this
+        discount_amount: 10000,
       };
 
       repositoryMock.findOne.mockResolvedValue({ id: 1, ...createVoucherDto }); // Simulate existing voucher
@@ -92,6 +94,7 @@ describe('VouchersService', () => {
           ends_at: new Date(Date.now() + 86400000).toISOString(),
           condition_type: VoucherConditionType.NONE, //Need to add this
           action_type: VoucherActionType.FIXED_AMOUNT, //Need to add this
+          discount_amount: 10000,
         };
         repositoryMock.create.mockReturnValue(invalidDto);
 
@@ -189,9 +192,13 @@ describe('VouchersService', () => {
         repositoryMock.findOneBy.mockResolvedValue(existingVoucher);
         repositoryMock.findOne.mockResolvedValue(null); //For check duplicate code
         repositoryMock.save.mockResolvedValue(updatedVoucher);
+        repositoryMock.merge.mockImplementation((voucher, updateDto) => {
+            Object.assign(voucher, updateDto); // Simulate merge
+        });
 
         const result = await service.update(voucherId, updateVoucherDto);
         expect(result).toEqual(updatedVoucher);
+        expect(repositoryMock.merge).toHaveBeenCalledWith(existingVoucher, updateVoucherDto);
         expect(repositoryMock.save).toHaveBeenCalledWith(updatedVoucher);
     });
 
