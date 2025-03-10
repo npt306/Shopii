@@ -49,11 +49,15 @@ export class UserDto {
 
   @IsOptional()
   @IsString()
-  avatar?: string;
+  avatar: string | null;
 
   @IsOptional()
   @IsString()
-  sex?: string;
+  sex?: boolean;
+
+  @IsOptional()
+  @IsString()
+  shopName?: string;
 
   // Accept multiple roles as an array of strings
   @IsOptional()

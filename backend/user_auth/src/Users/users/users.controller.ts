@@ -16,12 +16,6 @@ export class UserController {
     return { message: 'Viewing limited profile data' };
   }
 
-  @Get('delete-product')
-  @Permissions('Product Management#delete')
-  deleteProduct() {
-    return { message: 'deleting product data' };
-  }
-
   @Get('view-product')
   @Permissions('Product Management#view')
   viewProduct() {
@@ -29,23 +23,18 @@ export class UserController {
   }
 
   @Get('delete_test')
-  @Permissions('delete')
+  @Permissions('User Management#delete')
   testingstuff() {
-    return { message: 'Viewing limited profile data' };
+    return { message: 'Deleting data' };
   }
 
-  @Post('add-seller-role')
-  async addSellerRole(@Body('userId') userId: string): Promise<any> {
-    if (!userId) {
-      throw new HttpException('User ID is required', HttpStatus.BAD_REQUEST);
+  @Post('register-shop')
+  async createOrUpdateSeller(@Body() sellerDto: any): Promise<any> {
+    try {
+      return await this.usersService.createOrUpdateSeller(sellerDto);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
-    return this.usersService.addSellerRole(userId);
-  }
-
-  @Delete(':id')
-  @Permissions('delete')
-  deleteUser() {
-    return { message: 'User deleted' };
   }
 
   @Post('refresh_token')
@@ -83,37 +72,4 @@ export class UserController {
       throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
     }
   }
-
-  // Add a resend verification endpoint
-  // @Post('resend-verification')
-  // async resendVerification(@Body() { email }: { email: string }) {
-  //   try {
-  //     const exists = await this.usersService.userExists(email);
-  //     if (!exists) {
-  //       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-  //     }
-      
-  //     await this.usersService.sendVerificationEmail(email);
-  //     return { 
-  //       success: true, 
-  //       message: 'Verification email sent. Please check your inbox.' 
-  //     };
-  //   } catch (error) {
-  //     throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
-  //   }
-  // }
-
-  // // Add a verification endpoint to handle the verification link
-  // @Get('verify')
-  // async verifyEmail(@Query('token') token: string) {
-  //   try {
-  //     const result = await this.usersService.verifyEmail(token);
-  //     return { 
-  //       success: true, 
-  //       message: 'Email successfully verified. You can now log in.' 
-  //     };
-  //   } catch (error) {
-  //     throw new HttpException('Invalid or expired verification token', HttpStatus.BAD_REQUEST);
-  //   }
-  // }
 }

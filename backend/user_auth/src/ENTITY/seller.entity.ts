@@ -1,40 +1,41 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { 
+  Entity, 
+  Column, 
+  CreateDateColumn, 
+  UpdateDateColumn, 
+  OneToOne, 
+  PrimaryColumn, 
+  JoinColumn 
+} from 'typeorm';
+import { Account } from './Account.entity';
 
-@Entity('sellers')
+@Entity('Sellers')
 export class Seller {
-  @PrimaryGeneratedColumn()
+  @PrimaryColumn()
   id: number;
 
-  @Column({ default: 'Default Shop Name' })
-  shopName: string;
+  @OneToOne(() => Account, account => account.seller, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'id', referencedColumnName: 'AccountId' })
+  account: Account;
+
+  @Column({ nullable: false })
+  ShopName: string;
 
   @Column({ default: 0 })
-  products: number;
+  TaxCode: number;
+
+  @Column({ default: 'Individual' })
+  SellerType: string;
+
+  @Column({ type: 'varchar', array: true, nullable: true })
+  Email: string[];
 
   @Column({ default: 0 })
-  revenue: number;
-
-  @Column({ default: 'Basic' })
-  sellerType: string;
-
-  @Column({ default: 'Standard Shipping' })
-  shippingMethod: string;
-
-  @Column({ nullable: true })
-  taxCode: string;
-
-  @Column({ nullable: true })
-  address: string;
-
-  @Column({ nullable: true })
-  email: string;
-
-  @Column({ default: 0 })
-  followers: number;
+  Followers: number;
 
   @CreateDateColumn()
-  createdAt: Date;
+  CreatedAt: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  UpdatedAt: Date;
 }

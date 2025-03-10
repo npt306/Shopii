@@ -5,7 +5,9 @@ import * as jwt from 'jsonwebtoken';
 import { HttpService } from '@nestjs/axios';
 import { UserDto } from 'src/DTO/user.dto';
 import { firstValueFrom } from 'rxjs';
-import { User } from 'src/ENTITY/user.entity';
+import { Account } from 'src/ENTITY/Account.entity';
+import { User } from 'src/ENTITY/User.entity';
+import { Seller } from 'src/ENTITY/seller.entity';
 
 @Injectable()
 export class UsersService {
@@ -19,8 +21,14 @@ export class UsersService {
 
   constructor(
     private readonly httpService: HttpService,
+    @InjectRepository(Account)
+    private readonly accountRepository: Repository<Account>,
+
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly usersRepository: Repository<User>,
+
+    @InjectRepository(Seller)
+    private readonly sellerRepository: Repository<Seller>,
   ) {}
 
   async getAdminToken(): Promise<string> {
@@ -76,6 +84,7 @@ export class UsersService {
         }),
       );
     } catch (error) {
+      console.log(error);
       throw new HttpException('User registration failed', HttpStatus.BAD_REQUEST);
     }
 
@@ -128,18 +137,25 @@ export class UsersService {
     // Trigger the email verification
     await this.triggerVerificationEmail(userId);
 
-    // Save additional user information into PostgreSQL
-    const userRecord = this.userRepository.create({
-      email: userDto.email,
-      username: userDto.username,
-      avatar: userDto.avatar || '', // Default to empty string if not provided
-      date_of_birth: userDto.date_of_birth ? new Date(userDto.date_of_birth) : undefined,
-      phoneNumber: userDto.phoneNumber,
-      address: userDto.address,
-      sex: userDto.sex,
-      status: userDto.status || 'active', // Default status if not provided
+    // Save additional user information into Accounts table
+    const accountRecord = this.accountRepository.create({
+      Email: userDto.email,
+      Username: userDto.username,
+      Avatar: userDto.avatar || undefined, 
+      DoB: userDto.date_of_birth ? new Date(userDto.date_of_birth) : undefined,
+      PhoneNumber: userDto.phoneNumber,
+      Sex: userDto.sex,
+      Status: userDto.status || 'active',
+      CreatedAt: new Date(),
+      UpdatedAt: new Date(),
     });
-    await this.userRepository.save(userRecord);
+    const savedAccount = await this.accountRepository.save(accountRecord);
+
+    const user = new User();
+    user.account = savedAccount;
+    user.CreatedAt = new Date();
+    user.UpdatedAt = new Date();
+    await this.usersRepository.save(user);
 
     return { 
       message: `User registered successfully and assigned roles: ${rolesToAssign.join(', ')}`,
@@ -257,7 +273,6 @@ export class UsersService {
         )
       );
     } catch (error) {
-      console.log("hello")
       console.log('Error triggering verification email:', error.response ? error.response.data : error);
       throw new HttpException('Failed to trigger email verification', HttpStatus.BAD_REQUEST);
     }
@@ -309,12 +324,11 @@ export class UsersService {
       throw new HttpException('Failed to obtain RPT', HttpStatus.UNAUTHORIZED);
     }
   }
-  
+
   async addSellerRole(userId: string): Promise<any> {
     const adminToken = await this.getAdminToken();
     const roleName = 'seller'; 
-  
-    console.log('About to request role');
+
     // Get the seller role representation from Keycloak
     const roleUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/roles/${roleName}`;
     let roleResponse;
@@ -328,7 +342,7 @@ export class UsersService {
       throw new HttpException(`Role ${roleName} not found in Keycloak`, HttpStatus.BAD_REQUEST);
     }
     const roleRepresentation = roleResponse.data;
-  
+    
     // Map the role to the user
     const mappingUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users/${userId}/role-mappings/realm`;
     try {
@@ -343,7 +357,62 @@ export class UsersService {
     } catch (error) {
       throw new HttpException(`Failed to assign role ${roleName} to user`, HttpStatus.BAD_REQUEST);
     }
-  
+    
     return { message: `Role ${roleName} assigned successfully to user ${userId}` };
   }
+
+  async createOrUpdateSeller(sellerDto: Partial<Seller> & { Email: string | string[] }): Promise<any> {
+    // Ensure sellerDto includes an email.
+    if (!sellerDto.Email) {
+      throw new HttpException('Seller email is required', HttpStatus.BAD_REQUEST);
+    }
+    
+    // If the email is an array, use its first element.
+    const email: string = Array.isArray(sellerDto.Email) ? sellerDto.Email[0] : sellerDto.Email;
+    
+    // Find the account by email (assuming the Account entity column is "Email")
+    const account = await this.accountRepository.findOne({ where: { Email: email } });
+    if (!account) {
+      throw new HttpException('Account not found for the provided email', HttpStatus.BAD_REQUEST);
+    }
+    
+    // Use the Account's primary key (AccountId) as the seller's id.
+    const sellerId = account.AccountId;
+    
+    // Try to find an existing seller record by the sellerId.
+    let seller = await this.sellerRepository.findOne({ where: { id: sellerId } });
+    
+    // Convert the email into a one-element array (to be stored in the Seller's Email column).
+    const emailArray = [email];
+    
+    if (seller) {
+      // Merge new data into the existing seller record.
+      seller = this.sellerRepository.merge(seller, { ...sellerDto, Email: emailArray, UpdatedAt: new Date() });
+      await this.sellerRepository.save(seller);
+    } else {
+      // Create a new seller record using the account's ID and the email as an array.
+      seller = this.sellerRepository.create({ ...sellerDto, id: sellerId, Email: emailArray, CreatedAt: new Date(), UpdatedAt: new Date() });
+      await this.sellerRepository.save(seller);
+    }
+
+    // Find the user in Keycloak by email
+    const adminToken = await this.getAdminToken();
+    const searchUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users?email=${email}`;
+    const searchResponse = await firstValueFrom(
+      this.httpService.get(searchUrl, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      }),
+    );
+    if (!searchResponse.data || searchResponse.data.length === 0) {
+      throw new HttpException('User not found in Keycloak', HttpStatus.BAD_REQUEST);
+    }
+    const keycloakUser = searchResponse.data[0];
+    const userId = keycloakUser.id;
+
+    // Add the seller role to the user in Keycloak
+    await this.addSellerRole(userId);
+
+    return { message: seller ? 'Seller updated successfully' : 'Seller created successfully', seller };
+  }
+
 }

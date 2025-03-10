@@ -6,7 +6,7 @@ import * as jwt from 'jsonwebtoken';
 @Injectable()
 export class KeycloakMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
-    // Skip middleware for public endpoints (e.g., login and register)
+    // Skip middleware for public routes
     if (req.path === '/Users/login' || req.path === '/Users/register' || req.path === '/Users/add-seller-role') {
       return next();
     }
