@@ -38,20 +38,25 @@ export class VouchersService {
   }
 
   async update(id: number, updateVoucherDto: UpdateVoucherDto): Promise<Voucher> {
-      const voucher = await this.findOne(id); // This also handles the NotFoundException
+    const voucher = await this.vouchersRepository.findOneBy({id});
+    if (!voucher) {
+      throw new NotFoundException(`Voucher with ID ${id} not found`);
+    }
 
-      // Check if the updated code is unique (if code is being updated)
-      if (updateVoucherDto.code && updateVoucherDto.code !== voucher.code) {
-          const existingVoucher = await this.vouchersRepository.findOne({
-              where: { code: updateVoucherDto.code },
-          });
-          if (existingVoucher) {
-              throw new BadRequestException('A voucher with this code already exists.');
-          }
+    // Check if the updated code already exists (excluding the current voucher)
+    if (updateVoucherDto.code && updateVoucherDto.code !== voucher.code) {
+      const existingVoucher = await this.vouchersRepository.findOne({
+        where: { code: updateVoucherDto.code },
+      });
+      if (existingVoucher) {
+        throw new BadRequestException('A voucher with this code already exists.');
       }
-      Object.assign(voucher, updateVoucherDto);
-      return this.vouchersRepository.save(voucher);
+    }
+
+    this.vouchersRepository.merge(voucher, updateVoucherDto);
+    return this.vouchersRepository.save(voucher);
   }
+
 
   async remove(id: number): Promise<void> {
       const result = await this.vouchersRepository.delete(id);
