@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Upload, PenLine, X, ChevronRight, Search } from 'lucide-react';
+import axios from 'axios';
 
 // Define types for tab data
 type TabId = 'basic' | 'sales' | 'shipping' | 'other';
@@ -18,18 +19,32 @@ interface Step {
     ref: React.RefObject<HTMLDivElement>;
 }
 
-interface Category {
+type Option = {
+    name: string;
+    subOptions: string[];
+    price?: number;
+    stock?: number;
+    weight?: number;
+    dimensions?: {
+        length: number;
+        width: number;
+        height: number;
+    };
+};
+
+type Category = {
     id: number;
     name: string;
-    options: { name: string; subOptions: string[] }[];
+    options: Option[];
     maxOptions: number;
     currentOptions: number;
-}
+};
 
 interface UpdateOptionParams {
     categoryId: number;
     index: number;
-    value: string;
+    field: string;
+    value: string | number;
 }
 
 interface AddOptionParams {
@@ -273,8 +288,8 @@ const AddProduct = () => {
     const [selectedCategory, setSelectedCategory] = useState<CategoryType | null>(null);
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [selectedFileOne, setSelectedFileOne] = useState<File[]>([]);
-    const [charCount, setCharCount] = useState(0);
-    const [inputValue, setInputValue] = useState("");
+    const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
+    const [charCounts, setCharCounts] = useState<{ [key: string]: number }>({});
     const [useCustomSettings, setUseCustomSettings] = useState(false);
 
     const navigate = useNavigate();
@@ -371,6 +386,14 @@ const AddProduct = () => {
                 {
                     name: "",
                     subOptions: [],
+                    price: 0,
+                    stock: 0,
+                    weight: 0,
+                    dimensions: {
+                        length: 0,
+                        width: 0,
+                        height: 0,
+                    },
                 },
             ],
             maxOptions: 14,
@@ -396,6 +419,14 @@ const AddProduct = () => {
                     {
                         name: "",
                         subOptions: [],
+                        price: 0,
+                        stock: 0,
+                        weight: 0,
+                        dimensions: {
+                            length: 0,
+                            width: 0,
+                            height: 0,
+                        },
                     },
                 ],
                 maxOptions: 14,
@@ -414,12 +445,33 @@ const AddProduct = () => {
         );
     };
 
-    const updateOption = ({ categoryId, index, value }: UpdateOptionParams) => {
+    const updateOption = ({ categoryId, index, field, value }: UpdateOptionParams) => {
+        if (categoryId === undefined) {
+            console.error("categoryId is undefined");
+            return;
+        }
+
         setCategories(
             categories.map((cat: Category) => {
                 if (cat.id === categoryId) {
                     const newOptions = [...cat.options];
-                    newOptions[index] = { ...newOptions[index], name: value };
+                    newOptions[index] = { ...newOptions[index], [field]: value };
+                    console.log("Updated options:", newOptions);
+                    return { ...cat, options: newOptions };
+                }
+                return cat;
+            })
+        );
+    };
+
+    const updateAllOptions = ({ categoryId, field, value }: { categoryId: number; field: string; value: number }) => {
+        setCategories(
+            categories.map((cat: Category) => {
+                if (cat.id === categoryId) {
+                    const newOptions = cat.options.map(option => ({
+                        ...option,
+                        [field]: value,
+                    }));
                     return { ...cat, options: newOptions };
                 }
                 return cat;
@@ -435,8 +487,22 @@ const AddProduct = () => {
                 if (cat.id === categoryId && cat.currentOptions < cat.maxOptions) {
                     return {
                         ...cat,
-                        options: [...cat.options, { name: value, subOptions: [] }],
-                        currentOptions: cat.currentOptions + 1
+                        options: [
+                            ...cat.options,
+                            {
+                                name: value,
+                                subOptions: [],
+                                price: 0,
+                                stock: 0,
+                                weight: 0,
+                                dimensions: {
+                                    length: 0,
+                                    width: 0,
+                                    height: 0,
+                                },
+                            },
+                        ],
+                        currentOptions: cat.currentOptions + 1,
                     };
                 }
                 return cat;
@@ -468,21 +534,35 @@ const AddProduct = () => {
     const generateCombinations = (): string[][] => {
         if (categories.length === 0) return [];
 
-        if (categories.length === 1) {
-            return categories[0].options.map(option => [option.name]);
+        // Filter out options with empty names
+        const filteredCategories = categories.map(category => ({
+            ...category,
+            options: category.options.filter(option => option.name !== undefined && option.name !== "")
+        }));
+
+        if (filteredCategories.length === 1) {
+            return filteredCategories[0].options.map(option => [option.name]).filter(combination => combination.every(value => value !== undefined));
         }
 
         const combinations: string[][] = [];
-        categories[0].options.forEach(option1 => {
-            if (categories.length > 1) {
-                categories[1].options.forEach(option2 => {
-                    combinations.push([option1.name, option2.name]);
+        filteredCategories[0].options.forEach(option1 => {
+            if (filteredCategories.length > 1) {
+                filteredCategories[1].options.forEach(option2 => {
+                    const combination = [option1.name, option2.name];
+                    if (combination.every(value => value !== undefined)) {
+                        combinations.push(combination);
+                    }
                 });
             } else {
-                combinations.push([option1.name]);
+                const combination = [option1.name];
+                if (combination.every(value => value !== undefined)) {
+                    combinations.push(combination);
+                }
             }
         });
 
+        console.log("Categories:", filteredCategories);
+        console.log("Combinations:", combinations);
         return combinations;
     };
 
@@ -526,12 +606,74 @@ const AddProduct = () => {
         updatedFiles[optionIdx].splice(fileIdx, 1);
         setSelectedManyFiles(updatedFiles);
     };
-    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (categoryId: number, event: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = event.target;
         if (value.length <= 20) { // Giới hạn tối đa 20 ký tự
-            setCharCount(value.length);
-            setInputValue(value);
+            setInputValues(prevValues => ({ ...prevValues, [categoryId]: value }));
+            setCharCounts(prevCounts => ({ ...prevCounts, [categoryId]: value.length }));
         }
+    };
+
+    const convertCategoriesToClassifications = (categories: Category[]): any[] => {
+        return categories.map((category, index) => ({
+            ClassTypeName: category.name,
+            Level: index + 1
+        }));
+    };
+
+    const convertCategoriesToDetails = (categories: Category[]): any[] => {
+        const combinations = generateCombinations();
+        return combinations.map(combination => {
+            const option1 = categories[0].options.find(option => option.name === combination[0]);
+
+            return {
+                Type_1: combination[0] || "",
+                Type_2: combination[1] || "",
+                Image: "http://example.com/detail-image.jpg", // Bạn có thể thay đổi URL hình ảnh theo nhu cầu
+                Price: option1?.price || 0,
+                Quantity: option1?.stock || 0,
+                Dimension: {
+                    Weight: option1?.weight || 0,
+                    Length: option1?.dimensions?.length || 0,
+                    Width: option1?.dimensions?.width || 0,
+                    Height: option1?.dimensions?.height || 0
+                }
+            };
+        }).filter(detail => detail.Type_1.trim() !== "" && detail.Type_2.trim() !== "");
+    };
+
+    const sendProduct = async () => {
+        const productClassifications = convertCategoriesToClassifications(categories);
+        const productDetails = convertCategoriesToDetails(categories);
+
+        console.log("Classifications:", productClassifications);
+        console.log("Details:", productDetails);
+
+        const sampleProduct = {
+            SellerID: 1,
+            Name: productName,
+            Description: productDescription,
+            Categories: [1, 2],
+            Images: ["http://example.com/image1.jpg", "http://example.com/image2.jpg"],
+            SoldQuantity: 0,
+            Rating: 0.0,
+            status: "Pending",
+            CreatedAt: new Date(),
+            UpdatedAt: new Date(),
+            CoverImage: "http://example.com/cover.jpg",
+            Video: "http://example.com/video.mp4",
+            Quantity: 100,
+            Reviews: 0,
+            classifications: productClassifications,
+            details: productDetails
+        };
+
+        // try {
+        //     const response = await axios.post(`${import.meta.env.VITE_API_URL}/product`, sampleProduct);
+        //     console.log('Product added:', response.data);
+        // } catch (error) {
+        //     console.error('Error adding product:', error);
+        // }
     };
 
     useEffect(() => {
@@ -992,26 +1134,28 @@ const AddProduct = () => {
                                                 </div>
                                                 <div className="w-3/4 flex">
                                                     <div className="flex-1 px-1">
-                                                        {category.options.map((option, index) => (
-                                                            <div key={index} className="flex justify-between mb-1">
-                                                                <input
-                                                                    type="text"
-                                                                    value={option.name}
-                                                                    onChange={(e) => updateOption({ categoryId: category.id, index, value: e.target.value })}
-                                                                    className="outline-none bg-transparent"
-                                                                />
-                                                                <div className="flex items-center">
-                                                                    <button
-                                                                        className="ml-1 text-gray-400"
-                                                                        onClick={() => removeOption({ categoryId: category.id, index })}
-                                                                    >
-                                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                                                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                                                        </svg>
-                                                                    </button>
+                                                        {category.options
+                                                            .filter((_, index) => index !== 0) // Filter out the first option
+                                                            .map((option, index) => (
+                                                                <div key={index} className="flex justify-between mb-1">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={option.name}
+                                                                        onChange={(e) => updateOption({ categoryId: category.id, index: index + 1, field: 'name', value: e.target.value })} // Adjust index
+                                                                        className="outline-none bg-transparent"
+                                                                    />
+                                                                    <div className="flex items-center">
+                                                                        <button
+                                                                            className="ml-1 text-gray-400"
+                                                                            onClick={() => removeOption({ categoryId: category.id, index: index + 1 })} // Adjust index
+                                                                        >
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                                            </svg>
+                                                                        </button>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        ))}
+                                                            ))}
                                                     </div>
                                                 </div>
                                             </div>
@@ -1025,9 +1169,8 @@ const AddProduct = () => {
                                                             const input = (e.target as HTMLFormElement).elements.namedItem('newOption') as HTMLInputElement;
                                                             if (input.value.trim() !== '') {
                                                                 addOption({ categoryId: category.id, value: input.value });
-                                                                input.value = '';
-                                                                setCharCount(0); // Reset character count after form submission
-                                                                setInputValue(''); // Reset input value after form submission
+                                                                setCharCounts(prevCounts => ({ ...prevCounts, [category.id]: 0 })); // Reset character count after form submission
+                                                                setInputValues(prevValues => ({ ...prevValues, [category.id]: '' })); // Reset input value after form submission
                                                             }
                                                         }}
                                                     >
@@ -1037,14 +1180,13 @@ const AddProduct = () => {
                                                                 name="newOption"
                                                                 placeholder="Nhập"
                                                                 className="w-full px-4 py-2 outline-none rounded bg-white text-black"
-                                                                onInput={handleInputChange}
-                                                                value={inputValue}
+                                                                onChange={(e) => handleInputChange(category.id, e)}
+                                                                value={inputValues[category.id] || ''}
                                                                 maxLength={20}
                                                             />
-                                                            <span className="pr-4 text-gray-500 text-sm">{charCount}/20</span>
+                                                            <span className="pr-4 text-gray-500 text-sm">{charCounts[category.id] || 0}/20</span>
                                                         </div>
                                                     </form>
-
                                                 </div>
                                             </div>
 
@@ -1053,15 +1195,17 @@ const AddProduct = () => {
                                 </div>
 
                                 {/* Thêm nhóm phân loại */}
-                                <button
-                                    onClick={addNewCategory}
-                                    className="border border-dashed border-orange-400 text-orange-500 bg-white px-4 py-2 rounded flex items-center justify-center w-full sm:w-auto"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                                    </svg>
-                                    Thêm nhóm phân loại {categories.length + 1}
-                                </button>
+                                {categories.length < 2 && (
+                                    <button
+                                        onClick={addNewCategory}
+                                        className="border border-dashed border-orange-400 text-orange-500 bg-white px-4 py-2 rounded flex items-center justify-center w-full sm:w-auto"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                                        </svg>
+                                        Thêm nhóm phân loại {categories.length + 1}
+                                    </button>
+                                )}
                             </div>
 
                             {/* Danh sách phân loại hàng */}
@@ -1071,145 +1215,247 @@ const AddProduct = () => {
                                 </div>
 
                                 {combinations.length > 0 ? (
-                                    <div className="border rounded overflow-hidden">
-                                        <table className="w-full">
-                                            <thead>
-                                                <tr className="bg-gray-50">
-                                                    {categories.map((category, index) => (
-                                                        <th key={index} className="text-left py-3 px-4 font-medium border-b border-r">{category.name}</th>
-                                                    ))}
-                                                    <th className="text-left py-3 px-4 font-medium border-b border-r">Giá</th>
-                                                    <th className="text-left py-3 px-4 font-medium border-b border-r">Kho hàng</th>
-
-                                                    {/* Thêm cột cân nặng khi toggle bật */}
-                                                    {useCustomSettings && (
-                                                        <>
-                                                            <th className="text-left py-3 px-4 font-medium border-b border-r">
-                                                                <div className="flex items-center">
-                                                                    <span className="text-red-500 mr-1">*</span>
-                                                                    Cân nặng (Sau khi đóng gói)
-                                                                </div>
+                                    <div className="border rounded">
+                                        <div className="overflow-x-auto" style={{ position: 'relative' }}>
+                                            <table className="w-full table-fixed">
+                                                <thead>
+                                                    <tr className="bg-gray-50">
+                                                        {/* Fixed columns - Categories/Combinations */}
+                                                        {categories.map((category, index) => (
+                                                            <th key={index} className="text-left py-3 px-4 font-medium border-b border-r sticky left-0 bg-gray-50 z-10"
+                                                                style={{
+                                                                    left: index === 0 ? 0 : `${index * 150}px`,
+                                                                    minWidth: '150px',
+                                                                    width: '150px'
+                                                                }}>
+                                                                {category.name}
                                                             </th>
-                                                            <th className="text-left py-3 px-4 font-medium border-b border-r">
-                                                                Kích thước đóng gói (Phí vận chuyển thực tế sẽ thay đổi nếu bạn nhập sai kích thước)
-                                                            </th>
-                                                        </>
-                                                    )}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {combinations.map((combination, index) => (
-                                                    <tr key={index}>
-                                                        {combination.map((option, optionIndex) => (
-                                                            <td key={optionIndex} className={`border-r p-4 ${optionIndex > 0 ? 'border-t' : ''}`}>
-                                                                <div className="flex items-center">
-                                                                    <label className="w-14 h-14 border flex items-center justify-center mr-3 cursor-pointer">
-                                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
-                                                                            <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                                                                        </svg>
-                                                                        <input type="file" multiple className="hidden" onChange={(e) => handleManyFileChange(e, index * combinations[0].length + optionIndex)} />
-                                                                    </label>
-                                                                    <span>{option}</span>
-                                                                </div>
-                                                                <div className="flex flex-wrap mt-2">
-                                                                    {selectedManyFiles[index * combinations[0].length + optionIndex]?.map((file, fileIndex) => (
-                                                                        file && (
-                                                                            <div key={fileIndex} className="relative w-24 h-24 m-2">
-                                                                                <img
-                                                                                    src={URL.createObjectURL(file)}
-                                                                                    alt={`Upload preview ${fileIndex + 1}`}
-                                                                                    className="w-full h-full object-cover"
-                                                                                    style={{ aspectRatio: '1 / 1' }}
-                                                                                />
-                                                                                <button
-                                                                                    className="absolute top-0 right-0 bg-red-600 text-white rounded-full p-1"
-                                                                                    onClick={() => handleRemoveManyFile(index * combinations[0].length + optionIndex, fileIndex)}
-                                                                                >
-                                                                                    <X className="h-4 w-4" />
-                                                                                </button>
-                                                                            </div>
-                                                                        )
-                                                                    ))}
-                                                                </div>
-                                                            </td>
                                                         ))}
-                                                        <td className={`border-r p-4 ${index > 0 ? 'border-t' : ''}`}>
-                                                            <div className="relative">
-                                                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">₫</span>
-                                                                <input
-                                                                    type="number"
-                                                                    className="pl-8 pr-4 py-2 border rounded w-full bg-white text-black"
-                                                                    placeholder="Nhập vào"
-                                                                    min="0"
-                                                                    onKeyDown={(e) => {
-                                                                        if (e.key === '-' || e.key === 'e') e.preventDefault();
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                        <td className={`border-r p-4 ${index > 0 ? 'border-t' : ''}`}>
-                                                            <input
-                                                                type="number"
-                                                                className="px-4 py-2 border rounded w-full bg-white text-black"
-                                                                placeholder="0"
-                                                                min="0"
-                                                                onKeyDown={(e) => {
-                                                                    if (e.key === '-' || e.key === 'e') e.preventDefault();
-                                                                }}
-                                                            />
-                                                        </td>
 
-                                                        {/* Thêm cột cân nặng và kích thước khi toggle bật */}
+                                                        {/* Scrollable columns - Price and settings */}
+                                                        <th className="text-left py-3 px-4 font-medium border-b border-r whitespace-nowrap" style={{ minWidth: '150px', width: '150px' }}>Giá</th>
+                                                        <th className="text-left py-3 px-4 font-medium border-b border-r whitespace-nowrap" style={{ minWidth: '150px', width: '150px' }}>Kho hàng</th>
+
                                                         {useCustomSettings && (
                                                             <>
-                                                                <td className={`border-r p-4 ${index > 0 ? 'border-t' : ''}`}>
+                                                                <th className="text-left py-3 px-4 font-medium border-b border-r whitespace-nowrap" style={{ minWidth: '200px', width: '200px' }}>
                                                                     <div className="flex items-center">
-                                                                        <input
-                                                                            type="text"
-                                                                            className="border rounded p-2 w-32 bg-white text-black"
-                                                                            placeholder="Nhập vào"
-                                                                            pattern="[0-9]*"
-                                                                        />
-                                                                        <span className="ml-2 text-gray-600">gr</span>
+                                                                        <span className="text-red-500 mr-1">*</span>
+                                                                        Cân nặng
                                                                     </div>
-                                                                </td>
-                                                                <td className={`border-r p-4 ${index > 0 ? 'border-t' : ''}`}>
-                                                                    <div className="flex items-center space-x-2">
-                                                                        <input
-                                                                            type="text"
-                                                                            className="border rounded p-2 w-16 bg-white text-black"
-                                                                            placeholder="R"
-                                                                            pattern="[0-9]*"
-                                                                        />
-                                                                        <span className="text-gray-600 whitespace-nowrap">cm</span>
-
-                                                                        <span className="text-gray-600 mx-1">×</span>
-
-                                                                        <input
-                                                                            type="text"
-                                                                            className="border rounded p-2 w-16 bg-white text-black"
-                                                                            placeholder="D"
-                                                                            pattern="[0-9]*"
-                                                                        />
-                                                                        <span className="text-gray-600 whitespace-nowrap">cm</span>
-
-                                                                        <span className="text-gray-600 mx-1">×</span>
-
-                                                                        <input
-                                                                            type="text"
-                                                                            className="border rounded p-2 w-16 bg-white text-black"
-                                                                            placeholder="C"
-                                                                            pattern="[0-9]*"
-                                                                        />
-                                                                        <span className="text-gray-600 whitespace-nowrap">cm</span>
-                                                                    </div>
-                                                                </td>
+                                                                </th>
+                                                                <th className="text-left py-3 px-4 font-medium border-b border-r whitespace-nowrap" style={{ minWidth: '350px', width: '350px' }}>
+                                                                    Kích thước đóng gói
+                                                                </th>
                                                             </>
                                                         )}
                                                     </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                                                </thead>
+                                                <tbody>
+                                                    {(() => {
+                                                        // Define types for group structure
+                                                        type GroupInfo = {
+                                                            value: string;
+                                                            rowSpan: number;
+                                                            startIndex: number;
+                                                        };
+
+                                                        type GroupedRow = {
+                                                            combination: string[];
+                                                            index: number;
+                                                            isNewGroup: boolean;
+                                                            group: GroupInfo;
+                                                        };
+
+                                                        // Group combinations by first column value
+                                                        const groupedRows: GroupedRow[] = [];
+                                                        let currentGroup: GroupInfo | null = null;
+                                                        let rowSpan = 0;
+                                                        let currentGroupValue: string | null = null;
+
+                                                        combinations.forEach((combination, index) => {
+                                                            // If this is a new group or the first item
+                                                            if (currentGroupValue !== combination[0]) {
+                                                                currentGroupValue = combination[0];
+                                                                // Count how many rows have this value
+                                                                rowSpan = combinations.slice(index).findIndex(c => c[0] !== currentGroupValue);
+                                                                if (rowSpan === -1) rowSpan = combinations.length - index;
+                                                                currentGroup = {
+                                                                    value: currentGroupValue,
+                                                                    rowSpan,
+                                                                    startIndex: index
+                                                                };
+                                                            }
+
+                                                            if (currentGroup) {
+                                                                groupedRows.push({
+                                                                    combination,
+                                                                    index,
+                                                                    isNewGroup: currentGroup.startIndex === index,
+                                                                    group: currentGroup
+                                                                });
+                                                            }
+                                                        });
+
+                                                        return groupedRows.map(({ combination, index, isNewGroup, group }) => {
+                                                            const categoryId = categories.find(cat => cat.options.some(opt => opt.name === combination[0]))?.id;
+
+                                                            if (categoryId === undefined) {
+                                                                console.error("categoryId is undefined for combination:", combination);
+                                                                return null;
+                                                            }
+
+                                                            return (
+                                                                <tr key={index}>
+                                                                    {/* First column - may span multiple rows */}
+                                                                    {isNewGroup && (
+                                                                        <td
+                                                                            className="border-r p-4 border-t sticky bg-white"
+                                                                            style={{
+                                                                                left: 0,
+                                                                                minWidth: '150px',
+                                                                                width: '150px',
+                                                                                zIndex: 5
+                                                                            }}
+                                                                            rowSpan={group.rowSpan}
+                                                                        >
+                                                                            <div>
+                                                                                <div className="flex items-center">
+                                                                                    <label className="w-14 h-14 border flex items-center justify-center mr-3 cursor-pointer">
+                                                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                                                                                            <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                                                                                        </svg>
+                                                                                        <input type="file" multiple className="hidden" onChange={(e) => handleManyFileChange(e, index * combinations[0].length)} />
+                                                                                    </label>
+                                                                                    <span>{combination[0]}</span>
+                                                                                </div>
+                                                                                <div className="flex flex-wrap mt-2">
+                                                                                    {selectedManyFiles[index * combinations[0].length]?.map((file, fileIndex) => (
+                                                                                        file && (
+                                                                                            <div key={fileIndex} className="relative w-24 h-24 m-2">
+                                                                                                <img
+                                                                                                    src={URL.createObjectURL(file)}
+                                                                                                    alt={`Upload preview ${fileIndex + 1}`}
+                                                                                                    className="w-full h-full object-cover"
+                                                                                                    style={{ aspectRatio: '1 / 1' }}
+                                                                                                />
+                                                                                                <button
+                                                                                                    className="absolute top-0 right-0 bg-red-600 text-white rounded-full p-1"
+                                                                                                    onClick={() => handleRemoveManyFile(index * combinations[0].length, fileIndex)}
+                                                                                                >
+                                                                                                    <X className="h-4 w-4" />
+                                                                                                </button>
+                                                                                            </div>
+                                                                                        )
+                                                                                    ))}
+                                                                                </div>
+                                                                            </div>
+                                                                        </td>
+                                                                    )}
+
+                                                                    {/* Other fixed columns */}
+                                                                    {combination.slice(1).map((option, optionIndex) => {
+                                                                        const originalIndex = optionIndex + 1; // +1 because we sliced off the first element
+                                                                        return (
+                                                                            <td key={originalIndex}
+                                                                                className={`border-r p-4 border-t sticky bg-white`}
+                                                                                style={{
+                                                                                    left: `${originalIndex * 150}px`,
+                                                                                    minWidth: '150px',
+                                                                                    width: '150px',
+                                                                                    zIndex: 5
+                                                                                }}>
+                                                                                <span>{option}</span>
+                                                                            </td>
+                                                                        );
+                                                                    })}
+
+                                                                    {/* Scrollable columns - Price and settings */}
+                                                                    <td className="border-r p-4 border-t" style={{ minWidth: '150px', width: '150px' }}>
+                                                                        <div className="relative">
+                                                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">₫</span>
+                                                                            <input
+                                                                                type="number"
+                                                                                className="pl-8 pr-4 py-2 border rounded w-full bg-white text-black"
+                                                                                placeholder="Nhập vào"
+                                                                                min="0"
+                                                                                onKeyDown={(e) => {
+                                                                                    if (e.key === '-' || e.key === 'e') e.preventDefault();
+                                                                                }}
+                                                                                onChange={(e) => updateOption({ categoryId, index, field: 'price', value: parseFloat(e.target.value) || 0 })}
+                                                                            />
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="border-r p-4 border-t" style={{ minWidth: '150px', width: '150px' }}>
+                                                                        <input
+                                                                            type="number"
+                                                                            className="px-4 py-2 border rounded w-full bg-white text-black"
+                                                                            placeholder="0"
+                                                                            min="0"
+                                                                            onKeyDown={(e) => {
+                                                                                if (e.key === '-' || e.key === 'e') e.preventDefault();
+                                                                            }}
+                                                                            onChange={(e) => updateOption({ categoryId, index, field: 'stock', value: parseInt(e.target.value) || 0 })}
+                                                                        />
+                                                                    </td>
+
+                                                                    {useCustomSettings && (
+                                                                        <>
+                                                                            <td className="border-r p-4 border-t" style={{ minWidth: '200px', width: '200px' }}>
+                                                                                <div className="flex items-center">
+                                                                                    <input
+                                                                                        type="text"
+                                                                                        className="border rounded p-2 w-32 bg-white text-black"
+                                                                                        placeholder="Nhập vào"
+                                                                                        pattern="[0-9]*"
+                                                                                        onChange={(e) => updateOption({ categoryId, index, field: 'weight', value: parseFloat(e.target.value) || 0 })}
+                                                                                    />
+                                                                                    <span className="ml-2 text-gray-600">gr</span>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td className="border-r p-4 border-t" style={{ minWidth: '350px', width: '350px' }}>
+                                                                                <div className="flex items-center space-x-2">
+                                                                                    <input
+                                                                                        type="text"
+                                                                                        className="border rounded p-2 w-16 bg-white text-black"
+                                                                                        placeholder="R"
+                                                                                        pattern="[0-9]*"
+                                                                                        onChange={(e) => updateOption({ categoryId, index, field: 'dimensions.length', value: parseFloat(e.target.value) || 0 })}
+                                                                                    />
+                                                                                    <span className="text-gray-600 whitespace-nowrap">cm</span>
+
+                                                                                    <span className="text-gray-600 mx-1">×</span>
+
+                                                                                    <input
+                                                                                        type="text"
+                                                                                        className="border rounded p-2 w-16 bg-white text-black"
+                                                                                        placeholder="D"
+                                                                                        pattern="[0-9]*"
+                                                                                        onChange={(e) => updateOption({ categoryId, index, field: 'dimensions.width', value: parseFloat(e.target.value) || 0 })}
+                                                                                    />
+                                                                                    <span className="text-gray-600 whitespace-nowrap">cm</span>
+
+                                                                                    <span className="text-gray-600 mx-1">×</span>
+
+                                                                                    <input
+                                                                                        type="text"
+                                                                                        className="border rounded p-2 w-16 bg-white text-black"
+                                                                                        placeholder="C"
+                                                                                        pattern="[0-9]*"
+                                                                                        onChange={(e) => updateOption({ categoryId, index, field: 'dimensions.height', value: parseFloat(e.target.value) || 0 })}
+                                                                                    />
+                                                                                    <span className="text-gray-600 whitespace-nowrap">cm</span>
+                                                                                </div>
+                                                                            </td>
+                                                                        </>
+                                                                    )}
+                                                                </tr>
+                                                            );
+                                                        });
+                                                    })()}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 ) : (
                                     <div className="border rounded p-8 text-center text-gray-500 mt-16">
@@ -1251,6 +1497,10 @@ const AddProduct = () => {
                                                         type="text"
                                                         className="border rounded p-2 w-32 bg-white text-black border-red-500"
                                                         placeholder="Nhập vào"
+                                                        onChange={(e) => {
+                                                            const categoryId = 1; // Replace with the actual category ID
+                                                            updateAllOptions({ categoryId, field: 'weight', value: parseFloat(e.target.value) || 0 });
+                                                        }}
                                                     />
                                                     <span className="ml-2 text-gray-600">gr</span>
                                                 </div>
@@ -1268,6 +1518,10 @@ const AddProduct = () => {
                                                     type="text"
                                                     className="border rounded p-2 w-20 bg-white text-black"
                                                     placeholder="R"
+                                                    onChange={(e) => {
+                                                        const categoryId = 1; // Replace with the actual category ID
+                                                        updateAllOptions({ categoryId, field: 'dimensions.length', value: parseFloat(e.target.value) || 0 });
+                                                    }}
                                                 />
                                                 <span className="text-gray-600">cm</span>
 
@@ -1277,6 +1531,10 @@ const AddProduct = () => {
                                                     type="text"
                                                     className="border rounded p-2 w-20 bg-white text-black"
                                                     placeholder="D"
+                                                    onChange={(e) => {
+                                                        const categoryId = 1; // Replace with the actual category ID
+                                                        updateAllOptions({ categoryId, field: 'dimensions.width', value: parseFloat(e.target.value) || 0 });
+                                                    }}
                                                 />
                                                 <span className="text-gray-600">cm</span>
 
@@ -1286,6 +1544,10 @@ const AddProduct = () => {
                                                     type="text"
                                                     className="border rounded p-2 w-20 bg-white text-black"
                                                     placeholder="C"
+                                                    onChange={(e) => {
+                                                        const categoryId = 1; // Replace with the actual category ID
+                                                        updateAllOptions({ categoryId, field: 'dimensions.height', value: parseFloat(e.target.value) || 0 });
+                                                    }}
                                                 />
                                                 <span className="text-gray-600">cm</span>
                                             </div>
@@ -1308,8 +1570,13 @@ const AddProduct = () => {
                     {/* Action Buttons */}
                     <div className="flex justify-end space-x-2 p-6 bg-white border-t shadow-lg">
                         <button className="px-4 py-2 border border-black rounded text-black bg-white" onClick={handleCancelClick}>Hủy</button>
-                        <button className="px-4 py-2 border border-black rounded text-black bg-white">Lưu & Ẩn</button>
-                        <button className="px-4 py-2 border border-black bg-orange-500 text-white rounded">Lưu & Hiển thị</button>
+                        <button
+                            type="button"
+                            className="px-4 py-2 border border-black bg-orange-500 text-white rounded"
+                            onClick={sendProduct}
+                        >
+                            Lưu
+                        </button>
                     </div>
                 </div>
             </div>
