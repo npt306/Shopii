@@ -7,7 +7,12 @@ import * as jwt from 'jsonwebtoken';
 export class KeycloakMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     // Skip middleware for public routes
-    if (req.path === '/Users/login' || req.path === '/Users/register' || req.path === '/Users/add-seller-role') {
+    if (req.path === '/Users/login' 
+      || req.path === '/Users/register' 
+      || req.path === '/Users/register-shop'
+      || req.path === '/Users/login-admin'
+      || req.path === '/Users/verify-otp'
+    ) {
       return next();
     }
     
@@ -29,6 +34,8 @@ export class KeycloakMiddleware implements NestMiddleware {
       
       // Extract roles from realm_access
       const roles: string[] = decoded.realm_access?.roles || [];
+
+      console.log('Roles:', roles);
       
       // Extract permissions from authorization.permissions
       const mappedPermissions: string[] = [];
@@ -46,6 +53,8 @@ export class KeycloakMiddleware implements NestMiddleware {
           }
         });
       }
+
+      console.log('Permissions:', mappedPermissions);
       
       // Add user info to request
       req.user = {

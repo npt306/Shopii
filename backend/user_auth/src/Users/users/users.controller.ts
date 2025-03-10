@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Delete, UseGuards, HttpException, HttpStatus, Req, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Body, Get, Delete, UseGuards, HttpException, HttpStatus, Req, UnauthorizedException, HttpCode } from '@nestjs/common';
 import { Request } from 'express';
 import { Permissions } from 'src/GUARDS/permission.decorator';
 import { PermissionsGuard } from 'src/GUARDS/permission.guard';
@@ -11,20 +11,26 @@ export class UserController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('profile')
-  @Permissions('User Management#view')
+  @Permissions('Accounts#View')
   viewProfile() {
     return { message: 'Viewing limited profile data' };
   }
 
   @Get('view-product')
-  @Permissions('Product Management#view')
+  @Permissions('Product#View')
   viewProduct() {
     return { message: 'Viewing product data' };
   }
 
   @Get('delete_test')
-  @Permissions('User Management#delete')
+  @Permissions('Product#Delete')
   testingstuff() {
+    return { message: 'Deleting data' };
+  }
+
+  @Get('add_product')
+  @Permissions('Product#Add')
+  testingproduct() {
     return { message: 'Deleting data' };
   }
 

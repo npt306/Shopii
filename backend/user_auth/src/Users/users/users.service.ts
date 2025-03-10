@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus, UnauthorizedException, Inject } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, UnauthorizedException, Logger} from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as jwt from 'jsonwebtoken';
@@ -21,6 +21,7 @@ export class UsersService {
 
   constructor(
     private readonly httpService: HttpService,
+    
     @InjectRepository(Account)
     private readonly accountRepository: Repository<Account>,
 
@@ -29,7 +30,8 @@ export class UsersService {
 
     @InjectRepository(Seller)
     private readonly sellerRepository: Repository<Seller>,
-  ) {}
+  ) {
+  }
 
   async getAdminToken(): Promise<string> {
     const url = `${this.keycloakBaseUrl}/realms/master/protocol/openid-connect/token`;
@@ -189,7 +191,7 @@ export class UsersService {
     }
   }
   
-  // New method: automatically exchange standard token for an RPT
+
   async loginAndExchange(username: string, password: string, permissions: string[]): Promise<any> {
     // Get the standard access token via login
     const tokenData = await this.login(username, password);
@@ -415,4 +417,8 @@ export class UsersService {
     return { message: seller ? 'Seller updated successfully' : 'Seller created successfully', seller };
   }
 
+
+  async fetchProfile(userId: string): Promise<any> {
+    
+  }
 }

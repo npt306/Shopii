@@ -30,6 +30,9 @@ import { APP_GUARD } from '@nestjs/core';
     }),
 
     UsersModule,
+
+    // OtpModule,
+
   ],
   controllers: [],
   providers: [    
