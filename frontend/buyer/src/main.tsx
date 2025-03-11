@@ -11,6 +11,8 @@ import { DetailProductPage } from './page/detail_product.tsx';
 import { CartPage } from './page/cart.tsx';
 
 import { UserPage } from './page/user.tsx';
+import { OrderPage } from './page/order.tsx';
+
 const router = createBrowserRouter(
   [
     {
@@ -38,9 +40,13 @@ const router = createBrowserRouter(
       element: <UserPage />,
     },
     {
+      path: "/order",
+      element: <OrderPage />,
+    },
+    {
       path: "/cart",
       element: <CartPage />,
-    }
+    },
   ],
   {
     future: {
