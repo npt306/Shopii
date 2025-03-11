@@ -14,6 +14,7 @@ import OrderDelivery from './pages/OrderManagement/OrderDelivery/OrderDeliveryMa
 import OrderInteraction from './pages/OrderManagement/OrderInteraction/OrderInteractionMain';
 import MediaStorage from './pages/DecorationShop/MediaStorage/MediaStorage';
 import DeliverySetting from "./pages/OrderManagement/DeliverySetting/DeliverySettingMain";
+import ShopRegister from './pages/RegisterShop/Register';
 
 function App() {
 
@@ -22,6 +23,9 @@ function App() {
       <MainLayout>
         <Routes>
           <Route path="/" element={<h1 className='text-black'>Trang chủ</h1>} />
+
+          <Route path="/portal/register" element={<ShopRegister />} />
+
           <Route path="/portal/settings/shop/profile/" element={<ProfileShop />} />
           <Route path="/portal/settings/shop/profile/:tab" element={<ProfileShop />} />
           <Route path="/portal/decoration" element={<DecorationShop />} />
