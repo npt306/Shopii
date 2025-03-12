@@ -19,26 +19,41 @@ interface Step {
     ref: React.RefObject<HTMLDivElement>;
 }
 
-type Option = {
-    name: string;
-    subOptions: string[];
-    price?: number;
-    stock?: number;
-    weight?: number;
-    dimensions?: {
-        length: number;
-        width: number;
-        height: number;
-    };
-};
-
-type Category = {
+// Định nghĩa cấu trúc dữ liệu
+interface Category {
     id: number;
     name: string;
     options: Option[];
     maxOptions: number;
     currentOptions: number;
-};
+}
+
+interface Option {
+    name: string;
+    subOptions: string[];
+    price: number;
+    stock: number;
+    weight: number[];
+    dimensions: {
+        length: number[];
+        width: number[];
+        height: number[];
+    };
+}
+
+
+interface Combination {
+    combination: string[]; // Mảng các giá trị option, ví dụ ["do", "a"]
+    variantId?: string;    // ID duy nhất cho combination, có thể tạo từ combination
+    price: number;
+    stock: number;
+    weight: number[];
+    dimensions: {
+        length: number[];
+        width: number[];
+        height: number[];
+    };
+}
 
 interface UpdateOptionParams {
     categoryId: number;
@@ -287,6 +302,7 @@ const AddProduct = () => {
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<CategoryType | null>(null);
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
     const [selectedFileOne, setSelectedFileOne] = useState<File[]>([]);
     const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
     const [charCounts, setCharCounts] = useState<{ [key: string]: number }>({});
@@ -388,11 +404,11 @@ const AddProduct = () => {
                     subOptions: [],
                     price: 0,
                     stock: 0,
-                    weight: 0,
+                    weight: [],
                     dimensions: {
-                        length: 0,
-                        width: 0,
-                        height: 0,
+                        length: [],
+                        width: [],
+                        height: [],
                     },
                 },
             ],
@@ -408,7 +424,6 @@ const AddProduct = () => {
     };
 
 
-    // Thêm nhóm phân loại mới
     const addNewCategory = () => {
         setCategories([
             ...categories,
@@ -421,11 +436,11 @@ const AddProduct = () => {
                         subOptions: [],
                         price: 0,
                         stock: 0,
-                        weight: 0,
+                        weight: [],
                         dimensions: {
-                            length: 0,
-                            width: 0,
-                            height: 0,
+                            length: [],
+                            width: [],
+                            height: [],
                         },
                     },
                 ],
@@ -433,50 +448,6 @@ const AddProduct = () => {
                 currentOptions: 0,
             }
         ]);
-    };
-
-
-
-    const updateCategoryName = (id: number, value: string) => {
-        setCategories(
-            categories.map((cat: Category) =>
-                cat.id === id ? { ...cat, name: value } : cat
-            )
-        );
-    };
-
-    const updateOption = ({ categoryId, index, field, value }: UpdateOptionParams) => {
-        if (categoryId === undefined) {
-            console.error("categoryId is undefined");
-            return;
-        }
-
-        setCategories(
-            categories.map((cat: Category) => {
-                if (cat.id === categoryId) {
-                    const newOptions = [...cat.options];
-                    newOptions[index] = { ...newOptions[index], [field]: value };
-                    console.log("Updated options:", newOptions);
-                    return { ...cat, options: newOptions };
-                }
-                return cat;
-            })
-        );
-    };
-
-    const updateAllOptions = ({ categoryId, field, value }: { categoryId: number; field: string; value: number }) => {
-        setCategories(
-            categories.map((cat: Category) => {
-                if (cat.id === categoryId) {
-                    const newOptions = cat.options.map(option => ({
-                        ...option,
-                        [field]: value,
-                    }));
-                    return { ...cat, options: newOptions };
-                }
-                return cat;
-            })
-        );
     };
 
     const addOption = ({ categoryId, value }: AddOptionParams) => {
@@ -494,16 +465,149 @@ const AddProduct = () => {
                                 subOptions: [],
                                 price: 0,
                                 stock: 0,
-                                weight: 0,
+                                weight: [],
                                 dimensions: {
-                                    length: 0,
-                                    width: 0,
-                                    height: 0,
+                                    length: [],
+                                    width: [],
+                                    height: [],
                                 },
                             },
                         ],
                         currentOptions: cat.currentOptions + 1,
                     };
+                }
+                return cat;
+            })
+        );
+    };
+
+    const updateCategoryName = (id: number, value: string) => {
+        setCategories(
+            categories.map((cat: Category) =>
+                cat.id === id ? { ...cat, name: value } : cat
+            )
+        );
+    };
+
+    const updateOption = ({ categoryId, index, field, value }: UpdateOptionParams) => {
+        if (categoryId === undefined) {
+            console.error("categoryId is undefined");
+            return;
+        }
+
+        setCategories(prevCategories => {
+            // Tạo bản sao của mảng categories để tránh thay đổi trực tiếp state
+            const newCategories = [...prevCategories];
+
+            // Tìm category dựa trên categoryId
+            const categoryIndex = newCategories.findIndex(cat => cat.id === categoryId);
+
+            if (categoryIndex === -1) {
+                console.error("Category with ID", categoryId, "not found");
+                return prevCategories;
+            }
+
+            const category = newCategories[categoryIndex];
+
+            // Kiểm tra xem index có hợp lệ không
+            if (index < 0 || index >= category.options.length) {
+                console.error("Option at index", index, "is out of bounds");
+                return prevCategories;
+            }
+
+            // Tạo bản sao của options để cập nhật an toàn
+            const newOptions = [...category.options];
+            const option = { ...newOptions[index] };
+
+            // Cập nhật dựa trên loại field
+            if (field.startsWith('dimensions.')) {
+                const parts = field.split('.');
+                const dimensionField = parts[1] as 'length' | 'width' | 'height';
+
+                // Nếu có index cụ thể (dimensions.length.0)
+                if (parts.length > 2) {
+                    const dimensionIndex = parseInt(parts[2], 10);
+
+                    // Tạo bản sao của đối tượng dimensions
+                    const newDimensions = {
+                        length: [...(option.dimensions.length || [])],
+                        width: [...(option.dimensions.width || [])],
+                        height: [...(option.dimensions.height || [])]
+                    };
+
+                    // Cập nhật giá trị cụ thể
+                    newDimensions[dimensionField][dimensionIndex] = Number(value);
+                    option.dimensions = newDimensions;
+                }
+                // Nếu đang cập nhật toàn bộ mảng (dimensions.length)
+                else {
+                    const newDimensions = { ...option.dimensions };
+                    newDimensions[dimensionField] = Array.isArray(value) ? value : [Number(value)];
+                    option.dimensions = newDimensions;
+                }
+            }
+            // Cập nhật weight
+            else if (field.startsWith('weight.')) {
+                const weightIndex = parseInt(field.split('.')[1], 10);
+                const newWeight = [...(option.weight || [])];
+                newWeight[weightIndex] = Number(value);
+                option.weight = newWeight;
+            }
+            // Cập nhật weight toàn bộ mảng
+            else if (field === 'weight') {
+                option.weight = Array.isArray(value) ? value : [Number(value)];
+            }
+            // Các trường thông thường khác
+            else {
+                (option as any)[field] = value;
+            }
+
+            // Cập nhật option vào mảng
+            newOptions[index] = option;
+
+            // Cập nhật category với options mới
+            newCategories[categoryIndex] = {
+                ...category,
+                options: newOptions
+            };
+
+            return newCategories;
+        });
+    };
+
+    const updateAllOptions = ({ categoryId, field, value }: { categoryId: number; field: string; value: number }) => {
+        setCategories(
+            categories.map((cat: Category) => {
+                if (cat.id === categoryId) {
+                    const newOptions = cat.options.map(option => {
+                        if (field.startsWith('dimensions.')) {
+                            const dimensionField = field.split('.')[1] as 'length' | 'width' | 'height';
+                            const dimensionIndex = parseInt(field.split('.')[2], 10);
+                            const newDimensions = { ...option.dimensions };
+                            if (!newDimensions[dimensionField]) {
+                                newDimensions[dimensionField] = [];
+                            }
+                            newDimensions[dimensionField][dimensionIndex] = Number(value); // Ensure value is a number
+                            return { ...option, dimensions: newDimensions };
+                        } else if (field.startsWith('weight.')) {
+                            const weightIndex = parseInt(field.split('.')[1], 10);
+                            const newWeight = [...option.weight];
+                            newWeight[weightIndex] = Number(value); // Ensure value is a number
+                            return { ...option, weight: newWeight };
+                        } else {
+                            return { ...option, [field]: value };
+                        }
+                    });
+
+                    // Filter out options with empty names
+                    const filteredOptions = newOptions
+                        .filter(option => option.name.trim() !== "")
+                        .map(option => ({
+                            ...option,
+                            subOptions: option.subOptions.filter(subOption => subOption.trim() !== "")
+                        }));
+
+                    return { ...cat, options: filteredOptions };
                 }
                 return cat;
             })
@@ -526,60 +630,143 @@ const AddProduct = () => {
             })
         );
     };
+
     // Xóa phân loại
     const removeCategory = (id: number) => {
         setCategories(categories.filter(cat => cat.id !== id));
     };
 
-    const generateCombinations = (): string[][] => {
-        if (categories.length === 0) return [];
+    const generateCombinations = (categories: Category[]): Combination[] => {
+        // Hàm đệ quy để tạo tất cả các tổ hợp
+        const buildCombinations = (
+            categoryIndex: number,
+            currentCombination: string[] = []
+        ): Combination[] => {
+            // Nếu đã xử lý hết tất cả categories, trả về combination hiện tại
+            if (categoryIndex >= categories.length) {
+                // Tạo một variantId duy nhất từ combination
+                const variantId = currentCombination.join('-');
 
-        // Filter out options with empty names
-        const filteredCategories = categories.map(category => ({
-            ...category,
-            options: category.options.filter(option => option.name !== undefined && option.name !== "")
-        }));
-
-        if (filteredCategories.length === 1) {
-            return filteredCategories[0].options.map(option => [option.name]).filter(combination => combination.every(value => value !== undefined));
-        }
-
-        const combinations: string[][] = [];
-        filteredCategories[0].options.forEach(option1 => {
-            if (filteredCategories.length > 1) {
-                filteredCategories[1].options.forEach(option2 => {
-                    const combination = [option1.name, option2.name];
-                    if (combination.every(value => value !== undefined)) {
-                        combinations.push(combination);
+                return [{
+                    combination: [...currentCombination],
+                    variantId,
+                    price: 0,
+                    stock: 0,
+                    weight: [],
+                    dimensions: {
+                        length: [],
+                        width: [],
+                        height: []
                     }
+                }];
+            }
+
+            const currentCategory = categories[categoryIndex];
+            const validOptions = currentCategory.options.filter(option => option.name.trim() !== '');
+
+            if (validOptions.length === 0) {
+                // Nếu category hiện tại không có options hợp lệ, bỏ qua nó
+                return buildCombinations(categoryIndex + 1, currentCombination);
+            }
+
+            // Tạo combinations cho mỗi option trong category hiện tại
+            let results: Combination[] = [];
+
+            for (const option of validOptions) {
+                const newCombination = [...currentCombination, option.name];
+                const nextCombinations = buildCombinations(categoryIndex + 1, newCombination);
+                results = [...results, ...nextCombinations];
+            }
+
+            return results;
+        };
+
+        return buildCombinations(0);
+    };
+
+    const [combinationData, setCombinationData] = useState<Record<string, Combination>>({});
+
+    const updateCombinationData = (
+        variantId: string,
+        field: string,
+        value: number | number[]
+    ) => {
+        setCombinationData(prev => {
+            const updated = { ...prev };
+
+            // Nếu combination chưa tồn tại, tạo mới
+            if (!updated[variantId]) {
+                updated[variantId] = {
+                    combination: variantId.split('-'),
+                    variantId,
+                    price: 0,
+                    stock: 0,
+                    weight: [],
+                    dimensions: {
+                        length: [],
+                        width: [],
+                        height: []
+                    }
+                };
+            }
+
+            // Cập nhật trường dữ liệu
+            if (field === 'price') {
+                updated[variantId].price = value as number;
+            } else if (field === 'stock') {
+                updated[variantId].stock = value as number;
+            } else if (field === 'weight') {
+                updated[variantId].weight = value as number[];
+            } else if (field.startsWith('dimensions.')) {
+                const dimensionType = field.split('.')[1] as 'length' | 'width' | 'height';
+                updated[variantId].dimensions[dimensionType] = value as number[];
+            }
+            console.log(updated);
+            return updated;
+        });
+    };
+    const combinations = generateCombinations(categories);
+
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newFiles = Array.from(event.target.files || []);
+        const combinedFiles = [...selectedFiles, ...newFiles].slice(0, 9); // Giới hạn 9 ảnh
+
+        setSelectedFiles(combinedFiles);
+
+        // Upload từng ảnh lên GCS
+        const uploadPromises = combinedFiles.map(async (file) => {
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await axios.post(`${import.meta.env.VITE_API_URL}/product/uploadIMG`, formData, {
+                    headers: { "Content-Type": "multipart/form-data" },
                 });
-            } else {
-                const combination = [option1.name];
-                if (combination.every(value => value !== undefined)) {
-                    combinations.push(combination);
-                }
+                return response.data.url; // Trả về URL từ server
+            } catch (error) {
+                console.error("Lỗi khi upload ảnh:", error);
+                return null;
             }
         });
 
-        console.log("Categories:", filteredCategories);
-        console.log("Combinations:", combinations);
-        return combinations;
+        // Chờ tất cả ảnh upload xong và cập nhật URL
+        const urls = (await Promise.all(uploadPromises)).filter((url) => url !== null);
+        setUploadedUrls(urls);
     };
 
-    const combinations: string[][] = generateCombinations();
+    const handleRemoveFile = async (index: number) => {
+        const updatedUrls = [...uploadedUrls];
+        const removedUrl = updatedUrls.splice(index, 1)[0]; // Lấy URL bị xóa
+        setUploadedUrls(updatedUrls);
 
-
-
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const newFiles = Array.from(event.target.files || []);
-        const combinedFiles = [...selectedFiles, ...newFiles].slice(0, 9); // Giới hạn tối đa 9 ảnh
-        setSelectedFiles(combinedFiles);
+        // Gọi API xóa ảnh trên server nếu cần
+        try {
+            await axios.delete(`${import.meta.env.VITE_API_URL}/product/deleteIMG`, { data: { url: removedUrl } });
+        } catch (error) {
+            console.error("Lỗi khi xóa ảnh trên server:", error);
+        }
     };
 
-    const handleRemoveFile = (index: number) => {
-        const updatedFiles = selectedFiles.filter((_, i) => i !== index);
-        setSelectedFiles(updatedFiles);
-    };
 
     const handleOneFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const newFiles = Array.from(event.target.files || []);
@@ -621,33 +808,44 @@ const AddProduct = () => {
         }));
     };
 
-    const convertCategoriesToDetails = (categories: Category[]): any[] => {
-        const combinations = generateCombinations();
-        return combinations.map(combination => {
-            const option1 = categories[0].options.find(option => option.name === combination[0]);
+    const convertCategoriesToDetails = (categories: Category[], combinationData: Record<string, Combination>): any[] => {
+        const combinations = Object.keys(combinationData);
+        console.log("Categories:", categories);
+        console.log("Combination Data:", combinationData);
 
-            return {
-                Type_1: combination[0] || "",
-                Type_2: combination[1] || "",
-                Image: "http://example.com/detail-image.jpg", // Bạn có thể thay đổi URL hình ảnh theo nhu cầu
-                Price: option1?.price || 0,
-                Quantity: option1?.stock || 0,
-                Dimension: {
-                    Weight: option1?.weight || 0,
-                    Length: option1?.dimensions?.length || 0,
-                    Width: option1?.dimensions?.width || 0,
-                    Height: option1?.dimensions?.height || 0
-                }
-            };
-        }).filter(detail => detail.Type_1.trim() !== "" && detail.Type_2.trim() !== "");
+        // Determine the required combination length based on categories count
+        const requiredLength = categories.length > 1 ? categories.length : 1;
+
+        return combinations
+            // Filter combinations based on the number of categories
+            .filter(variantId => combinationData[variantId].combination.length === requiredLength)
+            .map(variantId => {
+                const combination = combinationData[variantId];
+                const option1 = categories[0]?.options.find(option => option.name === combination.combination[0]);
+                const option2 = categories.length > 1 ? categories[1]?.options.find(option => option.name === combination.combination[1]) : null;
+
+                return {
+                    Type_1: combination.combination[0] || "",
+                    Type_2: combination.combination[1] || "",
+                    Image: "http://example.com/detail-image.jpg", // Bạn có thể thay đổi URL hình ảnh theo nhu cầu
+                    Price: option1?.price || option2?.price || combination.price || 0,
+                    Quantity: option1?.stock || option2?.stock || combination.stock || 0,
+                    Dimension: {
+                        Weight: option1?.weight[0] || option2?.weight[0] || combination.weight[0] || 0, // Assuming you want the first element of the weight array
+                        Length: option1?.dimensions.length[0] || option2?.dimensions.length[0] || combination.dimensions.length[0] || 0, // Assuming you want the first element of the length array
+                        Width: option1?.dimensions.width[0] || option2?.dimensions.width[0] || combination.dimensions.width[0] || 0, // Assuming you want the first element of the width array
+                        Height: option1?.dimensions.height[0] || option2?.dimensions.height[0] || combination.dimensions.height[0] || 0 // Assuming you want the first element of the height array
+                    }
+                };
+            }).filter(detail => detail.Type_1.trim() !== "" || detail.Type_2.trim() !== "");
     };
 
     const sendProduct = async () => {
         const productClassifications = convertCategoriesToClassifications(categories);
-        const productDetails = convertCategoriesToDetails(categories);
+        const productDetails = convertCategoriesToDetails(categories, combinationData);
 
-        console.log("Classifications:", productClassifications);
-        console.log("Details:", productDetails);
+        // console.log("Classifications:", productClassifications);
+        // console.log("Details:", productDetails);
 
         const sampleProduct = {
             SellerID: 1,
@@ -668,12 +866,12 @@ const AddProduct = () => {
             details: productDetails
         };
 
-        // try {
-        //     const response = await axios.post(`${import.meta.env.VITE_API_URL}/product`, sampleProduct);
-        //     console.log('Product added:', response.data);
-        // } catch (error) {
-        //     console.error('Error adding product:', error);
-        // }
+        try {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/product`, sampleProduct);
+            console.log('Product added:', response.data);
+        } catch (error) {
+            console.error('Error adding product:', error);
+        }
     };
 
     useEffect(() => {
@@ -943,10 +1141,10 @@ const AddProduct = () => {
                                     <input type="file" multiple className="hidden" onChange={handleFileChange} />
                                 </label>
                                 <div className="mt-4 flex flex-wrap">
-                                    {selectedFiles.map((file, index) => (
+                                    {uploadedUrls.map((url, index) => (
                                         <div key={index} className="relative w-32 h-32 m-2">
                                             <img
-                                                src={URL.createObjectURL(file)}
+                                                src={url} // Dùng URL từ Google Cloud Storage
                                                 alt={`Upload preview ${index + 1}`}
                                                 className="w-full h-full object-cover"
                                                 style={{ aspectRatio: "1 / 1" }} // Đảm bảo tỉ lệ 1:1
@@ -1077,9 +1275,9 @@ const AddProduct = () => {
                                 <div className="text-right text-gray-500 text-xs mt-1">{productDescription.length}/3000</div>
 
                                 {/* Thông báo lỗi nếu dưới 100 ký tự */}
-                                {productDescription.length > 0 && productDescription.length < 100 && (
+                                {productDescription.length > 0 && productDescription.length < 20 && (
                                     <div className="text-red-500 text-xs mt-1">
-                                        Mô tả sản phẩm của bạn quá ngắn. Vui lòng nhập ít nhất 100 ký tự.
+                                        Mô tả sản phẩm của bạn quá ngắn. Vui lòng nhập ít nhất 20 ký tự.
                                     </div>
                                 )}
                             </div>
@@ -1220,7 +1418,7 @@ const AddProduct = () => {
                                             <table className="w-full table-fixed">
                                                 <thead>
                                                     <tr className="bg-gray-50">
-                                                        {/* Fixed columns - Categories/Combinations */}
+                                                        {/* Header cho các categories */}
                                                         {categories.map((category, index) => (
                                                             <th key={index} className="text-left py-3 px-4 font-medium border-b border-r sticky left-0 bg-gray-50 z-10"
                                                                 style={{
@@ -1232,7 +1430,7 @@ const AddProduct = () => {
                                                             </th>
                                                         ))}
 
-                                                        {/* Scrollable columns - Price and settings */}
+                                                        {/* Header cho các thông tin khác */}
                                                         <th className="text-left py-3 px-4 font-medium border-b border-r whitespace-nowrap" style={{ minWidth: '150px', width: '150px' }}>Giá</th>
                                                         <th className="text-left py-3 px-4 font-medium border-b border-r whitespace-nowrap" style={{ minWidth: '150px', width: '150px' }}>Kho hàng</th>
 
@@ -1252,207 +1450,135 @@ const AddProduct = () => {
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {(() => {
-                                                        // Define types for group structure
-                                                        type GroupInfo = {
-                                                            value: string;
-                                                            rowSpan: number;
-                                                            startIndex: number;
-                                                        };
+                                                    {combinations.map((combination) => {
+                                                        const variantId = combination.variantId || combination.combination.join('-');
+                                                        const data = combinationData[variantId] || combination;
 
-                                                        type GroupedRow = {
-                                                            combination: string[];
-                                                            index: number;
-                                                            isNewGroup: boolean;
-                                                            group: GroupInfo;
-                                                        };
-
-                                                        // Group combinations by first column value
-                                                        const groupedRows: GroupedRow[] = [];
-                                                        let currentGroup: GroupInfo | null = null;
-                                                        let rowSpan = 0;
-                                                        let currentGroupValue: string | null = null;
-
-                                                        combinations.forEach((combination, index) => {
-                                                            // If this is a new group or the first item
-                                                            if (currentGroupValue !== combination[0]) {
-                                                                currentGroupValue = combination[0];
-                                                                // Count how many rows have this value
-                                                                rowSpan = combinations.slice(index).findIndex(c => c[0] !== currentGroupValue);
-                                                                if (rowSpan === -1) rowSpan = combinations.length - index;
-                                                                currentGroup = {
-                                                                    value: currentGroupValue,
-                                                                    rowSpan,
-                                                                    startIndex: index
-                                                                };
-                                                            }
-
-                                                            if (currentGroup) {
-                                                                groupedRows.push({
-                                                                    combination,
-                                                                    index,
-                                                                    isNewGroup: currentGroup.startIndex === index,
-                                                                    group: currentGroup
-                                                                });
-                                                            }
-                                                        });
-
-                                                        return groupedRows.map(({ combination, index, isNewGroup, group }) => {
-                                                            const categoryId = categories.find(cat => cat.options.some(opt => opt.name === combination[0]))?.id;
-
-                                                            if (categoryId === undefined) {
-                                                                console.error("categoryId is undefined for combination:", combination);
-                                                                return null;
-                                                            }
-
-                                                            return (
-                                                                <tr key={index}>
-                                                                    {/* First column - may span multiple rows */}
-                                                                    {isNewGroup && (
-                                                                        <td
-                                                                            className="border-r p-4 border-t sticky bg-white"
-                                                                            style={{
-                                                                                left: 0,
-                                                                                minWidth: '150px',
-                                                                                width: '150px',
-                                                                                zIndex: 5
-                                                                            }}
-                                                                            rowSpan={group.rowSpan}
-                                                                        >
-                                                                            <div>
-                                                                                <div className="flex items-center">
-                                                                                    <label className="w-14 h-14 border flex items-center justify-center mr-3 cursor-pointer">
-                                                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
-                                                                                            <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                                                                                        </svg>
-                                                                                        <input type="file" multiple className="hidden" onChange={(e) => handleManyFileChange(e, index * combinations[0].length)} />
-                                                                                    </label>
-                                                                                    <span>{combination[0]}</span>
-                                                                                </div>
-                                                                                <div className="flex flex-wrap mt-2">
-                                                                                    {selectedManyFiles[index * combinations[0].length]?.map((file, fileIndex) => (
-                                                                                        file && (
-                                                                                            <div key={fileIndex} className="relative w-24 h-24 m-2">
-                                                                                                <img
-                                                                                                    src={URL.createObjectURL(file)}
-                                                                                                    alt={`Upload preview ${fileIndex + 1}`}
-                                                                                                    className="w-full h-full object-cover"
-                                                                                                    style={{ aspectRatio: '1 / 1' }}
-                                                                                                />
-                                                                                                <button
-                                                                                                    className="absolute top-0 right-0 bg-red-600 text-white rounded-full p-1"
-                                                                                                    onClick={() => handleRemoveManyFile(index * combinations[0].length, fileIndex)}
-                                                                                                >
-                                                                                                    <X className="h-4 w-4" />
-                                                                                                </button>
-                                                                                            </div>
-                                                                                        )
-                                                                                    ))}
-                                                                                </div>
-                                                                            </div>
-                                                                        </td>
-                                                                    )}
-
-                                                                    {/* Other fixed columns */}
-                                                                    {combination.slice(1).map((option, optionIndex) => {
-                                                                        const originalIndex = optionIndex + 1; // +1 because we sliced off the first element
-                                                                        return (
-                                                                            <td key={originalIndex}
-                                                                                className={`border-r p-4 border-t sticky bg-white`}
-                                                                                style={{
-                                                                                    left: `${originalIndex * 150}px`,
-                                                                                    minWidth: '150px',
-                                                                                    width: '150px',
-                                                                                    zIndex: 5
-                                                                                }}>
-                                                                                <span>{option}</span>
-                                                                            </td>
-                                                                        );
-                                                                    })}
-
-                                                                    {/* Scrollable columns - Price and settings */}
-                                                                    <td className="border-r p-4 border-t" style={{ minWidth: '150px', width: '150px' }}>
-                                                                        <div className="relative">
-                                                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">₫</span>
-                                                                            <input
-                                                                                type="number"
-                                                                                className="pl-8 pr-4 py-2 border rounded w-full bg-white text-black"
-                                                                                placeholder="Nhập vào"
-                                                                                min="0"
-                                                                                onKeyDown={(e) => {
-                                                                                    if (e.key === '-' || e.key === 'e') e.preventDefault();
-                                                                                }}
-                                                                                onChange={(e) => updateOption({ categoryId, index, field: 'price', value: parseFloat(e.target.value) || 0 })}
-                                                                            />
-                                                                        </div>
+                                                        return (
+                                                            <tr key={variantId}>
+                                                                {/* Các cột cho các options của categories */}
+                                                                {combination.combination.map((optionValue, optIndex) => (
+                                                                    <td key={optIndex}
+                                                                        className={`border-r p-4 border-t sticky bg-white`}
+                                                                        style={{
+                                                                            left: `${optIndex * 150}px`,
+                                                                            minWidth: '150px',
+                                                                            width: '150px',
+                                                                            zIndex: 5
+                                                                        }}>
+                                                                        <span>{optionValue}</span>
                                                                     </td>
-                                                                    <td className="border-r p-4 border-t" style={{ minWidth: '150px', width: '150px' }}>
+                                                                ))}
+
+                                                                {/* Cột giá */}
+                                                                <td className="border-r p-4 border-t" style={{ minWidth: '150px', width: '150px' }}>
+                                                                    <div className="relative">
+                                                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">₫</span>
                                                                         <input
                                                                             type="number"
-                                                                            className="px-4 py-2 border rounded w-full bg-white text-black"
-                                                                            placeholder="0"
+                                                                            className="pl-8 pr-4 py-2 border rounded w-full bg-white text-black"
+                                                                            placeholder="Nhập vào"
                                                                             min="0"
-                                                                            onKeyDown={(e) => {
-                                                                                if (e.key === '-' || e.key === 'e') e.preventDefault();
-                                                                            }}
-                                                                            onChange={(e) => updateOption({ categoryId, index, field: 'stock', value: parseInt(e.target.value) || 0 })}
+                                                                            value={data.price || ''}
+                                                                            onChange={(e) => updateCombinationData(
+                                                                                variantId,
+                                                                                'price',
+                                                                                parseFloat(e.target.value) || 0
+                                                                            )}
                                                                         />
-                                                                    </td>
+                                                                    </div>
+                                                                </td>
 
-                                                                    {useCustomSettings && (
-                                                                        <>
-                                                                            <td className="border-r p-4 border-t" style={{ minWidth: '200px', width: '200px' }}>
-                                                                                <div className="flex items-center">
-                                                                                    <input
-                                                                                        type="text"
-                                                                                        className="border rounded p-2 w-32 bg-white text-black"
-                                                                                        placeholder="Nhập vào"
-                                                                                        pattern="[0-9]*"
-                                                                                        onChange={(e) => updateOption({ categoryId, index, field: 'weight', value: parseFloat(e.target.value) || 0 })}
-                                                                                    />
-                                                                                    <span className="ml-2 text-gray-600">gr</span>
-                                                                                </div>
-                                                                            </td>
-                                                                            <td className="border-r p-4 border-t" style={{ minWidth: '350px', width: '350px' }}>
-                                                                                <div className="flex items-center space-x-2">
-                                                                                    <input
-                                                                                        type="text"
-                                                                                        className="border rounded p-2 w-16 bg-white text-black"
-                                                                                        placeholder="R"
-                                                                                        pattern="[0-9]*"
-                                                                                        onChange={(e) => updateOption({ categoryId, index, field: 'dimensions.length', value: parseFloat(e.target.value) || 0 })}
-                                                                                    />
-                                                                                    <span className="text-gray-600 whitespace-nowrap">cm</span>
+                                                                {/* Cột kho hàng */}
+                                                                <td className="border-r p-4 border-t" style={{ minWidth: '150px', width: '150px' }}>
+                                                                    <input
+                                                                        type="number"
+                                                                        className="px-4 py-2 border rounded w-full bg-white text-black"
+                                                                        placeholder="0"
+                                                                        min="0"
+                                                                        value={data.stock || ''}
+                                                                        onChange={(e) => updateCombinationData(
+                                                                            variantId,
+                                                                            'stock',
+                                                                            parseInt(e.target.value) || 0
+                                                                        )}
+                                                                    />
+                                                                </td>
 
-                                                                                    <span className="text-gray-600 mx-1">×</span>
+                                                                {/* Cột cân nặng và kích thước */}
+                                                                {useCustomSettings && (
+                                                                    <>
+                                                                        <td className="border-r p-4 border-t" style={{ minWidth: '200px', width: '200px' }}>
+                                                                            <div className="flex items-center">
+                                                                                <input
+                                                                                    type="text"
+                                                                                    className="border rounded p-2 w-32 bg-white text-black"
+                                                                                    placeholder="Nhập vào"
+                                                                                    pattern="[0-9]*"
+                                                                                    value={data.weight[0] || ''}
+                                                                                    onChange={(e) => updateCombinationData(
+                                                                                        variantId,
+                                                                                        'weight',
+                                                                                        [parseFloat(e.target.value) || 0]
+                                                                                    )}
+                                                                                />
+                                                                                <span className="ml-2 text-gray-600">gr</span>
+                                                                            </div>
+                                                                        </td>
+                                                                        <td className="border-r p-4 border-t" style={{ minWidth: '350px', width: '350px' }}>
+                                                                            <div className="flex items-center space-x-2">
+                                                                                <input
+                                                                                    type="text"
+                                                                                    className="border rounded p-2 w-16 bg-white text-black"
+                                                                                    placeholder="R"
+                                                                                    pattern="[0-9]*"
+                                                                                    value={data.dimensions.length[0] || ''}
+                                                                                    onChange={(e) => updateCombinationData(
+                                                                                        variantId,
+                                                                                        'dimensions.length',
+                                                                                        [parseFloat(e.target.value) || 0]
+                                                                                    )}
+                                                                                />
+                                                                                <span className="text-gray-600 whitespace-nowrap">cm</span>
 
-                                                                                    <input
-                                                                                        type="text"
-                                                                                        className="border rounded p-2 w-16 bg-white text-black"
-                                                                                        placeholder="D"
-                                                                                        pattern="[0-9]*"
-                                                                                        onChange={(e) => updateOption({ categoryId, index, field: 'dimensions.width', value: parseFloat(e.target.value) || 0 })}
-                                                                                    />
-                                                                                    <span className="text-gray-600 whitespace-nowrap">cm</span>
+                                                                                <span className="text-gray-600 mx-1">×</span>
 
-                                                                                    <span className="text-gray-600 mx-1">×</span>
+                                                                                <input
+                                                                                    type="text"
+                                                                                    className="border rounded p-2 w-16 bg-white text-black"
+                                                                                    placeholder="D"
+                                                                                    pattern="[0-9]*"
+                                                                                    value={data.dimensions.width[0] || ''}
+                                                                                    onChange={(e) => updateCombinationData(
+                                                                                        variantId,
+                                                                                        'dimensions.width',
+                                                                                        [parseFloat(e.target.value) || 0]
+                                                                                    )}
+                                                                                />
+                                                                                <span className="text-gray-600 whitespace-nowrap">cm</span>
 
-                                                                                    <input
-                                                                                        type="text"
-                                                                                        className="border rounded p-2 w-16 bg-white text-black"
-                                                                                        placeholder="C"
-                                                                                        pattern="[0-9]*"
-                                                                                        onChange={(e) => updateOption({ categoryId, index, field: 'dimensions.height', value: parseFloat(e.target.value) || 0 })}
-                                                                                    />
-                                                                                    <span className="text-gray-600 whitespace-nowrap">cm</span>
-                                                                                </div>
-                                                                            </td>
-                                                                        </>
-                                                                    )}
-                                                                </tr>
-                                                            );
-                                                        });
-                                                    })()}
+                                                                                <span className="text-gray-600 mx-1">×</span>
+
+                                                                                <input
+                                                                                    type="text"
+                                                                                    className="border rounded p-2 w-16 bg-white text-black"
+                                                                                    placeholder="C"
+                                                                                    pattern="[0-9]*"
+                                                                                    value={data.dimensions.height[0] || ''}
+                                                                                    onChange={(e) => updateCombinationData(
+                                                                                        variantId,
+                                                                                        'dimensions.height',
+                                                                                        [parseFloat(e.target.value) || 0]
+                                                                                    )}
+                                                                                />
+                                                                                <span className="text-gray-600 whitespace-nowrap">cm</span>
+                                                                            </div>
+                                                                        </td>
+                                                                    </>
+                                                                )}
+                                                            </tr>
+                                                        );
+                                                    })}
                                                 </tbody>
                                             </table>
                                         </div>

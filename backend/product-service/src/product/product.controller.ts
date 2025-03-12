@@ -1,4 +1,5 @@
-import { Controller, Get, Param, Post, Body } from '@nestjs/common';
+import { Controller, Get, Param, Post, Body, Delete, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ProductService } from './product.service';
 import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto'; // Import DTO
@@ -27,5 +28,17 @@ export class ProductController {
     @Body() createProductDto: CreateProductDto,
   ): Promise<Product> {
     return this.productService.addProduct(createProductDto);
+  }
+
+  @Post('uploadIMG')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadImage(@UploadedFile() file: Express.Multer.File): Promise<{ url: string }> {
+    const url = await this.productService.uploadImage(file);
+    return { url };
+  }
+
+  @Delete('deleteIMG')
+  async deleteImage(@Body('url') url: string): Promise<void> {
+    await this.productService.deleteImage(url);
   }
 }

@@ -9,8 +9,14 @@ import { ProductDimensions } from './entities/product-dimensions.entity';
 import { Categories } from './entities/category.entity';
 import { ProductDto } from './dto/product.dto';
 import { ProductListDto } from './dto/product-list.dto';
+import { v4 as uuidv4 } from 'uuid';
+import { Storage, Bucket } from '@google-cloud/storage';
+
 @Injectable()
 export class ProductService {
+  storage: Storage;
+  private bucket: Bucket;
+
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
@@ -22,13 +28,34 @@ export class ProductService {
     private readonly categoriesRepository: Repository<Categories>,
     @InjectRepository(ProductClassificationType)
     private readonly productClassificationTypeRepository: Repository<ProductClassificationType>,
-  ) { }
+  ) {
+    const privateKey = process.env.GCLOUD_PRIVATE_KEY;
+    const clientEmail = process.env.GCLOUD_CLIENT_EMAIL;
+
+    if (!privateKey || !clientEmail) {
+      throw new Error('GCLOUD_PRIVATE_KEY or GCLOUD_CLIENT_EMAIL environment variable is not defined');
+    }
+
+    this.storage = new Storage({
+      projectId: process.env.GCLOUD_PROJECT_ID,
+      credentials: {
+        private_key: privateKey.replace(/\\n/g, '\n'),
+        client_email: clientEmail,
+      },
+    });
+
+    const bucketName: string | undefined = process.env.GCLOUD_BUCKET;
+    if (!bucketName) {
+      throw new Error('DB_GCLOUD_BUCKET environment variable is not defined');
+    }
+    this.bucket = this.storage.bucket(bucketName);
+  }
 
   async findOne(id: number): Promise<Product | null> {
     return this.productRepository.findOneBy({ ProductID: id });
   }
 
-  async getProductDetails(productId: number) {
+  async getProductDetails(productId: number): Promise<ProductDto> {
     const product = await this.productRepository
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.classifications', 'classifications')
@@ -78,9 +105,7 @@ export class ProductService {
     return productDto;
   }
 
-
   async getProductList(): Promise<ProductListDto> {
-    ``
     const products = await this.productRepository
       .createQueryBuilder('product')
       .orderBy('RANDOM()')
@@ -115,9 +140,6 @@ export class ProductService {
     return productListDto;
   }
 
-
-
-
   async addProduct(createProductDto: CreateProductDto): Promise<Product> {
     const { classifications, details, ...productData } = createProductDto;
 
@@ -151,5 +173,30 @@ export class ProductService {
     }
 
     return savedProduct;
+  }
+
+  async uploadImage(file: Express.Multer.File): Promise<string> {
+    const blob = this.bucket.file(`images/${uuidv4()}_${file.originalname}`);
+    const blobStream = blob.createWriteStream({
+      resumable: false,
+    });
+
+    return new Promise((resolve, reject) => {
+      blobStream.on('finish', () => {
+        const publicUrl = `https://storage.googleapis.com/${this.bucket.name}/${blob.name}`;
+        resolve(publicUrl);
+      }).on('error', (err) => {
+        reject(`Unable to upload image, something went wrong: ${err.message}`);
+      }).end(file.buffer);
+    });
+  }
+
+  async deleteImage(url: string): Promise<void> {
+    const fileName: string | undefined = url.split('/').pop();
+    if (!fileName) {
+      throw new Error('Invalid URL: Unable to extract file name');
+    }
+    const filePath = `images/${fileName}`;
+    await this.bucket.file(filePath).delete();
   }
 }
