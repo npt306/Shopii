@@ -23,7 +23,7 @@ export class ProductController {
     }
 
     @Get('list/')
-    async getProductList(@Param('id') id: number) {
+    async getProductList() {
         try {
             const response = await this.httpService
                 .get(`http://localhost:3001/product/`)

@@ -1,5 +1,5 @@
 import { SearchProductLayout } from "../layout/search_product";
-import { ProductDisplay } from "../components/features/product_display";
+import { ProductDisplay } from "../components/features/productList";
 import { FaChevronLeft, FaChevronRight, FaInfoCircle } from 'react-icons/fa';
 
 export const SearchProductPage = () => {

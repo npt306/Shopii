@@ -60,7 +60,7 @@ export const LoginPage = () => {
           isWithQR ? (
             <div className="flex items-center justify-between mt-3 mb-4 font-normal">
               <div className="text-2xl">Đăng nhập</div>
-              <img src="../assets/psw-noti.png" width="160" height="50" />
+              <img src="src/assets/psw-noti.png" width="160" height="50" />
               <svg width="40" height="40" fill="none" onClick={() => setIsWithQR(false)} >
                 <g clipPath="url(#clip0)">
                   <rect x="1.5" y="1.5" width="37" height="28" rx="2.5" stroke="#EE4D2D" strokeWidth="3"></rect>
@@ -82,7 +82,7 @@ export const LoginPage = () => {
           ) : (
             <div className="flex items-center justify-between mt-3 mb-4 font-normal">
               <div className="text-2xl">Đăng nhập</div>
-              <img src="../assets/QR-noti.png" width="166" height="58" />
+              <img src="src/assets/QR-noti.png" width="166" height="58" />
               <svg width="40" height="40" fill="none" onClick={() => setIsWithQR(true)} >
                 <g clipPath="url(#clip0)">
                   <path fillRule="evenodd" clipRule="evenodd" d="M18 0H0v18h18V0zM3 15V3h12v12H3zM18 22H0v18h18V22zm-3 15H3V25h12v12zM40 0H22v18h18V0zm-3 15H25V3h12v12z" fill="#EE4D2D"></path>
@@ -109,7 +109,7 @@ export const LoginPage = () => {
                 <>
                   {/* QR Login */}
                   <Form.Group className="mb-3  flex flex-col justify-center items-center">
-                    <img src="../assets/login-qr.png" width="180" className=" mb-1"/>
+                    <img src="src/assets/login-qr.png" width="180" className=" mb-1"/>
                     <div className="text-center mt-1">Quét mã QR bằng ứng dụng Shopee</div>
                     <button
                       className="link-button text-center mt-1"
