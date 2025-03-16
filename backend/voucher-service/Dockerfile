@@ -1,15 +1,8 @@
-FROM node:20-alpine
-
+FROM node:20
 WORKDIR /usr/src/app
-
-COPY backend/voucher-service/package*.json ./
-
-RUN npm install --omit=dev 
-
-COPY backend/voucher-service .
-
+COPY package*.json ./
+RUN npm install
+COPY . .
 RUN npm run build
-
 EXPOSE 3002
-
 CMD ["node", "dist/main"]
