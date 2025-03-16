@@ -416,9 +416,4 @@ export class UsersService {
 
     return { message: seller ? 'Seller updated successfully' : 'Seller created successfully', seller };
   }
-
-
-  async fetchProfile(userId: string): Promise<any> {
-    
-  }
 }

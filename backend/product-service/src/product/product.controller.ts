@@ -41,4 +41,17 @@ export class ProductController {
   async deleteImage(@Body('url') url: string): Promise<void> {
     await this.productService.deleteImage(url);
   }
+
+  @Post('uploadVideo')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadVideo(@UploadedFile() file: Express.Multer.File): Promise<{ url: string }> {
+    const url = await this.productService.uploadVideo(file);
+    return { url };
+  }
+
+  @Delete('deleteVideo')
+  async deleteVideo(@Body('url') url: string): Promise<void> {
+    await this.productService.deleteVideo(url);
+  }
+
 }

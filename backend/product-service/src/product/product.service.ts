@@ -12,6 +12,11 @@ import { ProductListDto } from './dto/product-list.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { Storage, Bucket } from '@google-cloud/storage';
 
+interface CategoryWithChildren extends Categories {
+  children?: CategoryWithChildren[];
+}
+
+
 @Injectable()
 export class ProductService {
   storage: Storage;
@@ -192,11 +197,52 @@ export class ProductService {
   }
 
   async deleteImage(url: string): Promise<void> {
+    // Tách tên tệp từ URL
     const fileName: string | undefined = url.split('/').pop();
     if (!fileName) {
       throw new Error('Invalid URL: Unable to extract file name');
     }
+    // Xác định đường dẫn tệp trong bucket
     const filePath = `images/${fileName}`;
+    // Xóa tệp từ bucket
     await this.bucket.file(filePath).delete();
   }
+
+  async uploadVideo(file: Express.Multer.File): Promise<string> {
+    const blob = this.bucket.file(`videos/${uuidv4()}_${file.originalname}`);
+    const blobStream = blob.createWriteStream({
+      resumable: false,
+    });
+
+    return new Promise((resolve, reject) => {
+      blobStream.on('finish', () => {
+        const publicUrl = `https://storage.googleapis.com/${this.bucket.name}/${blob.name}`;
+        resolve(publicUrl);
+      }).on('error', (err) => {
+        reject(`Unable to upload video, something went wrong: ${err.message}`);
+      }).end(file.buffer);
+    });
+  }
+
+  async deleteVideo(url: string): Promise<void> {
+    // Tách tên tệp từ URL
+    const fileName: string | undefined = url.split('/').pop();
+    if (!fileName) {
+      throw new Error('Invalid URL: Unable to extract file name');
+    }
+    // Xác định đường dẫn tệp trong bucket
+    const filePath = `videos/${fileName}`;
+    // Xóa tệp từ bucket
+    await this.bucket.file(filePath).delete();
+  }
+
+  async testGetCategoriesRaw() {
+    return this.categoriesRepository
+      .createQueryBuilder('categories')
+      .where('categories.id = :id', { id: 'categories' }) // 🚨 Lỗi: ID phải là số nguyên
+      .getRawMany();
+  }
+
+
+
 }
