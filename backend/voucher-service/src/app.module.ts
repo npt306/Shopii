@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { VouchersModule } from './vouchers/vouchers.module';
 import { join } from 'path';
 import { Voucher } from './vouchers/entities/voucher.entity';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -12,8 +14,7 @@ import { Voucher } from './vouchers/entities/voucher.entity';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
+      useFactory: async (configService: ConfigService) => ({
         type: 'postgres',
         host: configService.get<string>('DB_HOST'),
         port: configService.get<number>('DB_PORT'),
@@ -21,10 +22,13 @@ import { Voucher } from './vouchers/entities/voucher.entity';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
         entities: [Voucher, join(__dirname, '**', '*.entity.{ts,js}')],
-        synchronize: true,
+        synchronize: false,
       }),
+      inject: [ConfigService],
     }),
     VouchersModule,
   ],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

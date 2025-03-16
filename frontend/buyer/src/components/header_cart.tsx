@@ -2,7 +2,7 @@ import logoShopee from "../assets/logo_shopee_2.png";
 import { FaSearch, FaCommentDots, FaChevronDown, FaTicketAlt } from "react-icons/fa";
 import { Header } from "./header";
 import { useState } from 'react';
-import { QuantitySelector } from "./common/quantity_selector";
+import { QuantitySelector } from "./common/quantitySelector";
 
 const products = [
     {
