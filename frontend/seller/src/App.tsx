@@ -15,6 +15,8 @@ import OrderInteraction from './pages/OrderManagement/OrderInteraction/OrderInte
 import MediaStorage from './pages/DecorationShop/MediaStorage/MediaStorage';
 import DeliverySetting from "./pages/OrderManagement/DeliverySetting/DeliverySettingMain";
 import ShopRegister from './pages/RegisterShop/Register';
+import { ToastContainer } from "react-toastify";
+
 
 function App() {
 
@@ -37,7 +39,7 @@ function App() {
           <Route path="/portal/sale/order/:type" element={<All />} />
 
           <Route path="/portal/sale/bulkShipping" element={<BulkShipping />} />
-          <Route path="/portal/sale/bulkShipping/:tab" element={<BulkShipping />} /> 
+          <Route path="/portal/sale/bulkShipping/:tab" element={<BulkShipping />} />
 
           <Route path="/portal/sale/OrderDelivery" element={<OrderDelivery />} />
           <Route path="/portal/sale/OrderDelivery/:tab" element={<OrderDelivery />} />
@@ -47,17 +49,19 @@ function App() {
 
           <Route path="/portal/sale/DeliverySetting" element={<DeliverySetting />} />
           <Route path="/portal/sale/DeliverySetting/:tab" element={<DeliverySetting />} />
-          
+
           <Route path="/portal/finance/balance" element={<Balance />} />
           <Route path="/portal/finance/revenue" element={<Revenue />} />
           <Route path="/portal/finance/cards" element={<Cards />} />
-          
+
           <Route path="/portal/product/list/" element={<AllProduct />} />
           <Route path="/portal/product/list/:type" element={<AllProduct />} />
           <Route path="/portal/product/list/:type/:param?" element={<AllProduct />} />
           <Route path="/portal/product/new" element={<AddProduct />} />
           <Route path="/portal/product/new/:from" element={<AddProduct />} />
         </Routes>
+        <ToastContainer position="bottom-right" autoClose={3000} />
+
       </MainLayout>
     </BrowserRouter>
   )

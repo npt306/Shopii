@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, PenLine, X, ChevronRight } from 'lucide-react';
 import axios from 'axios';
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Define types for tab data
 type TabId = 'basic' | 'sales' | 'shipping' | 'other';
@@ -942,20 +944,6 @@ const AddProduct = () => {
         }
     };
 
-    const [selectedManyFiles, setSelectedManyFiles] = useState<(File | null)[][]>(combinations.map(() => []));
-
-    const handleManyFileChange = (event: React.ChangeEvent<HTMLInputElement>, idx: number) => {
-        const newFiles = Array.from(event.target.files || []);
-        const updatedFiles = [...selectedManyFiles];
-        updatedFiles[idx] = [...updatedFiles[idx], ...newFiles];
-        setSelectedManyFiles(updatedFiles);
-    };
-
-    const handleRemoveManyFile = (optionIdx: number, fileIdx: number) => {
-        const updatedFiles = [...selectedManyFiles];
-        updatedFiles[optionIdx].splice(fileIdx, 1);
-        setSelectedManyFiles(updatedFiles);
-    };
     const handleInputChange = (categoryId: number, event: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = event.target;
         if (value.length <= 20) { // Giới hạn tối đa 20 ký tự
@@ -1031,8 +1019,14 @@ const AddProduct = () => {
         };
 
         try {
-            const response = await axios.post(`http://34.58.241.34:3001/product`, sampleProduct);
-            console.log('Product added:', response.data);
+            // const response = await axios.post(`http://34.58.241.34:3001/product`, sampleProduct);
+            // console.log('Product added:', response.data);
+            toast.success("Thêm sản phẩm thành công!", {
+                onClose: () => {
+                    window.location.reload();
+                },
+                autoClose: 1000 // 2 seconds delay before auto-closing
+            });
         } catch (error) {
             console.error('Error adding product:', error);
         }
