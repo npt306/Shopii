@@ -106,7 +106,7 @@ export const LoginPage: React.FC = () => {
       if (!emailRegex.test(email)) {
         throw new Error("Please enter a valid Gmail address");
       }
-      
+
       const result = await userService.verifyEmail(email);
 
       setSuccess("Registration successful! Please check your phone for verification.");
@@ -171,15 +171,14 @@ export const LoginPage: React.FC = () => {
 
         {/* Login/Register Form Section */}
         <Col lg={6} className="d-flex align-items-center justify-content-center">
-<<<<<<< HEAD
           <Card className="login-card p-4">
-            {/* Header */}
+            {/* Header   */}
             {isLogin ? (
               isWithQR ? (
                 <div className="flex items-center justify-between mt-3 mb-4 font-normal">
                   <div className="text-2xl">Đăng nhập</div>
-                  <img src="../assets/psw-noti.png" width="160" height="50" alt="Password notification" />
-                  <svg width="40" height="40" fill="none" onClick={() => setIsWithQR(false)} style={{ cursor: "pointer" }}>
+                  <img src="src/assets/psw-noti.png" width="160" height="50" />
+                  <svg width="40" height="40" fill="none" onClick={() => setIsWithQR(false)} >
                     <g clipPath="url(#clip0)">
                       <rect x="1.5" y="1.5" width="37" height="28" rx="2.5" stroke="#EE4D2D" strokeWidth="3"></rect>
                       <path stroke="#EE4D2D" strokeWidth="3" d="M22 38.5h11"></path>
@@ -197,112 +196,11 @@ export const LoginPage: React.FC = () => {
                     </defs>
                   </svg>
                 </div>
-=======
-        <Card className="login-card p-4">
-          {/* Header   */}
-        {isLogin ? (
-          isWithQR ? (
-            <div className="flex items-center justify-between mt-3 mb-4 font-normal">
-              <div className="text-2xl">Đăng nhập</div>
-              <img src="src/assets/psw-noti.png" width="160" height="50" />
-              <svg width="40" height="40" fill="none" onClick={() => setIsWithQR(false)} >
-                <g clipPath="url(#clip0)">
-                  <rect x="1.5" y="1.5" width="37" height="28" rx="2.5" stroke="#EE4D2D" strokeWidth="3"></rect>
-                  <path stroke="#EE4D2D" strokeWidth="3" d="M22 38.5h11"></path>
-                  <path stroke="#EE4D2D" strokeWidth="10" d="M21 29v9"></path>
-                  <path fill="#fff" d="M-12.28 0l43.933 43.933-22.72 22.72L-35 22.72z"></path>
-                  <path
-                    d="M10.997 16.545l-2.76-.782.519-1.591 2.733 1.098-.176-3.067h1.723l-.176 3.129 2.663-1.081.519 1.608-2.813.783 1.846 2.338-1.397.993-1.6-2.567-1.582 2.479-1.397-.95 1.898-2.39zm8.156 0l-2.76-.782.52-1.591 2.732 1.098-.175-3.067h1.722l-.175 3.129 2.663-1.081.518 1.608-2.812.783 1.845 2.338-1.397.993-1.6-2.567-1.582 2.479-1.397-.95 1.898-2.39zm8.157 0l-2.76-.782.518-1.591 2.734 1.098-.176-3.067h1.723l-.176 3.129 2.663-1.081.519 1.608-2.813.783 1.846 2.338-1.398.993-1.6-2.567-1.581 2.479-1.398-.95 1.899-2.39z"
-                    fill="#EE4D2D"
-                  ></path>
-                </g>
-                <defs>
-                  <clipPath id="clip0">
-                    <path fill="#fff" d="M0 0h40v40H0z"></path>
-                  </clipPath>
-                </defs>
-              </svg>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between mt-3 mb-4 font-normal">
-              <div className="text-2xl">Đăng nhập</div>
-              <img src="src/assets/QR-noti.png" width="166" height="58" />
-              <svg width="40" height="40" fill="none" onClick={() => setIsWithQR(true)} >
-                <g clipPath="url(#clip0)">
-                  <path fillRule="evenodd" clipRule="evenodd" d="M18 0H0v18h18V0zM3 15V3h12v12H3zM18 22H0v18h18V22zm-3 15H3V25h12v12zM40 0H22v18h18V0zm-3 15H25V3h12v12z" fill="#EE4D2D"></path>
-                  <path d="M37 37H22.5v3H40V22.5h-3V37z" fill="#EE4D2D"></path>
-                  <path d="M27.5 32v-8h-3v8h3zM33.5 32v-8h-3v8h3zM6 6h6v6H6zM6 28h6v6H6zM28 6h6v6h-6z" fill="#EE4D2D"></path>
-                  <path fill="#fff" d="M-4.3 4l44 43.9-22.8 22.7-43.9-44z"></path>
-                </g>
-                <defs>
-                  <clipPath id="clip0">
-                    <path fill="#fff" d="M0 0h40v40H0z"></path>
-                  </clipPath>
-                </defs>
-              </svg>
-            </div>
-          )
-        ) : (
-          <div className="flex items-center justify-between mt-3 mb-4 font-normal">
-            <div className="text-2xl">Đăng ký</div>
-          </div>
-        )}
-            <Form>
-            {isLogin ? (
-              isWithQR ? (
-                <>
-                  {/* QR Login */}
-                  <Form.Group className="mb-3  flex flex-col justify-center items-center">
-                    <img src="src/assets/login-qr.png" width="180" className=" mb-1"/>
-                    <div className="text-center mt-1">Quét mã QR bằng ứng dụng Shopee</div>
-                    <button
-                      className="link-button text-center mt-1"
-                      type="button"
-                      onClick={() => setShowPopup(!showPopup)}
-                    >
-                      Làm thế nào để quét mã?
-                    </button>
-
-                    {/* Popup */}
-                    {showPopup && (
-                      <div className="popup-help flex flex-col justify-center items-center">
-                        <div className="_1wOMD">
-                          <div className="flex justify-between mb-2">
-                            <div className="LOf6JV">Làm thế nào để quét mã?</div>
-                            <svg
-                              width="18"
-                              fill="none"
-                              viewBox="0 0 11 11"
-                              className="BqQX2x"
-                              onClick={() => setShowPopup(false)} // Close on click
-                              style={{ cursor: "pointer" }}
-                            >
-                              <path
-                                fill="#757575"
-                                stroke="#757575"
-                                strokeWidth=".5"
-                                d="M6.677 6l4.183-4.182a.48.48 0 00-.677-.678L6 5.323 1.817 1.14a.479.479 0 10-.677.678L5.323 6 1.15 10.172a.479.479 0 00.677.677L6 6.677l4.172 4.172a.479.479 0 10.677-.677L6.677 6z"
-                              ></path>
-                            </svg>
-                          </div>
-                          <img
-                            src="https://deo.shopeemobile.com/shopee/shopee-pcmall-live-sg/assets/27eb1bc4f61803e6.png"
-                            className="SN3mQo mb-2"
-                          />
-                          <div className="A4htHe mb-2">
-                            Nhấn vào biểu tượng quét mã trên ứng dụng Shopee để mở trình quét mã QR
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </Form.Group>
-                </>
->>>>>>> 5879d1a279f27e489fbbb5af8ae3b03c6aa5d21c
               ) : (
                 <div className="flex items-center justify-between mt-3 mb-4 font-normal">
                   <div className="text-2xl">Đăng nhập</div>
-                  <img src="../assets/QR-noti.png" width="166" height="58" alt="QR notification" />
-                  <svg width="40" height="40" fill="none" onClick={() => setIsWithQR(true)} style={{ cursor: "pointer" }}>
+                  <img src="src/assets/QR-noti.png" width="166" height="58" />
+                  <svg width="40" height="40" fill="none" onClick={() => setIsWithQR(true)} >
                     <g clipPath="url(#clip0)">
                       <path fillRule="evenodd" clipRule="evenodd" d="M18 0H0v18h18V0zM3 15V3h12v12H3zM18 22H0v18h18V22zm-3 15H3V25h12v12zM40 0H22v18h18V0zm-3 15H25V3h12v12z" fill="#EE4D2D"></path>
                       <path d="M37 37H22.5v3H40V22.5h-3V37z" fill="#EE4D2D"></path>
@@ -322,18 +220,13 @@ export const LoginPage: React.FC = () => {
                 <div className="text-2xl">Đăng ký</div>
               </div>
             )}
-
-            {/* Error and Success Messages */}
-            {error && <Alert variant="danger">{error}</Alert>}
-            {success && <Alert variant="success">{success}</Alert>}
-
-            <Form onSubmit={isLogin ? handleLogin : handleRegister}>
+            <Form>
               {isLogin ? (
                 isWithQR ? (
                   <>
                     {/* QR Login */}
-                    <Form.Group className="mb-3 flex flex-col justify-center items-center">
-                      <img src="../assets/login-qr.png" width="180" className="mb-1" alt="QR code" />
+                    <Form.Group className="mb-3  flex flex-col justify-center items-center">
+                      <img src="src/assets/login-qr.png" width="180" className=" mb-1" />
                       <div className="text-center mt-1">Quét mã QR bằng ứng dụng Shopee</div>
                       <button
                         className="link-button text-center mt-1"
@@ -354,14 +247,20 @@ export const LoginPage: React.FC = () => {
                                 fill="none"
                                 viewBox="0 0 11 11"
                                 className="BqQX2x"
-                                onClick={() => setShowPopup(false)}
+                                onClick={() => setShowPopup(false)} // Close on click
                                 style={{ cursor: "pointer" }}
-                              ></svg>
+                              >
+                                <path
+                                  fill="#757575"
+                                  stroke="#757575"
+                                  strokeWidth=".5"
+                                  d="M6.677 6l4.183-4.182a.48.48 0 00-.677-.678L6 5.323 1.817 1.14a.479.479 0 10-.677.678L5.323 6 1.15 10.172a.479.479 0 00.677.677L6 6.677l4.172 4.172a.479.479 0 10.677-.677L6.677 6z"
+                                ></path>
+                              </svg>
                             </div>
                             <img
                               src="https://deo.shopeemobile.com/shopee/shopee-pcmall-live-sg/assets/27eb1bc4f61803e6.png"
                               className="SN3mQo mb-2"
-                              alt="QR scanning guide"
                             />
                             <div className="A4htHe mb-2">
                               Nhấn vào biểu tượng quét mã trên ứng dụng Shopee để mở trình quét mã QR
@@ -372,102 +271,176 @@ export const LoginPage: React.FC = () => {
                     </Form.Group>
                   </>
                 ) : (
+                  <div className="flex items-center justify-between mt-3 mb-4 font-normal">
+                    <div className="text-2xl">Đăng nhập</div>
+                    <img src="../assets/QR-noti.png" width="166" height="58" alt="QR notification" />
+                    <svg width="40" height="40" fill="none" onClick={() => setIsWithQR(true)} style={{ cursor: "pointer" }}>
+                      <g clipPath="url(#clip0)">
+                        <path fillRule="evenodd" clipRule="evenodd" d="M18 0H0v18h18V0zM3 15V3h12v12H3zM18 22H0v18h18V22zm-3 15H3V25h12v12zM40 0H22v18h18V0zm-3 15H25V3h12v12z" fill="#EE4D2D"></path>
+                        <path d="M37 37H22.5v3H40V22.5h-3V37z" fill="#EE4D2D"></path>
+                        <path d="M27.5 32v-8h-3v8h3zM33.5 32v-8h-3v8h3zM6 6h6v6H6zM6 28h6v6H6zM28 6h6v6h-6z" fill="#EE4D2D"></path>
+                        <path fill="#fff" d="M-4.3 4l44 43.9-22.8 22.7-43.9-44z"></path>
+                      </g>
+                      <defs>
+                        <clipPath id="clip0">
+                          <path fill="#fff" d="M0 0h40v40H0z"></path>
+                        </clipPath>
+                      </defs>
+                    </svg>
+                  </div>
+                )
+              ) : (
+                <div className="flex items-center justify-between mt-3 mb-4 font-normal">
+                  <div className="text-2xl">Đăng ký</div>
+                </div>
+              )}
+
+              {/* Error and Success Messages */}
+              {error && <Alert variant="danger">{error}</Alert>}
+              {success && <Alert variant="success">{success}</Alert>}
+
+              <Form onSubmit={isLogin ? handleLogin : handleRegister}>
+                {isLogin ? (
+                  isWithQR ? (
+                    <>
+                      {/* QR Login */}
+                      <Form.Group className="mb-3 flex flex-col justify-center items-center">
+                        <img src="../assets/login-qr.png" width="180" className="mb-1" alt="QR code" />
+                        <div className="text-center mt-1">Quét mã QR bằng ứng dụng Shopee</div>
+                        <button
+                          className="link-button text-center mt-1"
+                          type="button"
+                          onClick={() => setShowPopup(!showPopup)}
+                        >
+                          Làm thế nào để quét mã?
+                        </button>
+
+                        {/* Popup */}
+                        {showPopup && (
+                          <div className="popup-help flex flex-col justify-center items-center">
+                            <div className="_1wOMD">
+                              <div className="flex justify-between mb-2">
+                                <div className="LOf6JV">Làm thế nào để quét mã?</div>
+                                <svg
+                                  width="18"
+                                  fill="none"
+                                  viewBox="0 0 11 11"
+                                  className="BqQX2x"
+                                  onClick={() => setShowPopup(false)}
+                                  style={{ cursor: "pointer" }}
+                                ></svg>
+                              </div>
+                              <img
+                                src="https://deo.shopeemobile.com/shopee/shopee-pcmall-live-sg/assets/27eb1bc4f61803e6.png"
+                                className="SN3mQo mb-2"
+                                alt="QR scanning guide"
+                              />
+                              <div className="A4htHe mb-2">
+                                Nhấn vào biểu tượng quét mã trên ứng dụng Shopee để mở trình quét mã QR
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </Form.Group>
+                    </>
+                  ) : (
+                    <>
+                      {/* Regular Login */}
+                      <Form.Group className="mb-3">
+                        <Form.Control
+                          type="text"
+                          name="username"
+                          placeholder="Email"
+                          value={formData.username}
+                          onChange={handleChange}
+                        />
+                      </Form.Group>
+                      <Form.Group className="mb-3">
+                        <Form.Control
+                          type="password"
+                          name="password"
+                          placeholder="Mật khẩu"
+                          value={formData.password}
+                          onChange={handleChange}
+                        />
+                      </Form.Group>
+                      <Form.Group className="mt-3 mb-3">
+                        <div className="flex justify-between">
+                          <a href="/forgot-password" className="text-xs text-amber-900 text-decoration-none">Quên mật khẩu</a>
+                          <a href="/sms-login" className="text-xs text-blue-900 text-decoration-none">Đăng nhập với SMS</a>
+                        </div>
+                      </Form.Group>
+                      <button className="w-full normal-button py-2 px-4 rounded-none" type="submit" disabled={loading}>
+                        {loading ? "ĐANG XỬ LÝ..." : "ĐĂNG NHẬP"}
+                      </button>
+                    </>
+                  )
+                ) : (
                   <>
-                    {/* Regular Login */}
+                    {/* Register Form */}
                     <Form.Group className="mb-3">
                       <Form.Control
                         type="text"
-                        name="username"
+                        name="email"
                         placeholder="Email"
-                        value={formData.username}
+                        value={formData.email}
                         onChange={handleChange}
                       />
-                    </Form.Group>
-                    <Form.Group className="mb-3">
-                      <Form.Control
-                        type="password"
-                        name="password"
-                        placeholder="Mật khẩu"
-                        value={formData.password}
-                        onChange={handleChange}
-                      />
-                    </Form.Group>
-                    <Form.Group className="mt-3 mb-3">
-                      <div className="flex justify-between">
-                        <a href="/forgot-password" className="text-xs text-amber-900 text-decoration-none">Quên mật khẩu</a>
-                        <a href="/sms-login" className="text-xs text-blue-900 text-decoration-none">Đăng nhập với SMS</a>
-                      </div>
                     </Form.Group>
                     <button className="w-full normal-button py-2 px-4 rounded-none" type="submit" disabled={loading}>
-                      {loading ? "ĐANG XỬ LÝ..." : "ĐĂNG NHẬP"}
+                      {loading ? "ĐANG XỬ LÝ..." : "ĐĂNG KÝ"}
                     </button>
+                    <Form.Group className="mt-3 mb-3 flex justify-center">
+                      <div className="text-xs">
+                        Bằng việc đăng ký, bạn đồng ý với Shopee về
+                        <a href="https://help.shopee.vn/portal/article/77243" className="link-button"> Điều khoản dịch vụ</a> &amp;
+                        <a href="https://help.shopee.vn/portal/article/77244" className="link-button"> Chính sách bảo mật</a>
+                      </div>
+                    </Form.Group>
                   </>
-                )
-              ) : (
-                <>
-                  {/* Register Form */}
-                  <Form.Group className="mb-3">
-                    <Form.Control
-                      type="text"
-                      name="email"
-                      placeholder="Email"
-                      value={formData.email}
-                      onChange={handleChange}
-                    />
-                  </Form.Group>
-                  <button className="w-full normal-button py-2 px-4 rounded-none" type="submit" disabled={loading}>
-                    {loading ? "ĐANG XỬ LÝ..." : "ĐĂNG KÝ"}
-                  </button>
-                  <Form.Group className="mt-3 mb-3 flex justify-center">
-                    <div className="text-xs">
-                      Bằng việc đăng ký, bạn đồng ý với Shopee về
-                      <a href="https://help.shopee.vn/portal/article/77243" className="link-button"> Điều khoản dịch vụ</a> &amp;
-                      <a href="https://help.shopee.vn/portal/article/77244" className="link-button"> Chính sách bảo mật</a>
+                )}
+
+                {/* Social Login */}
+                {!isWithQR && (
+                  <>
+                    <div className="flex items-center my-4">
+                      <hr className="flex-grow border-gray-300" />
+                      <span className="px-2 text-gray-300">HOẶC</span>
+                      <hr className="flex-grow border-gray-300" />
                     </div>
-                  </Form.Group>
-                </>
-              )}
+                    <Form.Group className="mt-3 mb-3 flex justify-center gap-2">
+                      <button className="w-full gg-fb-button" type="button">
+                        <div className="fb-logo"></div>&nbsp; Facebook
+                      </button>
+                      <button
+                        className="w-full gg-fb-button"
+                        type="button"
+                        onClick={() => {
+                          const keycloakUrl = "https://sso-shopii.ddns.net/realms/shopii/protocol/openid-connect/auth";
+                          const clientId = "shopii";
+                          const redirectUri = encodeURIComponent(`${window.location.origin}/callback`);
 
-              {/* Social Login */}
-              {!isWithQR && (
-                <>
-                  <div className="flex items-center my-4">
-                    <hr className="flex-grow border-gray-300" />
-                    <span className="px-2 text-gray-300">HOẶC</span>
-                    <hr className="flex-grow border-gray-300" />
+                          // Redirect to Keycloak authentication with Google as the identity provider hint
+                          window.location.href = `${keycloakUrl}?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid&kc_idp_hint=google`;
+                        }}
+                      >
+                        <div className="gg-logo"></div>&nbsp; Google
+                      </button>
+                    </Form.Group>
+                  </>
+                )}
+
+                {/* Toggle Between Login & Register */}
+                <Form.Group className="mt-3 mb-3 flex justify-center">
+                  <div>
+                    {isLogin ? (
+                      <>Bạn mới biết đến Shopee? <a onClick={() => setIsLogin(false)} className="link-button text-decoration-none cursor-pointer">Đăng ký</a></>
+                    ) : (
+                      <>Bạn đã có tài khoản? <a onClick={() => setIsLogin(true)} className="link-button text-decoration-none cursor-pointer">Đăng nhập</a></>
+                    )}
                   </div>
-                  <Form.Group className="mt-3 mb-3 flex justify-center gap-2">
-                    <button className="w-full gg-fb-button" type="button">
-                      <div className="fb-logo"></div>&nbsp; Facebook
-                    </button>
-                    <button
-                      className="w-full gg-fb-button"
-                      type="button"
-                      onClick={() => {
-                        const keycloakUrl = "https://sso-shopii.ddns.net/realms/shopii/protocol/openid-connect/auth";
-                        const clientId = "shopii";
-                        const redirectUri = encodeURIComponent(`${window.location.origin}/callback`);
-
-                        // Redirect to Keycloak authentication with Google as the identity provider hint
-                        window.location.href = `${keycloakUrl}?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid&kc_idp_hint=google`;
-                      }}
-                    >
-                      <div className="gg-logo"></div>&nbsp; Google
-                    </button>
-                  </Form.Group>
-                </>
-              )}
-
-              {/* Toggle Between Login & Register */}
-              <Form.Group className="mt-3 mb-3 flex justify-center">
-                <div>
-                  {isLogin ? (
-                    <>Bạn mới biết đến Shopee? <a onClick={() => setIsLogin(false)} className="link-button text-decoration-none cursor-pointer">Đăng ký</a></>
-                  ) : (
-                    <>Bạn đã có tài khoản? <a onClick={() => setIsLogin(true)} className="link-button text-decoration-none cursor-pointer">Đăng nhập</a></>
-                  )}
-                </div>
-              </Form.Group>
+                </Form.Group>
+              </Form>
             </Form>
           </Card>
         </Col>
