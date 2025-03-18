@@ -12,13 +12,14 @@ import axios from 'axios';
 
 @Injectable()
 export class UsersService {
-  private keycloakBaseUrl = process.env.KEYCLOAK_BASE_URL || 'http://localhost:8080';
+  private keycloakBaseUrl = process.env.KEYCLOAK_BASE_URL;
   private realm = process.env.KEYCLOAK_REALM || 'shopii';
   private adminUsername = process.env.KEYCLOAK_ADMIN_USERNAME || 'admin';
   private adminPassword = process.env.KEYCLOAK_ADMIN_PASSWORD || 'admin';
   private adminClientId = process.env.KEYCLOAK_ADMIN_CLIENT_ID || 'admin-cli';
   private clientId = process.env.KEYCLOAK_CLIENT_ID || 'your-client-id';
   private clientSecret = process.env.KEYCLOAK_CLIENT_SECRET || '';
+  private redirectGateway = process.env.REDIRECT_GATEWAY;
 
   constructor(
     private readonly httpService: HttpService,
@@ -263,7 +264,7 @@ export class UsersService {
   async triggerVerificationEmail(userId: string): Promise<void> {
     const adminToken = await this.getAdminToken();
     const clientId = this.clientId;
-    const redirectUri = 'http://localhost:3000'; // Adjust accordingly
+    const redirectUri = `http://${this.redirectGateway}:3003`; // Adjust accordingly
     const executeActionsUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users/${userId}/execute-actions-email?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
   
     try {
@@ -480,7 +481,7 @@ export class UsersService {
       params.append('code', code);
       params.append('client_id', this.clientId);
       params.append('client_secret', this.clientSecret);
-      params.append('redirect_uri', 'http://localhost:8000/callback');
+      params.append('redirect_uri', `http://${this.redirectGateway}:8000/callback`);
       
       console.log("Sending token request with params:", params.toString());
       

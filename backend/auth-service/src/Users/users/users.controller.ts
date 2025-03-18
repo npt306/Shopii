@@ -4,6 +4,7 @@ import { Permissions } from 'src/guards/permission.decorator';
 import { PermissionsGuard } from 'src/guards/permission.guard';
 import { UserDto } from 'src/dto/user.dto';
 import { UsersService } from './users.service';
+import { env } from 'process';
 
 @Controller('Users')
 @UseGuards(PermissionsGuard)
@@ -87,10 +88,10 @@ export class UserController {
     // Extract user info from the token or make a userinfo request
     const userInfo = await this.usersService.getUserInfo(tokens.access_token);
 
-    // Create a session for the user
+    //TODO: Create a session for the user
 
     // Redirect to your frontend app with a session cookie or token
-    return res.redirect('http://localhost:8000/home');
+    return res.redirect(`http://${env.REDIRECT_GATEWAY}/home`);
   }
 
   @Post('auth/exchange-token')
