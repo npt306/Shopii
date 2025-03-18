@@ -60,11 +60,8 @@ export const ProductDisplay = () => {
                                 <p className="mt-2 text-xs">699.000Đ</p>
                                 <p className="mt-2 text-xs">Đã bán 2.5k</p>
                             </div>
-                        </div>
-
-                        <button className="absolute bottom-[-33px] left-[-1.5px] z-10 w-[208.5px] py-2 bg-orange-500 text-white text-xs opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer">
-                            Tìm sản phẩm tương tự
-                        </button>
+                        </div>                        
+                        <button className="opacity-0 absolute top-[calc(100%-0px)] right-0 left-[-1.9px] py-2 box-content w-full z-[1] group-hover:opacity-100 transition-all duration-300 cursor-pointer bg-orange-500 border-2 border-orange-500 !text-white text-xs "> Tìm sản phẩm tương tự</button>
                     </div>
                 ))}
             </div>
