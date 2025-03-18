@@ -1,11 +1,11 @@
-name: Build and Deploy backend product service
+name: Build and Deploy backend voucher service
 
 on:
   push:
     # paths-ignore:
     #   - '.github/**'
     paths:
-      - 'backend/product-service/**'
+      - 'backend/voucher-service/**'
     branches:
       - main
   workflow_dispatch:
@@ -30,19 +30,16 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: ./backend/product-service
-          file: ./backend/product-service/Dockerfile
+          context: ./backend/voucher-service
+          file: ./backend/voucher-service/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/backend-product-service:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/backend-voucher-service:latest
     
   deploy:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
-      - name: Print dockerhub username
-        run: echo "${{ secrets.DOCKERHUB_USERNAME }}"
-        
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.2.1
         with:
@@ -50,18 +47,15 @@ jobs:
           username: ${{ secrets.GCE_USERNAME }}
           key: ${{ secrets.GCE_SSH_KEY }}
           script: |
-            docker stop backend-product-service || true
-            docker rm backend-product-service || true
-            docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/backend-product-service:latest || true
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/backend-product-service:latest
-            docker run -d --name backend-product-service -p 3001:3001 \
+            docker stop backend-voucher-service || true
+            docker rm backend-voucher-service || true
+            docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/backend-voucher-service:latest || true
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/backend-voucher-service:latest
+            docker run -d --name backend-voucher-service -p 3002:3002 \
             -e DB_HOST=${{ secrets.DB_HOST }} \
             -e DB_PORT=${{ secrets.DB_PORT }} \
             -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
             -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
             -e DB_NAME=${{ secrets.DB_NAME }} \
-            -e GCLOUD_PRIVATE_KEY=${{ secrets.GCLOUD_PRIVATE_KEY }} \
-            -e GCLOUD_CLIENT_EMAIL=${{ secrets.GCLOUD_CLIENT_EMAIL }} \
-            -e GCLOUD_PROJECT_ID=${{ secrets.GCLOUD_PROJECT_ID }} \
-            -e GCLOUD_BUCKET=${{ secrets.GCLOUD_BUCKET }} \
-            ${{ secrets.DOCKERHUB_USERNAME }}/backend-product-service:latest
+            -e PORT=3002 \
+            ${{ secrets.DOCKERHUB_USERNAME }}/backend-voucher-service:latest

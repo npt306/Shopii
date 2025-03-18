@@ -42,42 +42,5 @@ export class ApigatewayController {
     );
     return response.data;
   }
-   // Voucher Service
-   @Post('vouchers')
-   async createVoucher(@Body() createVoucherDto: any): Promise<any> {
-     const voucherServiceUrl = 'http://localhost:3002/vouchers';
-     const response = await firstValueFrom(this.httpService.post(voucherServiceUrl, createVoucherDto));
-     return response.data;
-   }
- 
-   @Get('vouchers')
-   async getAllVouchers(): Promise<any> {
-     const voucherServiceUrl = 'http://localhost:3002/vouchers';
-     const response = await firstValueFrom(this.httpService.get(voucherServiceUrl));
-     return response.data;
-   }
- 
-   @Get('vouchers/:id')
-   async getVoucherById(@Param('id', ParseIntPipe) id: number): Promise<any> {
-     const voucherServiceUrl = `http://localhost:3002/vouchers/${id}`;
-     const response = await firstValueFrom(this.httpService.get(voucherServiceUrl));
-     return response.data;
-   }
- 
-   @Patch('vouchers/:id')
-   async updateVoucher(
-     @Param('id', ParseIntPipe) id: number,
-     @Body() updateVoucherDto: any,
-   ): Promise<any> {
-     const voucherServiceUrl = `http://localhost:3002/vouchers/${id}`;
-     const response = await firstValueFrom(this.httpService.patch(voucherServiceUrl, updateVoucherDto));
-     return response.data;
-   }
- 
-   @Delete('vouchers/:id')
-   async deleteVoucher(@Param('id', ParseIntPipe) id: number): Promise<any> {
-     const voucherServiceUrl = `http://localhost:3002/vouchers/${id}`;
-     const response = await firstValueFrom(this.httpService.delete(voucherServiceUrl));
-     return response.data;
-   } 
+
 }

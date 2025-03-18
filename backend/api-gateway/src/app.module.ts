@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ApigatewayModule } from './apigateway/apigateway.module';
 import { ProductModule } from './modules/product/product.modele';
+import { VouchersModule } from './modules/vouchers/vouchers.module';
 @Module({
   imports: [
     // Protect Gateway from DDoS attacks and limit number of requests per IP
@@ -17,6 +18,7 @@ import { ProductModule } from './modules/product/product.modele';
     }),
     ApigatewayModule,
     ProductModule,
+    VouchersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
