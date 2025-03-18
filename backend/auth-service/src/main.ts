@@ -10,7 +10,7 @@ async function bootstrap() {
     app.useGlobalPipes(new ValidationPipe({ transform: true }));
     app.use(new KeycloakMiddleware().use);
     app.enableCors({
-      origin: `http://${env.REDIRECT_GATEWAY}`, // frontend URL
+      origin: `http://34.58.241.34:8000`, // frontend URL
       // origin: `http://localhost:8000`, // frontend URL
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
