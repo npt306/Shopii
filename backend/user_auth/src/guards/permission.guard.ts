@@ -1,27 +1,29 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { PERMISSIONS_KEY } from './permission.decorator';
+import { Request } from 'express';
+import { PERMISSIONS_MAPPING } from 'src/config/permission.config';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
-
   canActivate(context: ExecutionContext): boolean {
-    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(PERMISSIONS_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    if (!requiredPermissions || requiredPermissions.length === 0) {
-      // No permissions required, allow access.
+    const request = context.switchToHttp().getRequest<Request>();
+    const user = request.user;
+
+    // Use the request's route path as the key (ensure it matches your mapping)
+    const currentRoute = request.route?.path;
+    const requiredPermission = PERMISSIONS_MAPPING[currentRoute];
+
+    // If the route doesn't require permissions, allow access
+    if (!requiredPermission) {
       return true;
     }
-
-    const request = context.switchToHttp().getRequest();
-    const user = request.user;
 
     if (!user || !user.permissions) {
       throw new ForbiddenException('User has no permissions.');
     }
+
+    const requiredPermissions = Array.isArray(requiredPermission)
+      ? requiredPermission
+      : [requiredPermission];
 
     const userPermissions: string[] = user.permissions;
     const hasAllPermissions = requiredPermissions.every(permission =>
