@@ -1,12 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { CheckCircle } from "lucide-react";
 
-// Define prop types for the component
-interface ShopInformationFormProps {
-    onNextStep: () => void;
-}
-
-const FinalizeRegister: React.FC<ShopInformationFormProps> = ({ onNextStep }) => {
+const FinalizeRegister: React.FC = () => {
     const location = useLocation();
     const { shopId } = (location.state as { shopId?: string }) || {};
     const navigate = useNavigate();

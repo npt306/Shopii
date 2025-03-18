@@ -146,4 +146,18 @@ export class UserController {
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+  @Get('check-email-verification')
+  async checkEmailVerification(@Query('email') email: string) {
+    try {
+      const isVerified = await this.usersService.checkEmailVerification(email);
+      return {
+        success: true,
+        isVerified,
+      };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
 }

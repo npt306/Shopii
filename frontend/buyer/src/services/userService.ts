@@ -41,5 +41,15 @@ export const userService = {
             const axiosError = error as AxiosError<{ message: string }>;
             throw new Error(axiosError.response?.data?.message || 'Token refresh failed');
         }
-    }
+    },
+
+    checkEmailExistOrVerfied: async (email: string): Promise<{ success: boolean; message: string }> => {
+        try {
+            const response = await axios.post<{ success: boolean; message: string }>('http://localhost:3000/Users/check-email-verification', { email });
+            return response.data;
+        } catch (error) {
+            const axiosError = error as AxiosError<{ message: string }>;
+            throw new Error(axiosError.response?.data?.message || 'Email verification failed');
+        }
+    },
 };
