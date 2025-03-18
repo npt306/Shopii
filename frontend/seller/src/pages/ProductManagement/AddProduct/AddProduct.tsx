@@ -1019,8 +1019,8 @@ const AddProduct = () => {
         };
 
         try {
-            // const response = await axios.post(`http://34.58.241.34:3001/product`, sampleProduct);
-            // console.log('Product added:', response.data);
+            const response = await axios.post(`http://34.58.241.34:3001/product`, sampleProduct);
+            console.log('Product added:', response.data);
             toast.success("Thêm sản phẩm thành công!", {
                 onClose: () => {
                     window.location.reload();
