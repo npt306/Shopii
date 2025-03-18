@@ -6,6 +6,7 @@ export const userService = {
     login: async (username: string, password: string): Promise<LoginResponse> => {
         try {
             // localhost:3003 for testing
+            console.log(`http://${import.meta.env.VITE_REDIRECT_GATEWAY}:3003/Users/login`);
             const response = await axios.post<LoginResponse>(`http://${import.meta.env.VITE_REDIRECT_GATEWAY}:3003/Users/login`, { username, password });
             return response.data;
         } catch (error) {
