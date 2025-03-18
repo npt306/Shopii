@@ -52,5 +52,5 @@ jobs:
             docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/frontend-seller:latest || true
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/frontend-seller:latest
             docker run -d --name frontend-seller -p 8001:8000 \
-            -e VITE_API_URL="127.11.0.1" \
+            -e VITE_API_URL="127.11.0.1:3001" \
             ${{ secrets.DOCKERHUB_USERNAME }}/frontend-seller:latest
