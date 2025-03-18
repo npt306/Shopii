@@ -3,8 +3,8 @@ import { UsersModule } from './Users/users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
-import { keycloakConfigAsync } from './CONFIG/keycloak.config';
-import { PermissionsGuard } from './GUARDS/permission.guard';
+import { keycloakConfigAsync } from './config/keycloak.config';
+import { PermissionsGuard } from './guards/permission.guard';
 import { APP_GUARD } from '@nestjs/core';
 
 @Module({

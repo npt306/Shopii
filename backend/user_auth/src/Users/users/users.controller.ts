@@ -1,14 +1,14 @@
-import { Controller, Post, Body, Get, Delete, UseGuards, HttpException, HttpStatus, Req, UnauthorizedException, HttpCode } from '@nestjs/common';
-import { Request } from 'express';
-import { Permissions } from 'src/GUARDS/permission.decorator';
-import { PermissionsGuard } from 'src/GUARDS/permission.guard';
-import { UserDto } from 'src/DTO/user.dto';
+import { Controller, Post, Body, Get, Delete, UseGuards, HttpException, HttpStatus, Req, UnauthorizedException, HttpCode, Query, Res } from '@nestjs/common';
+import { Request, Response } from 'express';
+import { Permissions } from 'src/guards/permission.decorator';
+import { PermissionsGuard } from 'src/guards/permission.guard';
+import { UserDto } from 'src/dto/user.dto';
 import { UsersService } from './users.service';
 
 @Controller('Users')
 @UseGuards(PermissionsGuard)
 export class UserController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   @Get('profile')
   @Permissions('Accounts#View')
@@ -52,13 +52,13 @@ export class UserController {
       throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
     }
   }
-  
+
   @Post('register')
   async register(@Body() userDto: UserDto) {
     try {
       // Register the user and trigger email verification
       const result = await this.usersService.register(userDto);
-      
+
       return {
         success: true,
         userId: result.userId // Return user ID for reference
@@ -67,7 +67,7 @@ export class UserController {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
-  
+
 
   @Post('login')
   async login(@Body() loginDto: { username: string; password: string }) {
@@ -76,6 +76,74 @@ export class UserController {
       return result;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
+    }
+  }
+
+  @Get('callback')
+  async handleCallback(@Query('code') code: string, @Query('session_state') sessionState: string, @Res() res) {
+    // Exchange the authorization code for tokens
+    const tokens = await this.usersService.exchangeCodeForTokens(code);
+
+    // Extract user info from the token or make a userinfo request
+    const userInfo = await this.usersService.getUserInfo(tokens.access_token);
+
+    // Create a session for the user
+
+    // Redirect to your frontend app with a session cookie or token
+    return res.redirect('http://localhost:8000/home');
+  }
+
+  @Post('auth/exchange-token')
+  async exchangeToken(@Body() tokenData: { code: string, sessionState: string }, @Res({ passthrough: true }) response: Response) {
+    try {
+      console.log("Starting token exchange process with code:", tokenData.code.substring(0, 8) + "...");
+      
+      // Step 1: Exchange code for tokens
+      const tokens = await this.usersService.exchangeCodeForTokens(tokenData.code);
+      
+      // If we got here, we have valid tokens - now get user info
+      console.log("Token exchange successful, fetching user info");
+      const userInfo = await this.usersService.getUserInfo(tokens.access_token);
+      
+      // Create user session
+      console.log("User info obtained, creating session for:", userInfo.email || userInfo.preferred_username);
+      const session = await this.usersService.createUserSession(userInfo, tokens);
+  
+      // Set HTTP-only cookies for security
+      response.cookie('refresh_token', tokens.refresh_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
+      
+      // Return user info and access token to frontend
+      return {
+        user: session,
+        access_token: tokens.access_token,
+      };
+    } catch (error) {
+      console.error('Token exchange error:', error);
+      
+      if (error.message?.includes('Code not valid') || error.message?.includes('expired')) {
+        throw new HttpException('Authentication code expired or already used. Please try logging in again.', HttpStatus.BAD_REQUEST);
+      }
+      
+      throw new HttpException(error.message || 'Authentication failed', HttpStatus.UNAUTHORIZED);
+    }
+  }
+
+  @Post('send-verification-email')
+  async sendVerificationEmail(@Body() body: { email: string }) {
+    try {
+      const result = await this.usersService.sendEmailVerification(body.email);
+      return {
+        success: true,
+        message: 'Verification email sent successfully',
+      };
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }
