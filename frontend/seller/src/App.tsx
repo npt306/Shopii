@@ -17,7 +17,7 @@ import DeliverySetting from "./pages/OrderManagement/DeliverySetting/DeliverySet
 import ShopRegister from './pages/RegisterShop/Register';
 import { ToastContainer } from "react-toastify";
 
-import ProtectedRoute from './components/hook/protectedRoute';
+// import ProtectedRoute from './components/hook/protectedRoute';
 
 function App() {
   return (
@@ -26,90 +26,38 @@ function App() {
         <Routes>
           {/* Public route for registration */}
           <Route path="/portal/register" element={<ShopRegister />} />
+
+          <Route path="/portal/settings/shop/profile/" element={<ProfileShop />} />
+          <Route path="/portal/settings/shop/profile/:tab" element={<ProfileShop />} />
+          <Route path="/portal/decoration" element={<DecorationShop />} />
+          <Route path="/portal/decoration/:tab" element={<DecorationShop />} />
+          <Route path="/portal/all-settings/" element={<AllSettings />} />
+          <Route path="/portal/all-settings/:tab" element={<AllSettings />} />
+          <Route path="/portal/decoration/mediastore" element={<MediaStorage />} />
+          <Route path="/portal/sale/order" element={<All />} />
+          <Route path="/portal/sale/order/:type" element={<All />} />
+
+          <Route path="/portal/sale/bulkShipping" element={<BulkShipping />} />
+          <Route path="/portal/sale/bulkShipping/:tab" element={<BulkShipping />} /> 
+
+          <Route path="/portal/sale/OrderDelivery" element={<OrderDelivery />} />
+          <Route path="/portal/sale/OrderDelivery/:tab" element={<OrderDelivery />} />
+
+          <Route path="/portal/sale/ReturnRefundCancel" element={<OrderInteraction />} />
+          <Route path="/portal/sale/ReturnRefundCancel/:tab" element={<OrderInteraction />} />
+
+          <Route path="/portal/sale/DeliverySetting" element={<DeliverySetting />} />
+          <Route path="/portal/sale/DeliverySetting/:tab" element={<DeliverySetting />} />
           
-          {/* Default route */}
-          <Route path="/" element={
-            <ProtectedRoute>
-              <h1 className='text-black'>Trang chủ</h1>
-            </ProtectedRoute>
-          } />
+          <Route path="/portal/finance/balance" element={<Balance />} />
+          <Route path="/portal/finance/revenue" element={<Revenue />} />
+          <Route path="/portal/finance/cards" element={<Cards />} />
           
-          {/* Protected routes */}
-          <Route path="/portal/settings/shop/profile/" element={
-            <ProtectedRoute><ProfileShop /></ProtectedRoute>
-          } />
-          <Route path="/portal/settings/shop/profile/:tab" element={
-            <ProtectedRoute><ProfileShop /></ProtectedRoute>
-          } />
-          <Route path="/portal/decoration" element={
-            <ProtectedRoute><DecorationShop /></ProtectedRoute>
-          } />
-          <Route path="/portal/decoration/:tab" element={
-            <ProtectedRoute><DecorationShop /></ProtectedRoute>
-          } />
-          <Route path="/portal/all-settings/" element={
-            <ProtectedRoute><AllSettings /></ProtectedRoute>
-          } />
-          <Route path="/portal/all-settings/:tab" element={
-            <ProtectedRoute><AllSettings /></ProtectedRoute>
-          } />
-          <Route path="/portal/decoration/mediastore" element={
-            <ProtectedRoute><MediaStorage /></ProtectedRoute>
-          } />
-          <Route path="/portal/sale/order" element={
-            <ProtectedRoute><All /></ProtectedRoute>
-          } />
-          <Route path="/portal/sale/order/:type" element={
-            <ProtectedRoute><All /></ProtectedRoute>
-          } />
-          <Route path="/portal/sale/bulkShipping" element={
-            <ProtectedRoute><BulkShipping /></ProtectedRoute>
-          } />
-          <Route path="/portal/sale/bulkShipping/:tab" element={
-            <ProtectedRoute><BulkShipping /></ProtectedRoute>
-          } />
-          <Route path="/portal/sale/OrderDelivery" element={
-            <ProtectedRoute><OrderDelivery /></ProtectedRoute>
-          } />
-          <Route path="/portal/sale/OrderDelivery/:tab" element={
-            <ProtectedRoute><OrderDelivery /></ProtectedRoute>
-          } />
-          <Route path="/portal/sale/ReturnRefundCancel" element={
-            <ProtectedRoute><OrderInteraction /></ProtectedRoute>
-          } />
-          <Route path="/portal/sale/ReturnRefundCancel/:tab" element={
-            <ProtectedRoute><OrderInteraction /></ProtectedRoute>
-          } />
-          <Route path="/portal/sale/DeliverySetting" element={
-            <ProtectedRoute><DeliverySetting /></ProtectedRoute>
-          } />
-          <Route path="/portal/sale/DeliverySetting/:tab" element={
-            <ProtectedRoute><DeliverySetting /></ProtectedRoute>
-          } />
-          <Route path="/portal/finance/balance" element={
-            <ProtectedRoute><Balance /></ProtectedRoute>
-          } />
-          <Route path="/portal/finance/revenue" element={
-            <ProtectedRoute><Revenue /></ProtectedRoute>
-          } />
-          <Route path="/portal/finance/cards" element={
-            <ProtectedRoute><Cards /></ProtectedRoute>
-          } />
-          <Route path="/portal/product/list/" element={
-            <ProtectedRoute><AllProduct /></ProtectedRoute>
-          } />
-          <Route path="/portal/product/list/:type" element={
-            <ProtectedRoute><AllProduct /></ProtectedRoute>
-          } />
-          <Route path="/portal/product/list/:type/:param?" element={
-            <ProtectedRoute><AllProduct /></ProtectedRoute>
-          } />
-          <Route path="/portal/product/new" element={
-            <ProtectedRoute><AddProduct /></ProtectedRoute>
-          } />
-          <Route path="/portal/product/new/:from" element={
-            <ProtectedRoute><AddProduct /></ProtectedRoute>
-          } />
+          <Route path="/portal/product/list/" element={<AllProduct />} />
+          <Route path="/portal/product/list/:type" element={<AllProduct />} />
+          <Route path="/portal/product/list/:type/:param?" element={<AllProduct />} />
+          <Route path="/portal/product/new" element={<AddProduct />} />
+          <Route path="/portal/product/new/:from" element={<AddProduct />} />
         </Routes>
         <ToastContainer position="bottom-right" autoClose={3000} />
 

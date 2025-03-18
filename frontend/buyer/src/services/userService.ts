@@ -12,6 +12,7 @@ export const userService = {
             // const response = await axios.post<LoginResponse>(`http://localhost:3003/Users/login`, { username, password });
             return response.data;
         } catch (error) {
+            console.log(error);
             const axiosError = error as AxiosError<{ message: string }>;
             throw new Error(axiosError.response?.data?.message || 'Login failed');
         }
