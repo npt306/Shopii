@@ -40,6 +40,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Print dockerhub username
+        run: echo "${{ secrets.DOCKERHUB_USERNAME }}"
+        
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.2.1
         with:
