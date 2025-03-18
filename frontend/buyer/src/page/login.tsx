@@ -41,43 +41,49 @@ export const LoginPage: React.FC = () => {
     setError("");
     setSuccess("");
     setLoading(true);
-
+  
     try {
       const { username, password } = formData;
       if (!username || !password) {
         throw new Error("Please enter both username and password");
       }
-
+  
+      // Call the login service that now sets httpOnly cookies on success
       const result = await userService.login(username, password);
-
-      // Store tokens in localStorage for persistence
-      localStorage.setItem("standardAccessToken", result.standardAccessToken);
-      localStorage.setItem("rptAccessToken", result.rptAccessToken);
-      localStorage.setItem("refreshToken", result.refresh_token);
+  
+      console.log(result);
+  
+      // Since tokens are now stored in httpOnly cookies by the backend,
+      // we don't store them in localStorage on the client.
+      // Instead, store only non-sensitive user profile data if needed.
       localStorage.setItem("userProfile", JSON.stringify(result.profile));
-
-      // Dispatch action to store credentials in Redux
+      
+      // Log non-sensitive data for testing purposes
+      console.log("User profile stored:", localStorage.getItem("userProfile"));
+  
+      // Dispatch action to store credentials in Redux.
+      // Note: Since tokens are now stored in secure cookies, you don't need to pass them to Redux.
       dispatch(setCredentials({
-        token: result.standardAccessToken,
+        token: "", // Not storing token client-side
         user: {
           id: result.profile.accountId,
           name: result.profile.username,
-          roles: []
+          roles: [] // Adjust roles as needed
         },
       }));
-
-      // Store additional user information in localStorage if needed
+  
+      // Optionally store additional non-sensitive user info
       localStorage.setItem("userEmail", result.profile.email);
       localStorage.setItem("userAvatar", result.profile.avatar);
       localStorage.setItem("userIsSeller", String(result.profile.isSeller));
-
+  
       setSuccess("Login successful! Redirecting...");
-
+  
       // Redirect to home page after successful login
       setTimeout(() => {
         window.location.href = "/home";
       }, 1500);
-
+  
     } catch (error) {
       const err = error as Error;
       console.log(error);

@@ -14,6 +14,7 @@ export class KeycloakMiddleware implements NestMiddleware {
       || req.path === '/Users/verify-otp'
       || req.path === '/Users/auth/exchange-token'
       || req.path === '/Users/send-verification-email'
+      || req.path === '/Users/me'
     ) {
       return next();
     }

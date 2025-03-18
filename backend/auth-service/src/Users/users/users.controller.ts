@@ -5,6 +5,7 @@ import { PermissionsGuard } from 'src/guards/permission.guard';
 import { UserDto } from 'src/dto/user.dto';
 import { UsersService } from './users.service';
 import { env } from 'process';
+import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 
 @Controller('Users')
 @UseGuards(PermissionsGuard)
@@ -71,10 +72,44 @@ export class UserController {
 
 
   @Post('login')
-  async login(@Body() loginDto: { username: string; password: string }) {
+  async login(
+    @Body() loginDto: { username: string; password: string },
+    @Res({ passthrough: true }) res: Response
+  ) {
     try {
-      const result = await this.usersService.loginAndExchange(loginDto.username, loginDto.password, []);
-      return result;
+      const result = await this.usersService.loginAndExchange(
+        loginDto.username,
+        loginDto.password,
+        []
+      );
+
+      // Assuming result contains your tokens and profile data
+      // Set standardAccessToken as an HTTP‑only cookie
+      res.cookie('accessToken', result.standardAccessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV !== 'development', // set true in production (HTTPS)
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 1000, // 1 hour
+      });
+
+      // Set rptAccessToken as an HTTP‑only cookie
+      res.cookie('rptToken', result.rptAccessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV !== 'development',
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 1000,
+      });
+
+      // Set refreshToken as an HTTP‑only cookie
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV !== 'development',
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      });
+
+      // Return non-sensitive data (e.g., user profile) to the client
+      return { message: 'Login successful', profile: result.profile };
     } catch (error) {
       console.log(error);
       throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
@@ -162,4 +197,10 @@ export class UserController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  getProfile(@Req() req: Request) {
+    // req.user contains the validated JWT payload
+    return req.user;
+  }
 }
