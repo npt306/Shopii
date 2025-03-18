@@ -80,6 +80,7 @@ export const LoginPage: React.FC = () => {
 
     } catch (error) {
       const err = error as Error;
+      console.log(error);
       setError(err.message);
     } finally {
       setLoading(false);
