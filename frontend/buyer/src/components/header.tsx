@@ -1,6 +1,8 @@
 import { FaFacebook, FaInstagram, FaBell, FaGlobe, FaQuestionCircle, FaChevronDown } from 'react-icons/fa';
 import { useState } from 'react';
 import avatarDefault from "../assets/avatar_default.png";
+import { useSelector } from 'react-redux';
+import { RootState } from '../redux/authStore'; // Adjust the path to where your store is defined 
 
 export const Header = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -75,7 +77,11 @@ export const Header = () => {
                             onClick={() => setIsOpen(!isOpen)}
                         >
                             <img src={avatarDefault} alt="Avatar" className="w-7 h-7 rounded-full" />
-                            <span className="">nguyenqui0911</span>
+                            {(() => {
+                              const user = useSelector((state: RootState) => state.auth?.user);
+                              console.log('state.auth.user:', user);
+                              return <span className="">{user?.name || "Guest"}</span>;
+                            })()}
                         </div>
 
                         {isOpen && (
