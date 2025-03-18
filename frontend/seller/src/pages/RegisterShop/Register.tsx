@@ -114,7 +114,7 @@ const ShopRegister = () => {
             case 'taxRegister':
                 return <TaxRegister onNextStep={handleNextStep} onPreviousStep={handlePreviousStep} />;
             case 'finalize':
-                return <FinalizeRegister onNextStep={handleNextStep}/>;
+                return <FinalizeRegister/>;
             default:
                 return null;
         }

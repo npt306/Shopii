@@ -5,7 +5,6 @@ import { setCredentials } from "../redux/authSlice";
 import { useDispatch } from "react-redux";
 import { userService } from "../services/userService";
 import { UserDto } from "../interfaces/user";
-import RegisterPage from "./register";
 
 interface FormData {
   username: string;

@@ -636,4 +636,28 @@ export class UsersService {
       throw new HttpException('Failed to send email verification', HttpStatus.BAD_REQUEST);
     }
   }
+
+  async checkEmailVerification(email: string): Promise<boolean> {
+    try {
+      const adminToken = await this.getAdminToken();
+      
+      // Find the user by email
+      const searchUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users?email=${email}`;
+      const searchResponse = await firstValueFrom(
+        this.httpService.get(searchUrl, {
+          headers: { Authorization: `Bearer ${adminToken}` },
+        }),
+      );
+      
+      if (!searchResponse.data || searchResponse.data.length === 0) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+      
+      const user = searchResponse.data[0];
+      return user.emailVerified === true;
+    } catch (error) {
+      console.error('Error checking email verification status:', error.response?.data || error.message);
+      throw new HttpException('Failed to check email verification status', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }
