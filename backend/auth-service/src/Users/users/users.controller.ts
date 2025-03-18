@@ -76,6 +76,7 @@ export class UserController {
       const result = await this.usersService.loginAndExchange(loginDto.username, loginDto.password, []);
       return result;
     } catch (error) {
+      console.log(error);
       throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
     }
   }

@@ -189,6 +189,7 @@ export class UsersService {
       );
       return response.data;
     } catch (error) {
+      console.log(error);
       throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
   }

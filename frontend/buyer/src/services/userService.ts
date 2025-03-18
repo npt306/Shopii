@@ -1,11 +1,13 @@
 import axios, { AxiosError } from "axios";
 import { UserDto, LoginResponse, RefreshTokenResponse, RegisterResponse } from "../interfaces/user";
+import { env } from "process";
 
 // API service to connect with the NestJS backend
 export const userService = {
     login: async (username: string, password: string): Promise<LoginResponse> => {
         try {
-            const response = await axios.post<LoginResponse>('http://localhost:3000/Users/login', { username, password });
+            // localhost:3003 for testing
+            const response = await axios.post<LoginResponse>(`http://${env.REDIRECT_GATEWAY}:3003/Users/login`, { username, password });
             return response.data;
         } catch (error) {
             const axiosError = error as AxiosError<{ message: string }>;
@@ -15,7 +17,7 @@ export const userService = {
 
     register: async (userData: UserDto): Promise<RegisterResponse> => {
         try {
-            const response = await axios.post<RegisterResponse>('http://localhost:3000/Users/login', userData);
+            const response = await axios.post<RegisterResponse>(`http://${env.REDIRECT_GATEWAY}:3003/Users/register`, userData);
             return response.data;
         } catch (error) {
             const axiosError = error as AxiosError<{ message: string }>;
@@ -25,7 +27,7 @@ export const userService = {
 
     verifyEmail: async (email: string): Promise<{ success: boolean; message: string }> => {
         try {
-            const response = await axios.post<{ success: boolean; message: string }>('http://localhost:3000/Users/send-verification-email', { email });
+            const response = await axios.post<{ success: boolean; message: string }>(`http://${env.REDIRECT_GATEWAY}:3003/Users/send-verification-email`, { email });
             return response.data;
         } catch (error) {
             const axiosError = error as AxiosError<{ message: string }>;
@@ -45,7 +47,7 @@ export const userService = {
 
     checkEmailExistOrVerfied: async (email: string): Promise<{ success: boolean; message: string }> => {
         try {
-            const response = await axios.post<{ success: boolean; message: string }>('http://localhost:3000/Users/check-email-verification', { email });
+            const response = await axios.post<{ success: boolean; message: string }>(`http://${env.REDIRECT_GATEWAY}:3003/Users/check-email-verification`, { email });
             return response.data;
         } catch (error) {
             const axiosError = error as AxiosError<{ message: string }>;

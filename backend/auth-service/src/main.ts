@@ -11,6 +11,7 @@ async function bootstrap() {
     app.use(new KeycloakMiddleware().use);
     app.enableCors({
       origin: `http://${env.REDIRECT_GATEWAY}`, // frontend URL
+      // origin: `http://localhost:8000`, // frontend URL
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true, // Important for cookies to work cross-domain
