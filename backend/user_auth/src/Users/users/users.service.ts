@@ -568,4 +568,71 @@ export class UsersService {
       throw new Error(`Failed to create user session: ${error.message}`);
     }
   }
+
+  async sendEmailVerification(email: string): Promise<string> {
+    const adminToken = await this.getAdminToken();
+    const createUserUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users`;
+
+    // Create a temporary user in Keycloak with minimal information
+    const userPayload = {
+      username: email, // Use email as username for temporary user
+      email: email,
+      enabled: true, // Enable the user to receive emails
+      emailVerified: false, // Not verified yet
+      credentials: [
+        {
+          type: 'password',
+          value: Math.random().toString(36).slice(-8), // Generate random password
+          temporary: true, // Mark as temporary
+        },
+      ],
+    };
+
+    try {
+      // Create the user
+      await firstValueFrom(
+        this.httpService.post(createUserUrl, userPayload, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+        }),
+      );
+
+      // Find the created user to get the ID
+      const searchUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users?email=${email}`;
+      const searchResponse = await firstValueFrom(
+        this.httpService.get(searchUrl, {
+          headers: { Authorization: `Bearer ${adminToken}` },
+        }),
+      );
+      
+      if (!searchResponse.data || searchResponse.data.length === 0) {
+        throw new HttpException('User not found after creation', HttpStatus.BAD_REQUEST);
+      }
+      
+      const userId = searchResponse.data[0].id;
+
+      // Send verification email
+      const executeActionsUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users/${userId}/execute-actions-email`;
+      
+      await firstValueFrom(
+        this.httpService.put(
+          executeActionsUrl,
+          ['VERIFY_EMAIL'],
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${adminToken}`,
+            },
+          }
+        )
+      );
+
+      return userId;
+    } catch (error) {
+      console.error('Error creating temporary user or sending verification:', error.response?.data || error.message);
+      throw new HttpException('Failed to send email verification', HttpStatus.BAD_REQUEST);
+    }
+  }
 }

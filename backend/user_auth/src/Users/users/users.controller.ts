@@ -132,4 +132,18 @@ export class UserController {
       throw new HttpException(error.message || 'Authentication failed', HttpStatus.UNAUTHORIZED);
     }
   }
+
+  @Post('send-verification-email')
+  async sendVerificationEmail(@Body() body: { email: string }) {
+    try {
+      const result = await this.usersService.sendEmailVerification(body.email);
+      return {
+        success: true,
+        message: 'Verification email sent successfully',
+      };
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }

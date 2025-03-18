@@ -5,11 +5,12 @@ import { setCredentials } from "../redux/authSlice";
 import { useDispatch } from "react-redux";
 import { userService } from "../services/userService";
 import { UserDto } from "../interfaces/user";
+import RegisterPage from "./register";
 
 interface FormData {
   username: string;
   password: string;
-  phone: string;
+  email: string;
 }
 
 export const LoginPage: React.FC = () => {
@@ -20,7 +21,7 @@ export const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     username: '',
     password: '',
-    phone: ''
+    email: ''
   });
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
@@ -49,13 +50,13 @@ export const LoginPage: React.FC = () => {
       }
 
       const result = await userService.login(username, password);
-      
+
       // Store tokens in localStorage for persistence
       localStorage.setItem("standardAccessToken", result.standardAccessToken);
       localStorage.setItem("rptAccessToken", result.rptAccessToken);
       localStorage.setItem("refreshToken", result.refresh_token);
       localStorage.setItem("userProfile", JSON.stringify(result.profile));
-      
+
       // Dispatch action to store credentials in Redux
       dispatch(setCredentials({
         token: result.standardAccessToken,
@@ -65,7 +66,7 @@ export const LoginPage: React.FC = () => {
           roles: []
         },
       }));
-      
+
       // Store additional user information in localStorage if needed
       localStorage.setItem("userEmail", result.profile.email);
       localStorage.setItem("userAvatar", result.profile.avatar);
@@ -73,12 +74,12 @@ export const LoginPage: React.FC = () => {
       localStorage.setItem("userIsSeller", String(result.profile.isSeller));
 
       setSuccess("Login successful! Redirecting...");
-      
+
       // Redirect to home page after successful login
       setTimeout(() => {
         window.location.href = "/home";
       }, 1500);
-      
+
     } catch (error) {
       const err = error as Error;
       setError(err.message);
@@ -95,20 +96,18 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const { phone } = formData;
-      if (!phone) {
-        throw new Error("Please enter your phone number");
+      const { email } = formData;
+      if (!email) {
+        throw new Error("Please enter your email");
       }
 
-      // Create a UserDto object as expected by the backend
-      const userData: UserDto = {
-        username: phone, // Using phone as username
-        password: formData.password || '', // If you add password field to registration
-        phone: phone,
-        // Add other required fields from UserDto as needed
-      };
-
-      const result = await userService.register(userData);
+      // Check if email is valid
+      const emailRegex = /^[^\s@]+@gmail\.com$/;
+      if (!emailRegex.test(email)) {
+        throw new Error("Please enter a valid Gmail address");
+      }
+      
+      const result = await userService.verifyEmail(email);
 
       setSuccess("Registration successful! Please check your phone for verification.");
 
@@ -308,9 +307,9 @@ export const LoginPage: React.FC = () => {
                   <Form.Group className="mb-3">
                     <Form.Control
                       type="text"
-                      name="phone"
-                      placeholder="Số điện thoại"
-                      value={formData.phone}
+                      name="email"
+                      placeholder="Email"
+                      value={formData.email}
                       onChange={handleChange}
                     />
                   </Form.Group>

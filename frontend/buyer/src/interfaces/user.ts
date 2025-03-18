@@ -34,7 +34,6 @@ export interface RefreshTokenResponse {
 export interface UserDto {
     username: string;
     password: string;
-    phone: string;
     email?: string;
 }
 
