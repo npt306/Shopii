@@ -3,12 +3,12 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { KeycloakMiddleware } from './middleware/keycloak.middleware';
 import { env } from 'process';
-// import * as cookieParser from 'cookie-parser';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   try {
     const app = await NestFactory.create(AppModule);
-    // app.use(cookieParser());
+    app.use(cookieParser());
     app.useGlobalPipes(new ValidationPipe({ transform: true }));
     app.use(new KeycloakMiddleware().use);
     app.enableCors({
