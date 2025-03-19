@@ -18,7 +18,7 @@ export const Header = () => {
         <div className="flex flex-col bg-orange-500 text-white">
             <div className="px-30 py-3 flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                    <a href="http://34.58.241.34:8001" className="cursor-pointer hover:opacity-80">Kênh người bán</a>
+                    <a href="http://34.58.241.34:8001/portal/settings/shop/profile/" className="cursor-pointer hover:opacity-80">Kênh người bán</a>
                     {/* <a href="http://localhost:8001" className="cursor-pointer hover:opacity-80">Kênh người bán</a> */}
                     <div>Dowload app</div>
                     <div className="flex items-center gap-2">
