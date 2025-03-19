@@ -1,5 +1,5 @@
-import MainLayout from './layouts/MainLayout'
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import MainLayout from './layouts/MainLayout';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ProfileShop from './pages/ProfileShop/ProfileShop';
 import DecorationShop from './pages/DecorationShop/DecorationShop';
 import All from './pages/OrderManagement/All/All';
@@ -14,14 +14,19 @@ import OrderDelivery from './pages/OrderManagement/OrderDelivery/OrderDeliveryMa
 import OrderInteraction from './pages/OrderManagement/OrderInteraction/OrderInteractionMain';
 import MediaStorage from './pages/DecorationShop/MediaStorage/MediaStorage';
 import DeliverySetting from "./pages/OrderManagement/DeliverySetting/DeliverySettingMain";
+import ShopRegister from './pages/RegisterShop/Register';
+import { ToastContainer } from "react-toastify";
+
+// import ProtectedRoute from './components/hook/protectedRoute';
 
 function App() {
-
   return (
     <BrowserRouter>
       <MainLayout>
         <Routes>
-          <Route path="/" element={<h1 className='text-black'>Trang chủ</h1>} />
+          {/* Public route for registration */}
+          <Route path="/portal/register" element={<ShopRegister />} />
+
           <Route path="/portal/settings/shop/profile/" element={<ProfileShop />} />
           <Route path="/portal/settings/shop/profile/:tab" element={<ProfileShop />} />
           <Route path="/portal/decoration" element={<DecorationShop />} />
@@ -54,9 +59,11 @@ function App() {
           <Route path="/portal/product/new" element={<AddProduct />} />
           <Route path="/portal/product/new/:from" element={<AddProduct />} />
         </Routes>
+        <ToastContainer position="bottom-right" autoClose={3000} />
+
       </MainLayout>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;

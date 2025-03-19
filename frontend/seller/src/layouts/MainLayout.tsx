@@ -11,7 +11,7 @@ interface MainLayoutProps {
 const MainLayout = ({ children }: MainLayoutProps) => {
   const location = useLocation();
 
-  const hideSidebarRoutes = ['/portal/product/new'];
+  const hideSidebarRoutes = ['/portal/product/new', '/portal/register'];
   const isSidebarHidden = hideSidebarRoutes.includes(location.pathname);
 
   return (

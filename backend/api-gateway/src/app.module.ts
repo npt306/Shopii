@@ -3,6 +3,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ApigatewayModule } from './apigateway/apigateway.module';
+import { ProductModule } from './modules/product/product.modele';
+import { VouchersModule } from './modules/vouchers/vouchers.module';
+import { APP_GUARD } from '@nestjs/core';
+import { PermissionsGuard } from "../../user_auth/src/guards/permission.guard";
 
 @Module({
   imports: [
@@ -16,8 +20,13 @@ import { ApigatewayModule } from './apigateway/apigateway.module';
       ],
     }),
     ApigatewayModule,
+    ProductModule,
+    VouchersModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, {
+      provide: APP_GUARD,
+      useClass: PermissionsGuard,
+  }],
 })
 export class AppModule {}

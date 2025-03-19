@@ -1,6 +1,8 @@
 import { FaFacebook, FaInstagram, FaBell, FaGlobe, FaQuestionCircle, FaChevronDown } from 'react-icons/fa';
 import { useState } from 'react';
 import avatarDefault from "../assets/avatar_default.png";
+import { useSelector } from 'react-redux';
+import { RootState } from '../redux/authStore'; // Adjust the path to where your store is defined 
 
 export const Header = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -16,7 +18,8 @@ export const Header = () => {
         <div className="flex flex-col bg-orange-500 text-white">
             <div className="px-30 py-3 flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                    <div>Kênh người bán</div>
+                    <a href="http://34.58.241.34:8001" className="cursor-pointer hover:opacity-80">Kênh người bán</a>
+                    {/* <a href="http://localhost:8001" className="cursor-pointer hover:opacity-80">Kênh người bán</a> */}
                     <div>Dowload app</div>
                     <div className="flex items-center gap-2">
                         <p>Kết nối</p>
@@ -75,7 +78,11 @@ export const Header = () => {
                             onClick={() => setIsOpen(!isOpen)}
                         >
                             <img src={avatarDefault} alt="Avatar" className="w-7 h-7 rounded-full" />
-                            <span className="">nguyenqui0911</span>
+                            {(() => {
+                              const user = useSelector((state: RootState) => state.auth?.user);
+                              console.log('state.auth.user:', user);
+                              return <span className="">{user?.name || "Guest"}</span>;
+                            })()}
                         </div>
 
                         {isOpen && (

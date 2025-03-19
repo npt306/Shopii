@@ -9,9 +9,12 @@ import { HomePage } from './page/home.tsx';
 import { SearchProductPage } from './page/search_product.tsx';
 import { DetailProductPage } from './page/detail_product.tsx';
 import { CartPage } from './page/cart.tsx';
-
+import CallbackPage from './page/callback.tsx';
 import { UserPage } from './page/user.tsx';
 import { OrderPage } from './page/order.tsx';
+import { store, persistor } from './redux/authStore.ts';
+import { Provider } from "react-redux";
+import { PersistGate } from 'redux-persist/integration/react';
 
 const router = createBrowserRouter(
   [
@@ -24,6 +27,10 @@ const router = createBrowserRouter(
       element: <LoginPage />,
     },
     {
+      path: "/callback",
+      element: <CallbackPage />,
+    },
+    {
       path: "/home",
       element: <HomePage />,
     },
@@ -32,7 +39,7 @@ const router = createBrowserRouter(
       element: <SearchProductPage />,
     },
     {
-      path: "/detail-product",
+      path: "/detail-product/:id",
       element: <DetailProductPage />,
     },
     {
@@ -57,6 +64,10 @@ const router = createBrowserRouter(
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <RouterProvider router={router} />
+      </PersistGate>
+    </Provider>
   </StrictMode>,
 );

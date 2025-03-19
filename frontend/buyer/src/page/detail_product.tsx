@@ -2,6 +2,11 @@ import { useState } from "react";
 import { DetailProduct } from "../components/features/product_detail";
 import { HomeLayout } from "../layout/home";
 
+const product = {
+    name: "test",
+
+};
+
 export const DetailProductPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -87,7 +92,7 @@ export const DetailProductPage = () => {
                     </div>
 
                     <div className="div">
-                        
+
                     </div>
                 </div>
 
