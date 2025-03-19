@@ -15,9 +15,9 @@ import OrderInteraction from './pages/OrderManagement/OrderInteraction/OrderInte
 import MediaStorage from './pages/DecorationShop/MediaStorage/MediaStorage';
 import DeliverySetting from "./pages/OrderManagement/DeliverySetting/DeliverySettingMain";
 import ShopRegister from './pages/RegisterShop/Register';
+// import ProtectedRoute from './components/hook/protectedRoute';
 import { ToastContainer } from "react-toastify";
 
-// import ProtectedRoute from './components/hook/protectedRoute';
 
 function App() {
   return (
