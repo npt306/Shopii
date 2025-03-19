@@ -88,7 +88,7 @@ export class UserController {
       res.cookie('accessToken', result.standardAccessToken, {
         httpOnly: true,
         secure: false, // must be true in production (HTTPS)
-        sameSite: 'none', // allow cross-site usage (including different ports)
+        sameSite: 'lax', // allow cross-site usage (including different ports)
         domain: '34.58.241.34', // explicitly set the domain (omit if you're using a subdomain)
         maxAge: 60 * 60 * 1000, // 1 hour
       });
@@ -96,7 +96,7 @@ export class UserController {
       res.cookie('rptToken', result.rptAccessToken, {
         httpOnly: true,
         secure: false,
-        sameSite: 'none',
+        sameSite: 'lax',
         domain: '34.58.241.34',
         maxAge: 60 * 60 * 1000,
       });
@@ -104,7 +104,7 @@ export class UserController {
       res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: false,
-        sameSite: 'none',
+        sameSite: 'lax',
         domain: '34.58.241.34',
         maxAge: 24 * 60 * 60 * 1000,
       });
