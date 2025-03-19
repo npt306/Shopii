@@ -87,26 +87,28 @@ export class UserController {
       // Set standardAccessToken as an HTTP‑only cookie
       res.cookie('accessToken', result.standardAccessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV !== 'development', // set true in production (HTTPS)
-        sameSite: 'strict',
+        secure: process.env.NODE_ENV !== 'development', // must be true in production (HTTPS)
+        sameSite: 'none', // allow cross-site usage (including different ports)
+        domain: '34.58.241.34', // explicitly set the domain (omit if you're using a subdomain)
         maxAge: 60 * 60 * 1000, // 1 hour
       });
 
-      // Set rptAccessToken as an HTTP‑only cookie
       res.cookie('rptToken', result.rptAccessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV !== 'development',
-        sameSite: 'strict',
+        sameSite: 'none',
+        domain: '34.58.241.34',
         maxAge: 60 * 60 * 1000,
       });
 
-      // Set refreshToken as an HTTP‑only cookie
       res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV !== 'development',
-        sameSite: 'strict',
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        sameSite: 'none',
+        domain: '34.58.241.34',
+        maxAge: 24 * 60 * 60 * 1000,
       });
+
 
       // Return non-sensitive data (e.g., user profile) to the client
       return { message: 'Login successful', profile: result.profile };
@@ -134,18 +136,18 @@ export class UserController {
   async exchangeToken(@Body() tokenData: { code: string, sessionState: string }, @Res({ passthrough: true }) response: Response) {
     try {
       console.log("Starting token exchange process with code:", tokenData.code.substring(0, 8) + "...");
-      
+
       // Step 1: Exchange code for tokens
       const tokens = await this.usersService.exchangeCodeForTokens(tokenData.code);
-      
+
       // If we got here, we have valid tokens - now get user info
       console.log("Token exchange successful, fetching user info");
       const userInfo = await this.usersService.getUserInfo(tokens.access_token);
-      
+
       // Create user session
       console.log("User info obtained, creating session for:", userInfo.email || userInfo.preferred_username);
       const session = await this.usersService.createUserSession(userInfo, tokens);
-  
+
       // Set HTTP-only cookies for security
       response.cookie('refresh_token', tokens.refresh_token, {
         httpOnly: true,
@@ -153,7 +155,7 @@ export class UserController {
         sameSite: 'lax',
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       });
-      
+
       // Return user info and access token to frontend
       return {
         user: session,
@@ -161,11 +163,11 @@ export class UserController {
       };
     } catch (error) {
       console.error('Token exchange error:', error);
-      
+
       if (error.message?.includes('Code not valid') || error.message?.includes('expired')) {
         throw new HttpException('Authentication code expired or already used. Please try logging in again.', HttpStatus.BAD_REQUEST);
       }
-      
+
       throw new HttpException(error.message || 'Authentication failed', HttpStatus.UNAUTHORIZED);
     }
   }
