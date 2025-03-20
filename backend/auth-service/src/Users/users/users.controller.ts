@@ -89,7 +89,7 @@ export class UserController {
         httpOnly: true,
         secure: false, // must be true in production (HTTPS)
         sameSite: 'lax', // allow cross-site usage (including different ports)
-        domain: '34.58.241.34', // explicitly set the domain (omit if you're using a subdomain)
+        domain: 'localhost', // explicitly set the domain (omit if you're using a subdomain)
         maxAge: 60 * 60 * 1000, // 1 hour
       });
 
@@ -97,7 +97,7 @@ export class UserController {
         httpOnly: true,
         secure: false,
         sameSite: 'lax',
-        domain: '34.58.241.34',
+        domain: 'localhost',
         maxAge: 60 * 60 * 1000,
       });
 
@@ -105,7 +105,7 @@ export class UserController {
         httpOnly: true,
         secure: false,
         sameSite: 'lax',
-        domain: '34.58.241.34',
+        domain: 'localhost',
         maxAge: 24 * 60 * 60 * 1000,
       });
 
