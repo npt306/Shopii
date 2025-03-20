@@ -121,32 +121,6 @@ const AllProduct = () => {
             <div className="relative mb-4 flex items-center justify-between">
                 <span className="px-3 py-2 text-2xl text-black">Sản phẩm</span>
                 <div className="px-4 py-2 flex space-x-4">
-                    <select
-                        defaultValue="default"
-                        className="text-sm text-black bg-gray-100 px-4 py-2 border border-gray-300 hover:bg-gray-200 transition"
-                        style={{
-                            outline: "none", // Loại bỏ viền đen khi chọn
-                            border: "0.5px solid rgba(0, 0, 0, 0.2)", // Viền nhạt hơn với độ trong suốt
-                        }}
-                    >
-                        <option value="default" disabled>Cài đặt sản phẩm</option>
-                        <option value="brandManagement">Quản lý thương hiệu</option>
-                        <option value="sizeChartManagement">Quản lý Bảng quy đổi kích cỡ</option>
-                    </select>
-                    <select
-                        defaultValue="default"
-                        className="text-sm text-black bg-gray-100 px-4 py-2 border border-gray-300 hover:bg-gray-200 transition"
-                        style={{
-                            outline: "none",
-                            border: "0.5px solid rgba(0, 0, 0, 0.2)",
-                        }}
-                    >
-                        <option value="default" disabled>Công cụ xử lí hàng loạt</option>
-                        <option value="bulkUpload">Đăng Hàng Loạt</option>
-                        <option value="bulkUpdate">Cập Nhật Hàng Loạt</option>
-                        <option value="updateAttributes">Cập Nhật Thuộc Tính</option>
-                    </select>
-
                     <OrangeButton
                         className="eds-button--normal" onClick={handleClick}
                         label={
@@ -269,8 +243,7 @@ const AllProduct = () => {
                                     left: `${inkBarStyleB.left}px`,
                                 }}
                             />
-                            {/* Lịch sử vi phạm */}
-                            <span className="text-blue-500 ml-4">Lịch sử vi phạm</span>
+
                         </div>
                     </>
                 )}
@@ -359,7 +332,7 @@ const AllProduct = () => {
 
                         {/* Vấn đề	*/}
                         <div className="flex items-center space-x-2 mb-4">
-                            <span className="text-gray-700 text-sm font-medium">Vấn đề	
+                            <span className="text-gray-700 text-sm font-medium">Vấn đề
                             </span>
                             <button
                                 className={`px-3 py-1 border rounded bg-white ${selectedIssue === "fail" ? "border-orange-500 text-orange-500" : "border-gray-300 text-black"
@@ -374,7 +347,7 @@ const AllProduct = () => {
                                 onClick={() => setSelectedIssue("picture")}
                             >
                                 Hình ảnh (0)
-                            </button> 
+                            </button>
                             <button
                                 className={`px-3 py-1 border rounded bg-white ${selectedIssue === "notFull" ? "border-orange-500 text-orange-500" : "border-gray-300 text-black"
                                     }`}
@@ -425,23 +398,6 @@ const AllProduct = () => {
                         </div>
                     </div>
 
-                    {(currentParam === "all" || currentParam === "restock" || currentParam === "unlisted") && (
-                        <div className="w-60">
-                            <div className="relative">
-                                <select
-                                    className="w-full px-4 py-2 border border-gray-400 text-black bg-white rounded-md appearance-none focus:outline-none focus:ring-1 focus:ring-gray-500"
-                                >
-                                    <option value="default" disabled>Loại Sản phẩm</option>
-                                    <option value="1">Sản phẩm Livestream</option>
-                                </select>
-                                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                    )}
                 </div>
 
 
@@ -465,15 +421,15 @@ const AllProduct = () => {
             {/* Nội dung tab */}
             <div className="m-3 bg-white p-4 rounded shadow">
                 {currentType === "all" && <All />}
-                {currentType === "live" &&  currentParam === "all" && <AllActived />}
-                {currentType === "live" &&  currentParam === "restock" && <Restock />}
-                {currentType === "live" &&  currentParam === "need_optimized" && <Need_optimized />}
-                {currentType === "violation" &&  currentParam === "banned" && <Banned />}
-                {currentType === "violation" &&  currentParam === "deboosted" && <Deboosted />}
-                {currentType === "violation" &&  currentParam === "deleted" && <Deleted />}
+                {currentType === "live" && currentParam === "all" && <AllActived />}
+                {currentType === "live" && currentParam === "restock" && <Restock />}
+                {currentType === "live" && currentParam === "need_optimized" && <Need_optimized />}
+                {currentType === "violation" && currentParam === "banned" && <Banned />}
+                {currentType === "violation" && currentParam === "deboosted" && <Deboosted />}
+                {currentType === "violation" && currentParam === "deleted" && <Deleted />}
                 {currentType === "reviewing" && <Reviewing />}
-                {currentType === "unpublished" &&  currentParam === "unlisted" && <Unlisted />}
-                {currentType === "unpublished" &&  currentParam === "draft" && <Draft />}
+                {currentType === "unpublished" && currentParam === "unlisted" && <Unlisted />}
+                {currentType === "unpublished" && currentParam === "draft" && <Draft />}
             </div>
         </div>
     );
