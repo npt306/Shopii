@@ -11,8 +11,6 @@ interface FormData {
     shopName: string;
     email: string;
     phone: string;
-    // other shop info fields...
-    // You can also include address info here if needed.
   };
   taxRegister: {
     businessType: string;
@@ -59,7 +57,9 @@ const ShopRegister = () => {
   // Final submission: Gather and process all data
   const handleFinalSubmit = async () => {
     try {
-      const response = await axios.post('/register-shop', formData);
+      console.log(formData);
+      // const response = await axios.post('http://localhost:3003/Users/register-shop', formData);
+      const response = await axios.post('http://34.58.241.34:3003/Users/register-shop', formData);
       console.log('Response from server:', response.data);
       // Handle success
     } catch (error: any) {

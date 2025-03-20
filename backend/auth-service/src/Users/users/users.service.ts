@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus, UnauthorizedException, Logger} from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, UnauthorizedException, Logger } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as jwt from 'jsonwebtoken';
@@ -23,7 +23,7 @@ export class UsersService {
 
   constructor(
     private readonly httpService: HttpService,
-    
+
     @InjectRepository(Account)
     private readonly accountRepository: Repository<Account>,
 
@@ -145,7 +145,7 @@ export class UsersService {
     const accountRecord = this.accountRepository.create({
       Email: userDto.email,
       Username: userDto.username,
-      Avatar: userDto.avatar || undefined, 
+      Avatar: userDto.avatar || undefined,
       DoB: userDto.date_of_birth ? new Date(userDto.date_of_birth) : undefined,
       PhoneNumber: userDto.phoneNumber,
       Sex: userDto.sex,
@@ -161,12 +161,12 @@ export class UsersService {
     user.UpdatedAt = new Date();
     await this.usersRepository.save(user);
 
-    return { 
+    return {
       message: `User registered successfully and assigned roles: ${rolesToAssign.join(', ')}`,
       userId,
     };
   }
-  
+
 
   async login(username: string, password: string): Promise<any> {
     const url = `${this.keycloakBaseUrl}/realms/${this.realm}/protocol/openid-connect/token`;
@@ -180,7 +180,7 @@ export class UsersService {
     }
     params.append('username', username);
     params.append('password', password);
-  
+
     try {
       const response = await firstValueFrom(
         this.httpService.post(url, params.toString(), {
@@ -193,7 +193,7 @@ export class UsersService {
       throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
   }
-  
+
 
   async loginAndExchange(username: string, password: string, permissions: string[]): Promise<any> {
     // Get the standard access token via login
@@ -204,13 +204,13 @@ export class UsersService {
     if (!decoded.email_verified) {
       throw new UnauthorizedException('Email is not verified.');
     }
-    
+
     // Fetch the user profile using the email from the decoded token
     const userProfile = await this.fetchProfileByEmail(decoded.email);
-    
+
     // Automatically request an RPT token with the required permissions.
     const rptData = await this.getRequestingPartyToken(standardAccessToken);
-    
+
     // Return both tokens, profile data, and other relevant information
     return {
       standardAccessToken,
@@ -233,7 +233,7 @@ export class UsersService {
       throw new HttpException('Client secret is not defined', HttpStatus.INTERNAL_SERVER_ERROR);
     }
     params.append('refresh_token', refreshToken);
-  
+
     try {
       // First, get a new standard token using the refresh token.
       const response = await firstValueFrom(
@@ -243,11 +243,11 @@ export class UsersService {
       );
       const tokenData = response.data;
       const standardAccessToken = tokenData.access_token;
-      
+
       // Automatically request an RPT token with the required permission(s)
       // Here, we're requesting "User Management#view". Adjust as needed.
       const rptData = await this.getRequestingPartyToken(standardAccessToken);
-      
+
       // Return both tokens and related details.
       return {
         standardAccessToken,
@@ -265,9 +265,9 @@ export class UsersService {
   async triggerVerificationEmail(userId: string): Promise<void> {
     const adminToken = await this.getAdminToken();
     const clientId = this.clientId;
-    const redirectUri = `http://34.58.241.34:3003`; // Adjust accordingly
+    const redirectUri = `http://34.58.241.34:8000/login`; // Adjust accordingly
     const executeActionsUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users/${userId}/execute-actions-email?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
-  
+
     try {
       await firstValueFrom(
         this.httpService.put(
@@ -304,7 +304,7 @@ export class UsersService {
       throw new HttpException('Failed to fetch permissions', HttpStatus.UNAUTHORIZED);
     }
   }
-  
+
   async getRequestingPartyToken(userAccessToken: string): Promise<any> {
     const url = `${this.keycloakBaseUrl}/realms/${this.realm}/protocol/openid-connect/token`;
     const params = new URLSearchParams();
@@ -317,7 +317,7 @@ export class UsersService {
     }
     params.append('audience', this.clientId);
     // Note: Do NOT append any explicit 'permission' parameter.
-    
+
     try {
       const response = await firstValueFrom(
         this.httpService.post(url, params.toString(), {
@@ -336,7 +336,7 @@ export class UsersService {
 
   async addSellerRole(userId: string): Promise<any> {
     const adminToken = await this.getAdminToken();
-    const roleName = 'seller'; 
+    const roleName = 'seller';
 
     // Get the seller role representation from Keycloak
     const roleUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/roles/${roleName}`;
@@ -351,7 +351,7 @@ export class UsersService {
       throw new HttpException(`Role ${roleName} not found in Keycloak`, HttpStatus.BAD_REQUEST);
     }
     const roleRepresentation = roleResponse.data;
-    
+
     // Map the role to the user
     const mappingUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users/${userId}/role-mappings/realm`;
     try {
@@ -366,44 +366,100 @@ export class UsersService {
     } catch (error) {
       throw new HttpException(`Failed to assign role ${roleName} to user`, HttpStatus.BAD_REQUEST);
     }
-    
+
     return { message: `Role ${roleName} assigned successfully to user ${userId}` };
   }
 
-  async createOrUpdateSeller(sellerDto: Partial<Seller> & { Email: string | string[] }): Promise<any> {
-    // Ensure sellerDto includes an email.
-    if (!sellerDto.Email) {
+  async createOrUpdateSeller(data: any): Promise<any> {
+    // Extract relevant information from nested structure
+    let email: string;
+    let shopName: string;
+    let taxCode: number = 0;
+    let sellerType: string = 'Individual';
+  
+    // Handle nested data structure from frontend
+    if (data.shopInformation || data.taxRegister) {
+      email = data.shopInformation?.email || data.taxRegister?.email;
+      shopName = data.shopInformation?.shopName;
+      
+      // Parse tax code as number or default to 0
+      if (data.taxRegister?.taxCode) {
+        taxCode = parseInt(data.taxRegister.taxCode, 10) || 0;
+      }
+  
+      // Map business type to seller type
+      if (data.taxRegister?.businessType) {
+        switch(data.taxRegister.businessType) {
+          case 'ho-kinh-doanh':
+            sellerType = 'Small Business';
+            break;
+          case 'cong-ty':
+            sellerType = 'Company';
+            break;
+          default:
+            sellerType = 'Individual';
+        }
+      }
+    } else {
+      // Support original format for backward compatibility
+      email = Array.isArray(data.Email) ? data.Email[0] : data.Email;
+      shopName = data.ShopName;
+      taxCode = data.TaxCode || 0;
+      sellerType = data.SellerType || 'Cá nhân';
+    }
+  
+    // Validate required data
+    if (!email) {
       throw new HttpException('Seller email is required', HttpStatus.BAD_REQUEST);
     }
-    
-    // If the email is an array, use its first element.
-    const email: string = Array.isArray(sellerDto.Email) ? sellerDto.Email[0] : sellerDto.Email;
-    
-    // Find the account by email (assuming the Account entity column is "Email")
+  
+    if (!shopName) {
+      throw new HttpException('Shop name is required', HttpStatus.BAD_REQUEST);
+    }
+  
+    // Find the account by email
     const account = await this.accountRepository.findOne({ where: { Email: email } });
     if (!account) {
       throw new HttpException('Account not found for the provided email', HttpStatus.BAD_REQUEST);
     }
-    
-    // Use the Account's primary key (AccountId) as the seller's id.
+  
+    // Use the Account's primary key (AccountId) as the seller's id
     const sellerId = account.AccountId;
-    
-    // Try to find an existing seller record by the sellerId.
-    let seller = await this.sellerRepository.findOne({ where: { id: sellerId } });
-    
-    // Convert the email into a one-element array (to be stored in the Seller's Email column).
+  
+    // Prepare valid seller data
+    const validSellerData: Partial<Seller> = {
+      ShopName: shopName,
+      TaxCode: taxCode,
+      SellerType: sellerType,
+      Followers: 0, 
+    };
+  
+    // Convert email to array format for storage
     const emailArray = [email];
-    
+  
+    // Find existing seller or create new one
+    let seller = await this.sellerRepository.findOne({ where: { id: sellerId } });
+  
     if (seller) {
-      // Merge new data into the existing seller record.
-      seller = this.sellerRepository.merge(seller, { ...sellerDto, Email: emailArray, UpdatedAt: new Date() });
+      // Update existing seller
+      seller = this.sellerRepository.merge(seller, {
+        ...validSellerData,
+        Email: emailArray,
+        UpdatedAt: new Date()
+      });
       await this.sellerRepository.save(seller);
     } else {
-      // Create a new seller record using the account's ID and the email as an array.
-      seller = this.sellerRepository.create({ ...sellerDto, id: sellerId, Email: emailArray, CreatedAt: new Date(), UpdatedAt: new Date() });
+      // Create new seller
+      seller = this.sellerRepository.create({
+        ...validSellerData,
+        id: sellerId,
+        Email: emailArray,
+        CreatedAt: new Date(),
+        UpdatedAt: new Date()
+      });
       await this.sellerRepository.save(seller);
     }
-
+  
     // Find the user in Keycloak by email
     const adminToken = await this.getAdminToken();
     const searchUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users?email=${email}`;
@@ -417,24 +473,27 @@ export class UsersService {
     }
     const keycloakUser = searchResponse.data[0];
     const userId = keycloakUser.id;
-
+  
     // Add the seller role to the user in Keycloak
     await this.addSellerRole(userId);
-
-    return { message: seller ? 'Seller updated successfully' : 'Seller created successfully', seller };
+  
+    return {
+      message: seller ? 'Seller updated successfully' : 'Seller created successfully',
+      seller
+    };
   }
 
   async fetchProfileByEmail(email: string): Promise<any> {
     try {
       // Find account by email
-      const account = await this.accountRepository.findOne({ 
-        where: { Email: email } 
+      const account = await this.accountRepository.findOne({
+        where: { Email: email }
       });
-      
+
       if (!account) {
         throw new HttpException('User profile not found', HttpStatus.NOT_FOUND);
       }
-      
+
       // Find user data associated with account
       const user = await this.usersRepository.findOne({
         where: { account: { AccountId: account.AccountId } }
@@ -471,11 +530,11 @@ export class UsersService {
       throw new HttpException('Error fetching user profile', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-  
+
   async exchangeCodeForTokens(code: string) {
     try {
       const tokenEndpoint = 'https://sso-shopii.ddns.net/realms/shopii/protocol/openid-connect/token';
-      
+
       // Make sure the redirect_uri matches EXACTLY what was used in the initial request
       const params = new URLSearchParams();
       params.append('grant_type', 'authorization_code');
@@ -483,26 +542,26 @@ export class UsersService {
       params.append('client_id', this.clientId);
       params.append('client_secret', this.clientSecret);
       params.append('redirect_uri', `http://${this.redirectGateway}:8000/callback`);
-      
+
       console.log("Sending token request with params:", params.toString());
-      
+
       const response = await axios.post(tokenEndpoint, params.toString(), {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       });
-      
+
       return response.data;
     } catch (error) {
       // Enhanced error logging
       console.error('Token exchange error details:', error.response?.data);
       console.error('Full error:', error);
-      
-      if (error.response?.data?.error === 'invalid_grant' && 
-          error.response?.data?.error_description === 'Code not valid') {
+
+      if (error.response?.data?.error === 'invalid_grant' &&
+        error.response?.data?.error_description === 'Code not valid') {
         throw new Error('Authentication code expired or already used. Please try logging in again.');
       }
-      
+
       throw error;
     }
   }
@@ -511,7 +570,7 @@ export class UsersService {
     try {
       const userInfoEndpoint = `${this.keycloakBaseUrl}/realms/${this.realm}/protocol/openid-connect/userinfo`;
       console.log(`Fetching user info from: ${userInfoEndpoint}`);
-      
+
       const response = await firstValueFrom(
         this.httpService.get(userInfoEndpoint, {
           headers: {
@@ -519,7 +578,7 @@ export class UsersService {
           },
         })
       );
-      
+
       console.log("User info fetched successfully");
       return response.data;
     } catch (error) {
@@ -532,7 +591,7 @@ export class UsersService {
     try {
       // Find account by email (if user already exists)
       let account = await this.accountRepository.findOne({ where: { Email: userInfo.email } });
-      
+
       if (!account) {
         // Create new account if not found
         account = this.accountRepository.create({
@@ -545,7 +604,7 @@ export class UsersService {
           UpdatedAt: new Date(),
         });
         await this.accountRepository.save(account);
-        
+
         // Create user record linked to the account
         const user = new User();
         user.account = account;
@@ -553,7 +612,7 @@ export class UsersService {
         user.UpdatedAt = new Date();
         await this.usersRepository.save(user);
       }
-      
+
       // Return user session data
       return {
         id: account.AccountId,
@@ -608,16 +667,16 @@ export class UsersService {
           headers: { Authorization: `Bearer ${adminToken}` },
         }),
       );
-      
+
       if (!searchResponse.data || searchResponse.data.length === 0) {
         throw new HttpException('User not found after creation', HttpStatus.BAD_REQUEST);
       }
-      
+
       const userId = searchResponse.data[0].id;
 
       // Send verification email
       const executeActionsUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users/${userId}/execute-actions-email`;
-      
+
       await firstValueFrom(
         this.httpService.put(
           executeActionsUrl,
@@ -641,7 +700,7 @@ export class UsersService {
   async checkEmailVerification(email: string): Promise<boolean> {
     try {
       const adminToken = await this.getAdminToken();
-      
+
       // Find the user by email
       const searchUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users?email=${email}`;
       const searchResponse = await firstValueFrom(
@@ -649,11 +708,11 @@ export class UsersService {
           headers: { Authorization: `Bearer ${adminToken}` },
         }),
       );
-      
+
       if (!searchResponse.data || searchResponse.data.length === 0) {
         throw new HttpException('User not found', HttpStatus.NOT_FOUND);
       }
-      
+
       const user = searchResponse.data[0];
       return user.emailVerified === true;
     } catch (error) {
