@@ -194,6 +194,7 @@ export class ProductService {
             level: c.Level,
           })),
           details: product.details.map((d) => ({
+            type_id: d.ProductDetailTypeID,
             type_1: d.Type_1,
             type_2: d.Type_2,
             image: d.Image,
