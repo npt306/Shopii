@@ -1,17 +1,24 @@
 import React, { useState } from "react";
 
-// Define prop types for the component
-interface TaxRegisterProps {
-  onNextStep: () => void;
-  onPreviousStep: () => void;
+interface TaxRegisterData {
+  businessType: string;
+  businessAddress: string;
+  email: string;
+  taxCode: string;
 }
 
-const TaxRegister: React.FC<TaxRegisterProps> = ({ onNextStep, onPreviousStep }) => {
-  const [taxData, setTaxData] = useState({
-    businessType: "", // e.g. "ca-nhan", "ho-kinh-doanh", "cong-ty"
-    businessAddress: "",
-    email: "",
-    taxCode: ""
+interface TaxRegisterProps {
+  onNextStep: (data: TaxRegisterData) => void;
+  onPreviousStep: () => void;
+  initialData?: TaxRegisterData;
+}
+
+const TaxRegister: React.FC<TaxRegisterProps> = ({ onNextStep, onPreviousStep, initialData }) => {
+  const [taxData, setTaxData] = useState<TaxRegisterData>({
+    businessType: initialData?.businessType || "",
+    businessAddress: initialData?.businessAddress || "",
+    email: initialData?.email || "",
+    taxCode: initialData?.taxCode || "",
   });
 
   // Handle changes in the form fields
@@ -19,16 +26,15 @@ const TaxRegister: React.FC<TaxRegisterProps> = ({ onNextStep, onPreviousStep })
     const { name, value } = e.target;
     setTaxData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
-  // Handle form submission
+  // Handle form submission: pass the collected tax data up via onNextStep
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Tax Data submitted:", taxData);
-    // Perform your submission logic here
-    onNextStep();
+    onNextStep(taxData);
   };
 
   return (
