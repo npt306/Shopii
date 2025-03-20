@@ -1,4 +1,14 @@
-import { Get, Post, Body, Controller, Req, Param, Patch, Delete, ParseIntPipe } from '@nestjs/common';
+import {
+  Get,
+  Post,
+  Body,
+  Controller,
+  Req,
+  Param,
+  Patch,
+  Delete,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { Request } from 'express';
@@ -9,8 +19,8 @@ export class ApigatewayController {
   constructor(private readonly httpService: HttpService) {}
 
   @Get('hello')
-  async getHello() {
-    return "Hello from API Gateway!";
+  getHello() {
+    return 'Hello from API Gateway!';
   }
 
   @Get('rest/hello')
@@ -26,21 +36,71 @@ export class ApigatewayController {
       properties: {
         query: {
           type: 'string',
-          example: "query { hello { message } }",
+          example: 'query { hello { message } }',
         },
       },
     },
   })
   @Post()
-  async forwardGraphqlRequest(@Req() req: Request, @Body() body: any): Promise<any> {
+  async forwardGraphqlRequest(
+    @Req() req: Request,
+    @Body() body: any,
+  ): Promise<any> {
     const graphqlServiceUrl = 'http://localhost:3103/graphql';
 
     const response = await firstValueFrom(
       this.httpService.post(graphqlServiceUrl, body, {
-        headers: req.headers, 
+        headers: req.headers,
       }),
     );
     return response.data;
   }
+  // Voucher Service
+  @Post('vouchers')
+  async createVoucher(@Body() createVoucherDto: any): Promise<any> {
+    const voucherServiceUrl = 'http://localhost:3002/vouchers';
+    const response = await firstValueFrom(
+      this.httpService.post(voucherServiceUrl, createVoucherDto),
+    );
+    return response.data;
+  }
 
+  @Get('vouchers')
+  async getAllVouchers(): Promise<any> {
+    const voucherServiceUrl = 'http://localhost:3002/vouchers';
+    const response = await firstValueFrom(
+      this.httpService.get(voucherServiceUrl),
+    );
+    return response.data;
+  }
+
+  @Get('vouchers/:id')
+  async getVoucherById(@Param('id', ParseIntPipe) id: number): Promise<any> {
+    const voucherServiceUrl = `http://localhost:3002/vouchers/${id}`;
+    const response = await firstValueFrom(
+      this.httpService.get(voucherServiceUrl),
+    );
+    return response.data;
+  }
+
+  @Patch('vouchers/:id')
+  async updateVoucher(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateVoucherDto: any,
+  ): Promise<any> {
+    const voucherServiceUrl = `http://localhost:3002/vouchers/${id}`;
+    const response = await firstValueFrom(
+      this.httpService.patch(voucherServiceUrl, updateVoucherDto),
+    );
+    return response.data;
+  }
+
+  @Delete('vouchers/:id')
+  async deleteVoucher(@Param('id', ParseIntPipe) id: number): Promise<any> {
+    const voucherServiceUrl = `http://localhost:3002/vouchers/${id}`;
+    const response = await firstValueFrom(
+      this.httpService.delete(voucherServiceUrl),
+    );
+    return response.data;
+  }
 }
