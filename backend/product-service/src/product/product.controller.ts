@@ -23,6 +23,11 @@ export class ProductController {
     return this.productService.getProductList();
   }
 
+  @Get('seller/:sellerId')
+  async getProductsBySellerID(@Param('sellerId') sellerId: number) {
+    return this.productService.getProductsBySellerID(sellerId);
+  }
+
   @Post()
   async addProduct(
     @Body() createProductDto: CreateProductDto,

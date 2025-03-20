@@ -61,6 +61,8 @@ export class ProductService {
   }
 
   async getProductDetails(productId: number): Promise<ProductDto> {
+    console.log('Starting getProductsBySellerID');
+
     const product = await this.productRepository
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.classifications', 'classifications')
@@ -110,6 +112,8 @@ export class ProductService {
     return productDto;
   }
 
+
+
   async getProductList(): Promise<ProductListDto> {
     const products = await this.productRepository
       .createQueryBuilder('product')
@@ -143,6 +147,60 @@ export class ProductService {
     };
 
     return productListDto;
+  }
+
+  async getProductsBySellerID(sellerId: number): Promise<ProductDto[]> {
+    const products = await this.productRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.classifications', 'classifications')
+      .leftJoinAndSelect('product.details', 'details')
+      .where('product.SellerID = :sellerId', { sellerId })
+      .getMany();
+
+    if (!products.length) {
+      throw new Error('No products found for this seller');
+    }
+
+    const productDtos: ProductDto[] = await Promise.all(products.map(async (product) => {
+      const categoryIds = product.Categories;
+      const categories = await this.categoriesRepository
+        .createQueryBuilder('category')
+        .where('category.CategoryID IN (:...categoryIds)', { categoryIds })
+        .getMany();
+
+      const classifications = await this.productClassificationTypeRepository
+        .createQueryBuilder('classification')
+        .where('classification.ProductID = :productId', { productId: product.ProductID })
+        .getMany();
+
+      const productDto: ProductDto = {
+        name: product.Name,
+        description: product.Description,
+        categories: categories.map((c) => c.CategoryName),
+        images: product.Images,
+        soldQuantity: product.SoldQuantity,
+        rating: product.Rating,
+        coverImage: product.CoverImage,
+        video: product.Video,
+        quantity: product.Quantity,
+        reviews: product.Reviews,
+        classifications: classifications.map((c) => ({
+          classTypeName: c.ClassTypeName,
+          level: c.Level,
+        })),
+        details: product.details.map((d) => ({
+          type_1: d.Type_1,
+          type_2: d.Type_2,
+          image: d.Image,
+          price: d.Price,
+          quantity: d.Quantity,
+        })),
+      };
+
+      return productDto;
+    }));
+
+    return productDtos;
   }
 
   async addProduct(createProductDto: CreateProductDto): Promise<Product> {
