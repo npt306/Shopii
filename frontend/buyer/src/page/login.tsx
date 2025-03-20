@@ -53,16 +53,13 @@ export const LoginPage: React.FC = () => {
   
       console.log(result);
   
-      // Since tokens are now stored in httpOnly cookies by the backend,
-      // we don't store them in localStorage on the client.
-      // Instead, store only non-sensitive user profile data if needed.
+      // Store only non-sensitive user profile data if needed.
       localStorage.setItem("userProfile", JSON.stringify(result.profile));
       
       // Log non-sensitive data for testing purposes
       console.log("User profile stored:", localStorage.getItem("userProfile"));
   
       // Dispatch action to store credentials in Redux.
-      // Note: Since tokens are now stored in secure cookies, you don't need to pass them to Redux.
       dispatch(setCredentials({
         token: "", // Not storing token client-side
         user: {
@@ -94,40 +91,41 @@ export const LoginPage: React.FC = () => {
   };
 
   // Handle registration submission
-  const handleRegister = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-    setLoading(true);
+// Handle registration submission
+const handleRegister = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  e.preventDefault();
+  setError("");
+  setSuccess("");
+  setLoading(true);
 
-    try {
-      const { email } = formData;
-      if (!email) {
-        throw new Error("Please enter your email");
-      }
-
-      // Check if email is valid
-      const emailRegex = /^[^\s@]+@gmail\.com$/;
-      if (!emailRegex.test(email)) {
-        throw new Error("Please enter a valid Gmail address");
-      }
-
-      const result = await userService.verifyEmail(email);
-
-      setSuccess("Registration successful! Please check your email for verification.");
-
-      // Switch to login view after successful registration
-      setTimeout(() => {
-        setIsLogin(true);
-      }, 2000);
-
-    } catch (error) {
-      const err = error as Error;
-      setError(err.message);
-    } finally {
-      setLoading(false);
+  try {
+    const { email } = formData;
+    if (!email) {
+      throw new Error("Please enter your email");
     }
-  };
+
+    // Check if email is valid
+    const emailRegex = /^[^\s@]+@gmail\.com$/;
+    if (!emailRegex.test(email)) {
+      throw new Error("Please enter a valid Gmail address");
+    }
+
+    // Call the registration service which generates the account and triggers verification email
+    const result = await userService.register({ email });
+
+    // Update the success state and switch to login view after a delay
+    setSuccess("Registration successful! Please check your email for verification before login.");
+    setTimeout(() => {
+      setIsLogin(true);
+    }, 2000);
+
+  } catch (error) {
+    const err = error as Error;
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     // Dynamically import Bootstrap CSS only when LoginPage is mounted
@@ -312,9 +310,9 @@ export const LoginPage: React.FC = () => {
                   <Form.Group className="mb-3">
                     <Form.Control
                       type="text"
-                      name="username"
+                      name="email"
                       placeholder="Email"
-                      value={formData.username}
+                      value={formData.email}
                       onChange={handleChange}
                     />
                   </Form.Group>

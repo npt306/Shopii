@@ -9,6 +9,7 @@ import { Account } from 'src/entity/Account.entity';
 import { User } from 'src/entity/User.entity';
 import { Seller } from 'src/entity/seller.entity';
 import axios from 'axios';
+import { MinimalRegisterDto } from 'src/dto/register.dto';
 
 @Injectable()
 export class UsersService {
@@ -63,29 +64,35 @@ export class UsersService {
     }
   }
 
-  async register(userDto: UserDto): Promise<any> {
+  async register(userDto: MinimalRegisterDto): Promise<any> {
     const adminToken = await this.getAdminToken();
     const createUserUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users`;
-
-    // Prepare payload for Keycloak registration
+  
+    // Generate default values using only the provided email
+    const defaultUsername = userDto.email.split('@')[0];
+    const defaultPassword = Math.random().toString(36).slice(-8); // Generate a random password
+    const defaultFirstName = 'User';
+    const defaultLastName = 'Account';
+  
+    // Prepare payload for Keycloak registration with defaults
     const userPayload = {
-      username: userDto.username,
+      username: defaultUsername,
       email: userDto.email,
-      firstName: userDto.firstName,
-      lastName: userDto.lastName,
+      firstName: defaultFirstName,
+      lastName: defaultLastName,
       enabled: true,
       attributes: {
-        phoneNumber: userDto.phoneNumber,
+        phoneNumber: 'N/A',
       },
       credentials: [
         {
           type: 'password',
-          value: userDto.password,
+          value: defaultPassword,
           temporary: false,
         },
       ],
     };
-
+  
     try {
       await firstValueFrom(
         this.httpService.post(createUserUrl, userPayload, {
@@ -99,7 +106,7 @@ export class UsersService {
       console.log(error);
       throw new HttpException('User registration failed', HttpStatus.BAD_REQUEST);
     }
-
+  
     // Retrieve the created user from Keycloak to get the user ID
     const searchUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users?email=${userDto.email}`;
     const searchResponse = await firstValueFrom(
@@ -112,11 +119,11 @@ export class UsersService {
     }
     const createdUser = searchResponse.data[0];
     const userId = createdUser.id;
-
+  
     // Determine roles to assign (default to ['buyer'] if not provided)
-    const rolesToAssign: string[] = userDto.roles && userDto.roles.length > 0 ? userDto.roles : ['buyer'];
-
-    // Loop through each role and assign to user in Keycloak
+    const rolesToAssign: string[] = ['buyer'];
+  
+    // Assign each role to the user in Keycloak
     for (const roleName of rolesToAssign) {
       const roleUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/roles/${roleName}`;
       let roleResponse;
@@ -130,7 +137,6 @@ export class UsersService {
         throw new HttpException(`Role ${roleName} not found in Keycloak`, HttpStatus.BAD_REQUEST);
       }
       const roleRepresentation = roleResponse.data;
-
       const mappingUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users/${userId}/role-mappings/realm`;
       try {
         await firstValueFrom(
@@ -145,30 +151,33 @@ export class UsersService {
         throw new HttpException(`Failed to assign role ${roleName}`, HttpStatus.BAD_REQUEST);
       }
     }
-
-    // Trigger the email verification
-    await this.triggerVerificationEmail(userId);
-
-    // Save additional user information into Accounts table
+  
+    // Generate the Account record using only the provided email and defaults
+    const generatedAvatar = null;
+    const defaultDoB = new Date('1900-01-01'); // Default birth date if not provided
     const accountRecord = this.accountRepository.create({
       Email: userDto.email,
-      Username: userDto.username,
-      Avatar: userDto.avatar || undefined,
-      DoB: userDto.date_of_birth ? new Date(userDto.date_of_birth) : undefined,
-      PhoneNumber: userDto.phoneNumber,
-      Sex: userDto.sex,
-      Status: userDto.status || 'active',
+      Username: defaultUsername,
+      Avatar: undefined,
+      DoB: defaultDoB,
+      PhoneNumber: 'N/A',
+      Sex: false,
+      Status: 'active',
       CreatedAt: new Date(),
       UpdatedAt: new Date(),
     });
     const savedAccount = await this.accountRepository.save(accountRecord);
-
+  
+    // Save additional user information into the Users table
     const user = new User();
     user.account = savedAccount;
     user.CreatedAt = new Date();
     user.UpdatedAt = new Date();
     await this.usersRepository.save(user);
-
+  
+    // Now trigger the email verification
+    await this.triggerVerificationEmail(userId);
+  
     return {
       message: `User registered successfully and assigned roles: ${rolesToAssign.join(', ')}`,
       userId,
@@ -274,6 +283,7 @@ export class UsersService {
     const adminToken = await this.getAdminToken();
     const clientId = this.clientId;
     const redirectUri = `http://34.58.241.34:8000/login`; // Adjust accordingly
+    // const redirectUri = `http://localhost:8000/login`; // Adjust accordingly
     const executeActionsUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users/${userId}/execute-actions-email?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
 
     try {

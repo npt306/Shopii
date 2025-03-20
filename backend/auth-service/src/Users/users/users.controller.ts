@@ -6,6 +6,7 @@ import { UserDto } from 'src/dto/user.dto';
 import { UsersService } from './users.service';
 import { env } from 'process';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
+import { MinimalRegisterDto } from 'src/dto/register.dto';
 
 @Controller('Users')
 @UseGuards(PermissionsGuard)
@@ -57,14 +58,13 @@ export class UserController {
   }
 
   @Post('register')
-  async register(@Body() userDto: UserDto) {
+  async register(@Body() userDto: MinimalRegisterDto) {
     try {
-      // Register the user and trigger email verification
+      // Register the user in Keycloak and assign roles
       const result = await this.usersService.register(userDto);
-
       return {
         success: true,
-        userId: result.userId // Return user ID for reference
+        userId: result.userId, // Return user ID for reference
       };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
