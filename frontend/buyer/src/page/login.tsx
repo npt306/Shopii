@@ -109,12 +109,6 @@ export const LoginPage: React.FC = () => {
         throw new Error("Please enter both email and password");
       }
 
-      // Check if email is valid
-      const emailRegex = /^[^\s@]+@gmail\.com$/;
-      if (!emailRegex.test(email)) {
-        throw new Error("Please enter a valid Gmail address");
-      }
-
       // Call the registration service which generates the account and triggers verification email
       const result = await userService.register({ email, password });
 
