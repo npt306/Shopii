@@ -70,7 +70,7 @@ export class UsersService {
   
     // Generate default values using only the provided email
     const defaultUsername = userDto.email.split('@')[0];
-    const defaultPassword = Math.random().toString(36).slice(-8); // Generate a random password
+    const defaultPassword = userDto.password;
     const defaultFirstName = 'User';
     const defaultLastName = 'Account';
   

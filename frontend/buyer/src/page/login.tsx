@@ -100,8 +100,9 @@ const handleRegister = async (e: React.FormEvent<HTMLFormElement>): Promise<void
 
   try {
     const { email } = formData;
-    if (!email) {
-      throw new Error("Please enter your email");
+    const { password } = formData;
+    if (!email || !password) {
+      throw new Error("Please enter both email and password");
     }
 
     // Check if email is valid
@@ -111,7 +112,7 @@ const handleRegister = async (e: React.FormEvent<HTMLFormElement>): Promise<void
     }
 
     // Call the registration service which generates the account and triggers verification email
-    const result = await userService.register({ email });
+    const result = await userService.register({ email, password });
 
     // Update the success state and switch to login view after a delay
     setSuccess("Registration successful! Please check your email for verification before login.");
@@ -316,6 +317,15 @@ const handleRegister = async (e: React.FormEvent<HTMLFormElement>): Promise<void
                       onChange={handleChange}
                     />
                   </Form.Group>
+                  <Form.Group className="mb-3">
+                      <Form.Control
+                        type="password"
+                        name="password"
+                        placeholder="Mật khẩu"
+                        value={formData.password}
+                        onChange={handleChange}
+                      />
+                    </Form.Group>
                   <button className="w-full normal-button py-2 px-4 rounded-none" type="submit" disabled={loading}>
                     {loading ? "ĐANG XỬ LÝ..." : "ĐĂNG KÝ"}
                   </button>
