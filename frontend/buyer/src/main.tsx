@@ -1,16 +1,20 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
 
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+} from "react-router-dom";
 
-import { LoginPage } from './page/login.tsx';
-import { HomePage } from './page/home.tsx';
-import { SearchProductPage } from './page/search_product.tsx';
-import { DetailProductPage } from './page/detail_product.tsx';
-import { CartPage } from './page/cart.tsx';
+import { LoginPage } from "./page/login.tsx";
+import { HomePage } from "./page/home.tsx";
+import { SearchProductPage } from "./page/search_product.tsx";
+import { ProductDetailPage } from "./page/productDetailPage.tsx";
+import { CartPage } from "./page/cart.tsx";
 
-import { UserPage } from './page/user.tsx';
+import { UserPage } from "./page/user.tsx";
 const router = createBrowserRouter(
   [
     {
@@ -31,7 +35,7 @@ const router = createBrowserRouter(
     },
     {
       path: "/detail-product/:id",
-      element: <DetailProductPage />,
+      element: <ProductDetailPage />,
     },
     {
       path: "/user",
@@ -40,7 +44,7 @@ const router = createBrowserRouter(
     {
       path: "/cart",
       element: <CartPage />,
-    }
+    },
   ],
   {
     future: {
@@ -49,8 +53,8 @@ const router = createBrowserRouter(
   }
 );
 
-createRoot(document.getElementById('root')!).render(
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <RouterProvider router={router} />
-  </StrictMode>,
+  </StrictMode>
 );
