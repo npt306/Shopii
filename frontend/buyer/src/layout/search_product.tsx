@@ -13,7 +13,7 @@ export const SearchProductLayout = ({ children }: SearchProductLayoutProps) => {
         <div className="flex flex-col h-screen w-full">
             <Header />
 
-            <div className="flex flex-1 w-full mx-auto my-5">
+            <div className="flex flex-1 w-full max-w-[1500px] mx-auto my-5">
                 <div className="w-1/5 bg-gray-100 pl-30">
                     <FilterSidebar />
                 </div>
