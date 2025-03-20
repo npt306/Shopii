@@ -20,6 +20,14 @@ export class UsersService {
   private clientId = process.env.KEYCLOAK_CLIENT_ID || 'your-client-id';
   private clientSecret = process.env.KEYCLOAK_CLIENT_SECRET || '';
   private redirectGateway = process.env.REDIRECT_GATEWAY;
+  //FOR TESTING LOCAL
+  // public client_gateway = "http://localhost:3003";
+  // public server_gateway = "http://localhost:8000";
+  // public domain = "localhost"
+  //FOR DEPLOYED
+  public domain = "34.58.241.34"
+  public client_gateway = "http://34.58.241.34";
+  public server_gateway = "http://34.58.241.34";
 
   constructor(
     private readonly httpService: HttpService,
@@ -370,18 +378,34 @@ export class UsersService {
     return { message: `Role ${roleName} assigned successfully to user ${userId}` };
   }
 
-  async createOrUpdateSeller(data: any): Promise<any> {
+  async createOrUpdateSeller(data: any, userAccessToken: string): Promise<any> {
     // Extract relevant information from nested structure
     let email: string;
     let shopName: string;
     let taxCode: number = 0;
     let sellerType: string = 'Individual';
+    let emailArray: string[] = [];
   
     // Handle nested data structure from frontend
     if (data.shopInformation || data.taxRegister) {
-      email = data.shopInformation?.email || data.taxRegister?.email;
-      shopName = data.shopInformation?.shopName;
+      const shopEmail = data.shopInformation?.email;
+      const taxEmail = data.taxRegister?.email;
+  
+      // Use shop email for primary account lookup, but fall back to tax email if not available
+      email = shopEmail || taxEmail;
       
+      // Track both emails when they differ
+      emailArray = [];
+      if (shopEmail) emailArray.push(shopEmail);
+      if (taxEmail && taxEmail !== shopEmail) emailArray.push(taxEmail);
+  
+      // If we have at least one email in the array, use it, otherwise create an array with the primary email
+      if (emailArray.length === 0 && email) {
+        emailArray = [email];
+      }
+  
+      shopName = data.shopInformation?.shopName;
+  
       // Parse tax code as number or default to 0
       if (data.taxRegister?.taxCode) {
         taxCode = parseInt(data.taxRegister.taxCode, 10) || 0;
@@ -389,7 +413,7 @@ export class UsersService {
   
       // Map business type to seller type
       if (data.taxRegister?.businessType) {
-        switch(data.taxRegister.businessType) {
+        switch (data.taxRegister.businessType) {
           case 'ho-kinh-doanh':
             sellerType = 'Small Business';
             break;
@@ -405,7 +429,7 @@ export class UsersService {
       email = Array.isArray(data.Email) ? data.Email[0] : data.Email;
       shopName = data.ShopName;
       taxCode = data.TaxCode || 0;
-      sellerType = data.SellerType || 'Cá nhân';
+      sellerType = data.SellerType || 'Individual';
     }
   
     // Validate required data
@@ -431,11 +455,8 @@ export class UsersService {
       ShopName: shopName,
       TaxCode: taxCode,
       SellerType: sellerType,
-      Followers: 0, 
+      Followers: 0,
     };
-  
-    // Convert email to array format for storage
-    const emailArray = [email];
   
     // Find existing seller or create new one
     let seller = await this.sellerRepository.findOne({ where: { id: sellerId } });
@@ -460,27 +481,24 @@ export class UsersService {
       await this.sellerRepository.save(seller);
     }
   
-    // Find the user in Keycloak by email
-    const adminToken = await this.getAdminToken();
-    const searchUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users?email=${email}`;
-    const searchResponse = await firstValueFrom(
-      this.httpService.get(searchUrl, {
-        headers: { Authorization: `Bearer ${adminToken}` },
-      }),
-    );
-    if (!searchResponse.data || searchResponse.data.length === 0) {
-      throw new HttpException('User not found in Keycloak', HttpStatus.BAD_REQUEST);
+    // Get user information from token rather than searching by email
+    try {
+      // Decode the token to get user info
+      const decoded = jwt.decode(userAccessToken) as any;
+      const userId = decoded.sub; // Subject claim contains the user ID
+  
+      // Add the seller role to the user in Keycloak using admin token
+      // We still need admin token for role assignment
+      await this.addSellerRole(userId);
+      
+      return {
+        message: seller ? 'Seller updated successfully' : 'Seller created successfully',
+        seller
+      };
+    } catch (error) {
+      console.error('Error processing token:', error);
+      throw new HttpException('Failed to process user token', HttpStatus.BAD_REQUEST);
     }
-    const keycloakUser = searchResponse.data[0];
-    const userId = keycloakUser.id;
-  
-    // Add the seller role to the user in Keycloak
-    await this.addSellerRole(userId);
-  
-    return {
-      message: seller ? 'Seller updated successfully' : 'Seller created successfully',
-      seller
-    };
   }
 
   async fetchProfileByEmail(email: string): Promise<any> {
