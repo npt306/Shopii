@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+const PRODUCT_SERVICE_URL = "http://localhost:3001";
+
 type Product = {
   id: number;
   name: string;
@@ -14,7 +16,7 @@ const fetchProductData = async (
   setProductList: React.Dispatch<React.SetStateAction<any[]>>
 ) => {
   try {
-    const response = await axios.get("http://localhost:3001/product");
+    const response = await axios.get(`${PRODUCT_SERVICE_URL}/product/`);
     setProductList(response.data.products);
   } catch (error) {
     console.error("Error fetching data:", error);
