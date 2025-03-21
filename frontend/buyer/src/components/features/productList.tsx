@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const PRODUCT_SERVICE_URL = "http://localhost:3001";
+const PRODUCT_SERVICE_URL = "http://34.58.241.34:3001";
 
 type Product = {
   id: number;
