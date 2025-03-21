@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { ApigatewayModule } from './apigateway/apigateway.module';
 import { ProductModule } from './modules/product/product.modele';
 import { VouchersModule } from './modules/vouchers/vouchers.module';
 import { APP_GUARD } from '@nestjs/core';
@@ -19,7 +18,6 @@ import { PermissionsGuard } from './guard/permission.guard';
         },
       ],
     }),
-    ApigatewayModule,
     ProductModule,
     VouchersModule,
   ],
