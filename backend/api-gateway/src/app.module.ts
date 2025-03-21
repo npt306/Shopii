@@ -6,7 +6,7 @@ import { ApigatewayModule } from './apigateway/apigateway.module';
 import { ProductModule } from './modules/product/product.modele';
 import { VouchersModule } from './modules/vouchers/vouchers.module';
 import { APP_GUARD } from '@nestjs/core';
-import { PermissionsGuard } from "../../user_auth/src/guards/permission.guard";
+import { PermissionsGuard } from './guard/permission.guard';
 
 @Module({
   imports: [
