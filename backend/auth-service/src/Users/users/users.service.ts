@@ -239,7 +239,7 @@ export class UsersService {
     };
   }
 
-  async refreshToken(refreshToken: string): Promise<any> {
+  async refreshToken(refreshToken: string, res?: any): Promise<any> {
     const url = `${this.keycloakBaseUrl}/realms/${this.realm}/protocol/openid-connect/token`;
     const params = new URLSearchParams();
     params.append('grant_type', 'refresh_token');
@@ -262,8 +262,34 @@ export class UsersService {
       const standardAccessToken = tokenData.access_token;
 
       // Automatically request an RPT token with the required permission(s)
-      // Here, we're requesting "User Management#view". Adjust as needed.
       const rptData = await this.getRequestingPartyToken(standardAccessToken);
+
+      // If response object is provided, update the cookies
+      if (res) {
+        res.cookie('accessToken', standardAccessToken, {
+          httpOnly: true,
+          secure: false, // Should be true in production (HTTPS)
+          sameSite: 'lax', 
+          domain: this.domain,
+          maxAge: 60 * 60 * 1000, // 1 hour
+        });
+
+        res.cookie('rptToken', rptData.access_token, {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax',
+          domain: this.domain,
+          maxAge: 60 * 60 * 1000,
+        });
+
+        res.cookie('refreshToken', tokenData.refresh_token, {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax',
+          domain: this.domain,
+          maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        });
+      }
 
       // Return both tokens and related details.
       return {
@@ -388,7 +414,7 @@ export class UsersService {
     return { message: `Role ${roleName} assigned successfully to user ${userId}` };
   }
 
-  async createOrUpdateSeller(data: any, userAccessToken: string): Promise<any> {
+  async createOrUpdateSeller(data: any, userAccessToken: string, refreshToken: string): Promise<any> {
     // Extract relevant information from nested structure
     let email: string;
     let shopName: string;
@@ -500,6 +526,9 @@ export class UsersService {
       // Add the seller role to the user in Keycloak using admin token
       // We still need admin token for role assignment
       await this.addSellerRole(userId);
+
+      //refresh token to update role
+      this.refreshToken(refreshToken);
       
       return {
         message: seller ? 'Seller updated successfully' : 'Seller created successfully',

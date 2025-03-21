@@ -58,8 +58,8 @@ const ShopRegister = () => {
   const handleFinalSubmit = async () => {
     try {
       console.log(formData);
-      // const response = await axios.post('http://localhost:3003/Users/register-shop', formData);
-      const response = await axios.post('http://34.58.241.34:3003/Users/register-shop', formData);
+      const response = await axios.post('http://localhost:3003/Users/register-shop', formData);
+      // const response = await axios.post('http://34.58.241.34:3003/Users/register-shop', formData);
       console.log('Response from server:', response.data);
       // Handle success
     } catch (error: any) {

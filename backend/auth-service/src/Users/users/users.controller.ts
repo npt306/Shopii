@@ -40,11 +40,12 @@ export class UserController {
   @Post('register-shop')
   async createSeller(@Req() req: Request, @Body() data: any) {
     const accessToken = req.cookies['accessToken'];
+    const refreshToken = req.cookies['refreshToken'];
     if (!accessToken) {
       throw new UnauthorizedException('Authentication required');
     }
     
-    return this.usersService.createOrUpdateSeller(data, accessToken);
+    return this.usersService.createOrUpdateSeller(data, accessToken, refreshToken);
   }
 
   @Post('refresh_token')
@@ -84,6 +85,8 @@ export class UserController {
         []
       );
 
+      console.log(result);
+
       // Assuming result contains your tokens and profile data
       // Set standardAccessToken as an HTTP‑only cookie
       res.cookie('accessToken', result.standardAccessToken, {
@@ -102,7 +105,7 @@ export class UserController {
         maxAge: 60 * 60 * 1000,
       });
 
-      res.cookie('refreshToken', result.refreshToken, {
+      res.cookie('refreshToken', result.refresh_token, {
         httpOnly: true,
         secure: false,
         sameSite: 'lax',
