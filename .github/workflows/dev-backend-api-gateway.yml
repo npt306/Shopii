@@ -52,5 +52,5 @@ jobs:
             docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/backend-api-gateway:latest || true
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/backend-api-gateway:latest
             docker run -d --name backend-api-gateway -p 3000:3000 \
-            -e ORDER_SERVICE_URL=3004 \
+            -e ORDER_SERVICE_URL="http://34.58.241.34:3004" \
             ${{ secrets.DOCKERHUB_USERNAME }}/backend-api-gateway:latest
