@@ -11,7 +11,7 @@ import {
 import { LoginPage } from "./page/login.tsx";
 import { HomePage } from "./page/home.tsx";
 import { SearchProductPage } from "./page/search_product.tsx";
-import { CartPage } from "./page/cart.tsx";
+import { CartPage } from "./page/cartPage.tsx";
 import CallbackPage from "./page/callback.tsx";
 import { UserPage } from "./page/user.tsx";
 import { store, persistor } from "./redux/authStore.ts";
