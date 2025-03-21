@@ -6,7 +6,7 @@ import { CreateProductDto } from './dto/create-product.dto'; // Import DTO
 
 @Controller('product')
 export class ProductController {
-  constructor(private readonly productService: ProductService) { }
+  constructor(private readonly productService: ProductService) {}
 
   @Get(':id')
   async findOne(@Param('id') id: number): Promise<Product | null> {

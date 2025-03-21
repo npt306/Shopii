@@ -16,7 +16,6 @@ interface CategoryWithChildren extends Categories {
   children?: CategoryWithChildren[];
 }
 
-
 @Injectable()
 export class ProductService {
   storage: Storage;
@@ -38,7 +37,9 @@ export class ProductService {
     const clientEmail = process.env.GCLOUD_CLIENT_EMAIL;
 
     if (!privateKey || !clientEmail) {
-      throw new Error('GCLOUD_PRIVATE_KEY or GCLOUD_CLIENT_EMAIL environment variable is not defined');
+      throw new Error(
+        'GCLOUD_PRIVATE_KEY or GCLOUD_CLIENT_EMAIL environment variable is not defined',
+      );
     }
 
     this.storage = new Storage({
@@ -69,6 +70,8 @@ export class ProductService {
       .leftJoinAndSelect('product.details', 'details')
       .where('product.ProductID = :productId', { productId })
       .getOne();
+
+    console.log(product);
 
     if (!product) {
       throw new Error('Product not found');
@@ -101,6 +104,7 @@ export class ProductService {
         level: c.Level,
       })),
       details: product.details.map((d) => ({
+        type_id: d.ProductDetailTypeID,
         type_1: d.Type_1,
         type_2: d.Type_2,
         image: d.Image,
@@ -111,8 +115,6 @@ export class ProductService {
 
     return productDto;
   }
-
-
 
   async getProductList(): Promise<ProductListDto> {
     const products = await this.productRepository
@@ -161,44 +163,49 @@ export class ProductService {
       throw new Error('No products found for this seller');
     }
 
-    const productDtos: ProductDto[] = await Promise.all(products.map(async (product) => {
-      const categoryIds = product.Categories;
-      const categories = await this.categoriesRepository
-        .createQueryBuilder('category')
-        .where('category.CategoryID IN (:...categoryIds)', { categoryIds })
-        .getMany();
+    const productDtos: ProductDto[] = await Promise.all(
+      products.map(async (product) => {
+        const categoryIds = product.Categories;
+        const categories = await this.categoriesRepository
+          .createQueryBuilder('category')
+          .where('category.CategoryID IN (:...categoryIds)', { categoryIds })
+          .getMany();
 
-      const classifications = await this.productClassificationTypeRepository
-        .createQueryBuilder('classification')
-        .where('classification.ProductID = :productId', { productId: product.ProductID })
-        .getMany();
+        const classifications = await this.productClassificationTypeRepository
+          .createQueryBuilder('classification')
+          .where('classification.ProductID = :productId', {
+            productId: product.ProductID,
+          })
+          .getMany();
 
-      const productDto: ProductDto = {
-        name: product.Name,
-        description: product.Description,
-        categories: categories.map((c) => c.CategoryName),
-        images: product.Images,
-        soldQuantity: product.SoldQuantity,
-        rating: product.Rating,
-        coverImage: product.CoverImage,
-        video: product.Video,
-        quantity: product.Quantity,
-        reviews: product.Reviews,
-        classifications: classifications.map((c) => ({
-          classTypeName: c.ClassTypeName,
-          level: c.Level,
-        })),
-        details: product.details.map((d) => ({
-          type_1: d.Type_1,
-          type_2: d.Type_2,
-          image: d.Image,
-          price: d.Price,
-          quantity: d.Quantity,
-        })),
-      };
+        const productDto: ProductDto = {
+          name: product.Name,
+          description: product.Description,
+          categories: categories.map((c) => c.CategoryName),
+          images: product.Images,
+          soldQuantity: product.SoldQuantity,
+          rating: product.Rating,
+          coverImage: product.CoverImage,
+          video: product.Video,
+          quantity: product.Quantity,
+          reviews: product.Reviews,
+          classifications: classifications.map((c) => ({
+            classTypeName: c.ClassTypeName,
+            level: c.Level,
+          })),
+          details: product.details.map((d) => ({
+            type_id: d.ProductDetailTypeID,
+            type_1: d.Type_1,
+            type_2: d.Type_2,
+            image: d.Image,
+            price: d.Price,
+            quantity: d.Quantity,
+          })),
+        };
 
-      return productDto;
-    }));
+        return productDto;
+      }),
+    );
 
     return productDtos;
   }
@@ -210,28 +217,34 @@ export class ProductService {
     const savedProduct = await this.productRepository.save(product);
 
     if (classifications) {
-      const classificationEntities = classifications.map(classification => {
+      const classificationEntities = classifications.map((classification) => {
         return this.productClassificationTypeRepository.create({
           ...classification,
           ProductID: savedProduct.ProductID,
         });
       });
-      await this.productClassificationTypeRepository.save(classificationEntities);
+      await this.productClassificationTypeRepository.save(
+        classificationEntities,
+      );
     }
 
     if (details) {
-      const detailEntities = await Promise.all(details.map(async detail => {
-        const { Dimension, ...detailData } = detail;
+      const detailEntities = await Promise.all(
+        details.map(async (detail) => {
+          const { Dimension, ...detailData } = detail;
 
-        const dimensionEntity = this.productDimensionsRepository.create(Dimension);
-        const savedDimension = await this.productDimensionsRepository.save(dimensionEntity);
+          const dimensionEntity =
+            this.productDimensionsRepository.create(Dimension);
+          const savedDimension =
+            await this.productDimensionsRepository.save(dimensionEntity);
 
-        return this.productDetailRepository.create({
-          ...detailData,
-          ProductID: savedProduct.ProductID,
-          Dimension: savedDimension,
-        });
-      }));
+          return this.productDetailRepository.create({
+            ...detailData,
+            ProductID: savedProduct.ProductID,
+            Dimension: savedDimension,
+          });
+        }),
+      );
       await this.productDetailRepository.save(detailEntities);
     }
 
@@ -245,12 +258,17 @@ export class ProductService {
     });
 
     return new Promise((resolve, reject) => {
-      blobStream.on('finish', () => {
-        const publicUrl = `https://storage.googleapis.com/${this.bucket.name}/${blob.name}`;
-        resolve(publicUrl);
-      }).on('error', (err) => {
-        reject(`Unable to upload image, something went wrong: ${err.message}`);
-      }).end(file.buffer);
+      blobStream
+        .on('finish', () => {
+          const publicUrl = `https://storage.googleapis.com/${this.bucket.name}/${blob.name}`;
+          resolve(publicUrl);
+        })
+        .on('error', (err) => {
+          reject(
+            `Unable to upload image, something went wrong: ${err.message}`,
+          );
+        })
+        .end(file.buffer);
     });
   }
 
@@ -273,12 +291,17 @@ export class ProductService {
     });
 
     return new Promise((resolve, reject) => {
-      blobStream.on('finish', () => {
-        const publicUrl = `https://storage.googleapis.com/${this.bucket.name}/${blob.name}`;
-        resolve(publicUrl);
-      }).on('error', (err) => {
-        reject(`Unable to upload video, something went wrong: ${err.message}`);
-      }).end(file.buffer);
+      blobStream
+        .on('finish', () => {
+          const publicUrl = `https://storage.googleapis.com/${this.bucket.name}/${blob.name}`;
+          resolve(publicUrl);
+        })
+        .on('error', (err) => {
+          reject(
+            `Unable to upload video, something went wrong: ${err.message}`,
+          );
+        })
+        .end(file.buffer);
     });
   }
 
@@ -300,7 +323,4 @@ export class ProductService {
       .where('categories.id = :id', { id: 'categories' }) // 🚨 Lỗi: ID phải là số nguyên
       .getRawMany();
   }
-
-
-
 }
