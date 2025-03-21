@@ -15,8 +15,8 @@ import { HomeLayout } from "../layout/home";
 import { RatingStars } from "../helpers/utility/calculateRatingStars";
 import AddToCartNotification from "../components/features/addToCartNotification";
 
-const PRODUCT_SERVICE_URL = "http://localhost:3001";
-const ORDER_SERVICE_URL = "http://localhost:3004";
+const PRODUCT_SERVICE_URL = "http://34.58.241.34::3001";
+const ORDER_SERVICE_URL = "http://34.58.241.34::3004";
 
 const CUSTOMER_ID_TEST = 2;
 
