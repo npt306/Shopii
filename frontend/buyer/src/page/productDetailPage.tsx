@@ -15,8 +15,8 @@ import { HomeLayout } from "../layout/home";
 import { RatingStars } from "../helpers/utility/calculateRatingStars";
 import AddToCartNotification from "../components/features/addToCartNotification";
 
-const API_PRODUCT_DETAIL_URL = "http://localhost:3001/product/classifications/";
-const API_ADD_CART_URL = "http://localhost:3004/carts/add-to-cart";
+const PRODUCT_SERVICE_URL = "http://localhost:3001";
+const ORDER_SERVICE_URL = "http://localhost:3004";
 
 const CUSTOMER_ID_TEST = 2;
 
@@ -105,7 +105,9 @@ export const ProductDetailPage = () => {
   useEffect(() => {
     const fetchProductDetail = async () => {
       try {
-        const response = await axios.get(`${API_PRODUCT_DETAIL_URL}${id}`);
+        const response = await axios.get(
+          `${PRODUCT_SERVICE_URL}/product/classifications/${id}`
+        );
         setProductDetail(response.data);
         console.log(response.data);
       } catch (error) {
@@ -179,7 +181,10 @@ export const ProductDetailPage = () => {
       console.log("Raw data: ", data);
 
       try {
-        const response = await axios.post(`${API_ADD_CART_URL}`, data);
+        const response = await axios.post(
+          `${ORDER_SERVICE_URL}/carts/add-to-cart/`,
+          data
+        );
         setOpenDialog(true);
         console.log("Response data:", response.data);
       } catch (error) {
