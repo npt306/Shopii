@@ -1,17 +1,16 @@
-
 import "../css/userPage.css";
 // import "../css/pf.css";
 import React, { useState, useEffect } from "react";
 
-import { HeaderProduct } from "../components/header_product.tsx";
-import {Purchase} from "../components/user_page/purchase.tsx";
-import {ShopeeCoin} from "../components/user_page/shopee_coin.tsx";
-import {VoucherWallet} from "../components/user_page/voucher_wallet.tsx";
+import { HeaderProduct } from "../components/headerProduct.tsx";
+import { Purchase } from "../components/user_page/purchase.tsx";
+import { ShopeeCoin } from "../components/user_page/shopee_coin.tsx";
+import { VoucherWallet } from "../components/user_page/voucher_wallet.tsx";
 
-import {WalletUpdate} from "../components/user_page/notifications/wallet_updates.tsx";
-import {ShopeeUpdate} from "../components/user_page/notifications/shopee_updates.tsx";
-import {OrderUpdate} from "../components/user_page/notifications/order_updates.tsx";
-import {Promotions} from "../components/user_page/notifications/promotions.tsx";
+import { WalletUpdate } from "../components/user_page/notifications/wallet_updates.tsx";
+import { ShopeeUpdate } from "../components/user_page/notifications/shopee_updates.tsx";
+import { OrderUpdate } from "../components/user_page/notifications/order_updates.tsx";
+import { Promotions } from "../components/user_page/notifications/promotions.tsx";
 
 interface LinkItem {
   text: string;
@@ -19,9 +18,14 @@ interface LinkItem {
   component?: React.ReactNode; // Optional for component switching
 }
 
-const DropdownItem = ({ title, imageSrc, links, setActiveComponent }: { 
-  title: string; 
-  imageSrc: string; 
+const DropdownItem = ({
+  title,
+  imageSrc,
+  links,
+  setActiveComponent,
+}: {
+  title: string;
+  imageSrc: string;
   links: LinkItem[];
   setActiveComponent: (component: React.ReactNode) => void;
 }) => {
@@ -30,7 +34,10 @@ const DropdownItem = ({ title, imageSrc, links, setActiveComponent }: {
   return (
     <div className={`stardust-dropdown ${isOpen ? "open" : ""}`}>
       {/* Dropdown Header */}
-      <div className="stardust-dropdown__item-header" onClick={() => setIsOpen(!isOpen)}>
+      <div
+        className="stardust-dropdown__item-header"
+        onClick={() => setIsOpen(!isOpen)}
+      >
         <div className="jHbobZ">
           <div className="U7dHrp">
             <img src={imageSrc} alt={title} />
@@ -69,7 +76,9 @@ const DropdownItem = ({ title, imageSrc, links, setActiveComponent }: {
 };
 
 export const UserPage = () => {
-  const [activeComponent, setActiveComponent] = useState<React.ReactNode>(<VoucherWallet/>);
+  const [activeComponent, setActiveComponent] = useState<React.ReactNode>(
+    <VoucherWallet />
+  );
   return (
     <>
       <HeaderProduct />
@@ -134,79 +143,92 @@ export const UserPage = () => {
                 </div>
               </div>
               <div className="WDmP96">
-            <DropdownItem
-              title="Thông báo"
-              imageSrc="https://down-vn.img.susercontent.com/file/e10a43b53ec8605f4829da5618e0717c"
-              links={[
-                { text: "Cập nhật đơn hàng", component: <OrderUpdate/> },
-                { text: "Khuyến mãi", component: <Promotions/>},
-                { text: "Cập nhật Ví", component: <WalletUpdate/>},
-                { text: "Cập nhật Shopee", component: <ShopeeUpdate/> }
-              ]}
-              setActiveComponent={setActiveComponent}
-              
-            />
-            
-            <DropdownItem
-              title="Tài khoản của tôi"
-              imageSrc="https://down-vn.img.susercontent.com/file/ba61750a46794d8847c3f463c5e71cc4"
-              links={[
-                { text: "Hồ sơ" },
-                { text: "Ngân hàng" },
-                { text: "Địa chỉ" },
-                { text: "Đổi mật khẩu" },
-                { text: "Cài đặt thông báo" },
-                { text: "Những thiết lập riêng tư" }
-              ]}
-              setActiveComponent={setActiveComponent}
-            />
+                <DropdownItem
+                  title="Thông báo"
+                  imageSrc="https://down-vn.img.susercontent.com/file/e10a43b53ec8605f4829da5618e0717c"
+                  links={[
+                    { text: "Cập nhật đơn hàng", component: <OrderUpdate /> },
+                    { text: "Khuyến mãi", component: <Promotions /> },
+                    { text: "Cập nhật Ví", component: <WalletUpdate /> },
+                    { text: "Cập nhật Shopee", component: <ShopeeUpdate /> },
+                  ]}
+                  setActiveComponent={setActiveComponent}
+                />
 
+                <DropdownItem
+                  title="Tài khoản của tôi"
+                  imageSrc="https://down-vn.img.susercontent.com/file/ba61750a46794d8847c3f463c5e71cc4"
+                  links={[
+                    { text: "Hồ sơ" },
+                    { text: "Ngân hàng" },
+                    { text: "Địa chỉ" },
+                    { text: "Đổi mật khẩu" },
+                    { text: "Cài đặt thông báo" },
+                    { text: "Những thiết lập riêng tư" },
+                  ]}
+                  setActiveComponent={setActiveComponent}
+                />
 
-            <div className="stardust-dropdown"  onClick={() => setActiveComponent(<Purchase/>)}>
-              <div className="stardust-dropdown__item-header">
-                <div className="jHbobZ">
-                  <div className="U7dHrp">
-                    <img src="https://down-vn.img.susercontent.com/file/f0049e9df4e536bc3e7f140d071e9078" alt="Đơn Mua" />
+                <div
+                  className="stardust-dropdown"
+                  onClick={() => setActiveComponent(<Purchase />)}
+                >
+                  <div className="stardust-dropdown__item-header">
+                    <div className="jHbobZ">
+                      <div className="U7dHrp">
+                        <img
+                          src="https://down-vn.img.susercontent.com/file/f0049e9df4e536bc3e7f140d071e9078"
+                          alt="Đơn Mua"
+                        />
+                      </div>
+                      <div className="mY8KSl">
+                        <span className="fnmbfn">Đơn Mua</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="mY8KSl">
-                    <span className="fnmbfn">Đơn Mua</span>
+                </div>
+                <div
+                  className="stardust-dropdown"
+                  onClick={() => setActiveComponent(<VoucherWallet />)}
+                >
+                  <div className="stardust-dropdown__item-header">
+                    <div className="jHbobZ">
+                      <div className="U7dHrp">
+                        <img
+                          src="https://down-vn.img.susercontent.com/file/84feaa363ce325071c0a66d3c9a88748"
+                          alt="Kho Voucher"
+                        />
+                      </div>
+                      <div className="mY8KSl">
+                        <span className="fnmbfn">Kho Voucher</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className="stardust-dropdown"
+                  onClick={() => setActiveComponent(<ShopeeCoin />)}
+                >
+                  <div className="stardust-dropdown__item-header">
+                    <div className="jHbobZ">
+                      <div className="U7dHrp">
+                        <img
+                          src="https://down-vn.img.susercontent.com/file/a0ef4bd8e16e481b4253bd0eb563f784"
+                          alt="Shopee Xu"
+                        />
+                      </div>
+                      <div className="mY8KSl">
+                        <span className="fnmbfn">Shopee Xu</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="stardust-dropdown"   onClick={() => setActiveComponent(<VoucherWallet />)}>
-              <div className="stardust-dropdown__item-header" >
-                <div className="jHbobZ">
-                  <div className="U7dHrp">
-                    <img src="https://down-vn.img.susercontent.com/file/84feaa363ce325071c0a66d3c9a88748" alt="Kho Voucher" />
-                  </div>
-                  <div className="mY8KSl">
-                    <span className="fnmbfn">Kho Voucher</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="stardust-dropdown"  onClick={() => setActiveComponent(<ShopeeCoin />)}>
-              <div className="stardust-dropdown__item-header">
-                <div className="jHbobZ">
-                  <div className="U7dHrp">
-                    <img src="https://down-vn.img.susercontent.com/file/a0ef4bd8e16e481b4253bd0eb563f784" alt="Shopee Xu" />
-                  </div>
-                  <div className="mY8KSl">
-                    <span className="fnmbfn">Shopee Xu</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-            </div>
-            <div className="fkIi86">
-                  {activeComponent}
-            </div>
+            <div className="fkIi86">{activeComponent}</div>
           </div>
         </div>
       </div>
     </>
   );
-}
+};

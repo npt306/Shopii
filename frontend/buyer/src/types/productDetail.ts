@@ -14,6 +14,7 @@ export type ProductDetail = {
     level: number;
   }[];
   details: {
+    type_id: string;
     type_1: string;
     type_2: string;
     image: string;
