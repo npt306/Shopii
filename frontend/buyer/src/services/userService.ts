@@ -18,10 +18,11 @@ export const userService = {
         }
     },
 
-    register: async (userData: UserDto): Promise<RegisterResponse> => {
+    register: async (userData: any): Promise<RegisterResponse> => {
         try {
             axios.defaults.withCredentials = true;
             const response = await axios.post<RegisterResponse>(`http://34.58.241.34:3003/Users/register`, userData);
+            // const response = await axios.post<RegisterResponse>(`http://localhost:3003/Users/register`, userData);
             return response.data;
         } catch (error) {
             const axiosError = error as AxiosError<{ message: string }>;
@@ -31,14 +32,17 @@ export const userService = {
 
     verifyEmail: async (email: string): Promise<{ success: boolean; message: string }> => {
         try {
-            axios.defaults.withCredentials = true;
-            const response = await axios.post<{ success: boolean; message: string }>(`http://34.58.241.34:3003/Users/send-verification-email`, { email });
-            return response.data;
+          axios.defaults.withCredentials = true;
+          const response = await axios.post<{ success: boolean; message: string }>(
+            `http://34.58.241.34:3003/Users/send-verification-email`,
+            { email }
+          );
+          return response.data;
         } catch (error) {
-            const axiosError = error as AxiosError<{ message: string }>;
-            throw new Error(axiosError.response?.data?.message || 'Email verification failed');
+          const axiosError = error as AxiosError<{ message: string }>;
+          throw new Error(axiosError.response?.data?.message || 'Email verification failed');
         }
-    },
+      },
 
     refreshToken: async (refreshToken: string): Promise<RefreshTokenResponse> => {
         try {

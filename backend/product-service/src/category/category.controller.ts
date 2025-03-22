@@ -15,4 +15,9 @@ export class CategoryController {
     async getAllCategories(): Promise<CategoryWithChildren[]> {
         return this.categoryService.getCategoryTree();
     }
+
+    @Get('names')
+    async getCategoryNames(): Promise<string[]> {
+        return this.categoryService.getCategoryNames();
+    }
 }

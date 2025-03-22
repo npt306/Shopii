@@ -9,6 +9,7 @@ import { Account } from 'src/entity/Account.entity';
 import { User } from 'src/entity/User.entity';
 import { Seller } from 'src/entity/seller.entity';
 import axios from 'axios';
+import { MinimalRegisterDto } from 'src/dto/register.dto';
 
 @Injectable()
 export class UsersService {
@@ -63,29 +64,35 @@ export class UsersService {
     }
   }
 
-  async register(userDto: UserDto): Promise<any> {
+  async register(userDto: MinimalRegisterDto): Promise<any> {
     const adminToken = await this.getAdminToken();
     const createUserUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users`;
-
-    // Prepare payload for Keycloak registration
+  
+    // Generate default values using only the provided email
+    const defaultUsername = userDto.email.split('@')[0];
+    const defaultPassword = userDto.password;
+    const defaultFirstName = 'User';
+    const defaultLastName = 'Account';
+  
+    // Prepare payload for Keycloak registration with defaults
     const userPayload = {
-      username: userDto.username,
+      username: defaultUsername,
       email: userDto.email,
-      firstName: userDto.firstName,
-      lastName: userDto.lastName,
+      firstName: defaultFirstName,
+      lastName: defaultLastName,
       enabled: true,
       attributes: {
-        phoneNumber: userDto.phoneNumber,
+        phoneNumber: 'N/A',
       },
       credentials: [
         {
           type: 'password',
-          value: userDto.password,
+          value: defaultPassword,
           temporary: false,
         },
       ],
     };
-
+  
     try {
       await firstValueFrom(
         this.httpService.post(createUserUrl, userPayload, {
@@ -99,7 +106,7 @@ export class UsersService {
       console.log(error);
       throw new HttpException('User registration failed', HttpStatus.BAD_REQUEST);
     }
-
+  
     // Retrieve the created user from Keycloak to get the user ID
     const searchUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users?email=${userDto.email}`;
     const searchResponse = await firstValueFrom(
@@ -112,11 +119,11 @@ export class UsersService {
     }
     const createdUser = searchResponse.data[0];
     const userId = createdUser.id;
-
+  
     // Determine roles to assign (default to ['buyer'] if not provided)
-    const rolesToAssign: string[] = userDto.roles && userDto.roles.length > 0 ? userDto.roles : ['buyer'];
-
-    // Loop through each role and assign to user in Keycloak
+    const rolesToAssign: string[] = ['buyer'];
+  
+    // Assign each role to the user in Keycloak
     for (const roleName of rolesToAssign) {
       const roleUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/roles/${roleName}`;
       let roleResponse;
@@ -130,7 +137,6 @@ export class UsersService {
         throw new HttpException(`Role ${roleName} not found in Keycloak`, HttpStatus.BAD_REQUEST);
       }
       const roleRepresentation = roleResponse.data;
-
       const mappingUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users/${userId}/role-mappings/realm`;
       try {
         await firstValueFrom(
@@ -145,30 +151,33 @@ export class UsersService {
         throw new HttpException(`Failed to assign role ${roleName}`, HttpStatus.BAD_REQUEST);
       }
     }
-
-    // Trigger the email verification
-    await this.triggerVerificationEmail(userId);
-
-    // Save additional user information into Accounts table
+  
+    // Generate the Account record using only the provided email and defaults
+    const generatedAvatar = null;
+    const defaultDoB = new Date('1900-01-01'); // Default birth date if not provided
     const accountRecord = this.accountRepository.create({
       Email: userDto.email,
-      Username: userDto.username,
-      Avatar: userDto.avatar || undefined,
-      DoB: userDto.date_of_birth ? new Date(userDto.date_of_birth) : undefined,
-      PhoneNumber: userDto.phoneNumber,
-      Sex: userDto.sex,
-      Status: userDto.status || 'active',
+      Username: defaultUsername,
+      Avatar: undefined,
+      DoB: defaultDoB,
+      PhoneNumber: 'N/A',
+      Sex: false,
+      Status: 'active',
       CreatedAt: new Date(),
       UpdatedAt: new Date(),
     });
     const savedAccount = await this.accountRepository.save(accountRecord);
-
+  
+    // Save additional user information into the Users table
     const user = new User();
     user.account = savedAccount;
     user.CreatedAt = new Date();
     user.UpdatedAt = new Date();
     await this.usersRepository.save(user);
-
+  
+    // Now trigger the email verification
+    await this.triggerVerificationEmail(userId);
+  
     return {
       message: `User registered successfully and assigned roles: ${rolesToAssign.join(', ')}`,
       userId,
@@ -230,7 +239,7 @@ export class UsersService {
     };
   }
 
-  async refreshToken(refreshToken: string): Promise<any> {
+  async refreshToken(refreshToken: string, res?: any): Promise<any> {
     const url = `${this.keycloakBaseUrl}/realms/${this.realm}/protocol/openid-connect/token`;
     const params = new URLSearchParams();
     params.append('grant_type', 'refresh_token');
@@ -253,8 +262,34 @@ export class UsersService {
       const standardAccessToken = tokenData.access_token;
 
       // Automatically request an RPT token with the required permission(s)
-      // Here, we're requesting "User Management#view". Adjust as needed.
       const rptData = await this.getRequestingPartyToken(standardAccessToken);
+
+      // If response object is provided, update the cookies
+      if (res) {
+        res.cookie('accessToken', standardAccessToken, {
+          httpOnly: true,
+          secure: false, // Should be true in production (HTTPS)
+          sameSite: 'lax', 
+          domain: this.domain,
+          maxAge: 60 * 60 * 1000, // 1 hour
+        });
+
+        res.cookie('rptToken', rptData.access_token, {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax',
+          domain: this.domain,
+          maxAge: 60 * 60 * 1000,
+        });
+
+        res.cookie('refreshToken', tokenData.refresh_token, {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax',
+          domain: this.domain,
+          maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        });
+      }
 
       // Return both tokens and related details.
       return {
@@ -274,6 +309,7 @@ export class UsersService {
     const adminToken = await this.getAdminToken();
     const clientId = this.clientId;
     const redirectUri = `http://34.58.241.34:8000/login`; // Adjust accordingly
+    // const redirectUri = `http://localhost:8000/login`; // Adjust accordingly
     const executeActionsUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users/${userId}/execute-actions-email?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
 
     try {
@@ -378,7 +414,7 @@ export class UsersService {
     return { message: `Role ${roleName} assigned successfully to user ${userId}` };
   }
 
-  async createOrUpdateSeller(data: any, userAccessToken: string): Promise<any> {
+  async createOrUpdateSeller(data: any, userAccessToken: string, refreshToken: string): Promise<any> {
     // Extract relevant information from nested structure
     let email: string;
     let shopName: string;
@@ -490,6 +526,9 @@ export class UsersService {
       // Add the seller role to the user in Keycloak using admin token
       // We still need admin token for role assignment
       await this.addSellerRole(userId);
+
+      //refresh token to update role
+      this.refreshToken(refreshToken);
       
       return {
         message: seller ? 'Seller updated successfully' : 'Seller created successfully',

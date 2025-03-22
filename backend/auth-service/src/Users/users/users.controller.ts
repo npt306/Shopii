@@ -6,6 +6,7 @@ import { UserDto } from 'src/dto/user.dto';
 import { UsersService } from './users.service';
 import { env } from 'process';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
+import { MinimalRegisterDto } from 'src/dto/register.dto';
 
 @Controller('Users')
 @UseGuards(PermissionsGuard)
@@ -39,11 +40,12 @@ export class UserController {
   @Post('register-shop')
   async createSeller(@Req() req: Request, @Body() data: any) {
     const accessToken = req.cookies['accessToken'];
+    const refreshToken = req.cookies['refreshToken'];
     if (!accessToken) {
       throw new UnauthorizedException('Authentication required');
     }
     
-    return this.usersService.createOrUpdateSeller(data, accessToken);
+    return this.usersService.createOrUpdateSeller(data, accessToken, refreshToken);
   }
 
   @Post('refresh_token')
@@ -57,14 +59,13 @@ export class UserController {
   }
 
   @Post('register')
-  async register(@Body() userDto: UserDto) {
+  async register(@Body() userDto: MinimalRegisterDto) {
     try {
-      // Register the user and trigger email verification
+      // Register the user in Keycloak and assign roles
       const result = await this.usersService.register(userDto);
-
       return {
         success: true,
-        userId: result.userId // Return user ID for reference
+        userId: result.userId, // Return user ID for reference
       };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
@@ -84,6 +85,8 @@ export class UserController {
         []
       );
 
+      console.log(result);
+
       // Assuming result contains your tokens and profile data
       // Set standardAccessToken as an HTTP‑only cookie
       res.cookie('accessToken', result.standardAccessToken, {
@@ -102,7 +105,7 @@ export class UserController {
         maxAge: 60 * 60 * 1000,
       });
 
-      res.cookie('refreshToken', result.refreshToken, {
+      res.cookie('refreshToken', result.refresh_token, {
         httpOnly: true,
         secure: false,
         sameSite: 'lax',

@@ -5,11 +5,14 @@ import { setCredentials } from "../redux/authSlice";
 import { useDispatch } from "react-redux";
 import { userService } from "../services/userService";
 import { UserDto } from "../interfaces/user";
+import { TbEyeClosed } from "react-icons/tb";
+import { MdOutlineRemoveRedEye } from "react-icons/md";
 
 interface FormData {
   username: string;
   password: string;
   email: string;
+  showPassword?: boolean;
 }
 
 export const LoginPage: React.FC = () => {
@@ -20,7 +23,8 @@ export const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     username: '',
     password: '',
-    email: ''
+    email: '',
+    showPassword: false
   });
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
@@ -41,28 +45,25 @@ export const LoginPage: React.FC = () => {
     setError("");
     setSuccess("");
     setLoading(true);
-  
+
     try {
       const { username, password } = formData;
       if (!username || !password) {
         throw new Error("Please enter both username and password");
       }
-  
+
       // Call the login service that now sets httpOnly cookies on success
       const result = await userService.login(username, password);
-  
+
       console.log(result);
-  
-      // Since tokens are now stored in httpOnly cookies by the backend,
-      // we don't store them in localStorage on the client.
-      // Instead, store only non-sensitive user profile data if needed.
+
+      // Store only non-sensitive user profile data if needed.
       localStorage.setItem("userProfile", JSON.stringify(result.profile));
-      
+
       // Log non-sensitive data for testing purposes
       console.log("User profile stored:", localStorage.getItem("userProfile"));
-  
+
       // Dispatch action to store credentials in Redux.
-      // Note: Since tokens are now stored in secure cookies, you don't need to pass them to Redux.
       dispatch(setCredentials({
         token: "", // Not storing token client-side
         user: {
@@ -71,19 +72,19 @@ export const LoginPage: React.FC = () => {
           roles: [] // Adjust roles as needed
         },
       }));
-  
+
       // Optionally store additional non-sensitive user info
       localStorage.setItem("userEmail", result.profile.email);
       localStorage.setItem("userAvatar", result.profile.avatar);
       localStorage.setItem("userIsSeller", String(result.profile.isSeller));
-  
+
       setSuccess("Login successful! Redirecting...");
-  
+
       // Redirect to home page after successful login
       setTimeout(() => {
         window.location.href = "/home";
       }, 1500);
-  
+
     } catch (error) {
       const err = error as Error;
       console.log(error);
@@ -94,6 +95,7 @@ export const LoginPage: React.FC = () => {
   };
 
   // Handle registration submission
+  // Handle registration submission
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError("");
@@ -102,21 +104,19 @@ export const LoginPage: React.FC = () => {
 
     try {
       const { email } = formData;
-      if (!email) {
-        throw new Error("Please enter your email");
+      const { password } = formData;
+      if (!email || !password) {
+        throw new Error("Please enter both email and password");
       }
 
-      // Check if email is valid
-      const emailRegex = /^[^\s@]+@gmail\.com$/;
-      if (!emailRegex.test(email)) {
-        throw new Error("Please enter a valid Gmail address");
-      }
+      // Call the registration service which generates the account and triggers verification email
+      const result = await userService.register({ email, password });
 
-      const result = await userService.verifyEmail(email);
+      formData.password = "";
+      setFormData(formData);
 
-      setSuccess("Registration successful! Please check your email for verification.");
-
-      // Switch to login view after successful registration
+      // Update the success state and switch to login view after a delay
+      setSuccess("Registration successful! Please check your email for verification before login.");
       setTimeout(() => {
         setIsLogin(true);
       }, 2000);
@@ -312,11 +312,32 @@ export const LoginPage: React.FC = () => {
                   <Form.Group className="mb-3">
                     <Form.Control
                       type="text"
-                      name="username"
+                      name="email"
                       placeholder="Email"
-                      value={formData.username}
+                      value={formData.email}
                       onChange={handleChange}
                     />
+                  </Form.Group>
+                  <Form.Group className="mb-3 position-relative">
+                    <Form.Control
+                      type={formData.showPassword ? "text" : "password"}
+                      name="password"
+                      placeholder="Mật khẩu"
+                      value={formData.password}
+                      onChange={handleChange}
+                    />
+                    <Button
+                      variant="link"
+                      className="position-absolute end-0 top-0 bottom-0 d-flex align-items-center justify-content-center"
+                      onClick={() => setFormData(prev => ({ ...prev, showPassword: !prev.showPassword }))}
+                      type="button"
+                    >
+                      {formData.showPassword ? (
+                        <TbEyeClosed />
+                      ) : (
+                        <MdOutlineRemoveRedEye />
+                      )}
+                    </Button>
                   </Form.Group>
                   <button className="w-full normal-button py-2 px-4 rounded-none" type="submit" disabled={loading}>
                     {loading ? "ĐANG XỬ LÝ..." : "ĐĂNG KÝ"}

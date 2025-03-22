@@ -18,7 +18,7 @@ export const useUserProfile = () => {
   useEffect(() => {
     // http://localhost:3003/Users/me for testing local
     // http://34.58.241.34:3003/Users/me for testing on server
-    axios.get<UserProfile>('http://34.58.241.34:3003/Users/me', { withCredentials: true })
+    axios.get<UserProfile>('http://localhost:3003/Users/me', { withCredentials: true })
       .then((response) => {
         console.log('User profile:', response.data);
         setUser(response.data);

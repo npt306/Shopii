@@ -8,6 +8,7 @@ export const Header = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [isLanguageOpen, setIsLanguageOpen] = useState(false);
     const [language, setLanguage] = useState("Tiếng Việt");
+    const auth = useSelector((state: RootState) => state.auth);
 
     const handleLanguageChange = (lang: string) => {
         setLanguage(lang);
@@ -18,8 +19,8 @@ export const Header = () => {
         <div className="flex flex-col bg-orange-500 text-white">
             <div className="px-30 py-3 flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                    <a href="http://34.58.241.34:8001/portal/settings/shop/profile/" className="cursor-pointer hover:opacity-80">Kênh người bán</a>
-                    {/* <a href="http://localhost:8001" className="cursor-pointer hover:opacity-80">Kênh người bán</a> */}
+                    {/* <a href="http://34.58.241.34:8001/portal/settings/shop/profile/" className="cursor-pointer hover:opacity-80">Kênh người bán</a> */}
+                    <a href="http://localhost:8001" className="cursor-pointer hover:opacity-80">Kênh người bán</a>
                     <div>Dowload app</div>
                     <div className="flex items-center gap-2">
                         <p>Kết nối</p>
@@ -71,27 +72,31 @@ export const Header = () => {
                             </div>
                         )}
                     </div>
-
                     <div className="relative">
-                        <div
-                            className="flex items-center gap-1 cursor-pointer"
-                            onClick={() => setIsOpen(!isOpen)}
-                        >
-                            <img src={avatarDefault} alt="Avatar" className="w-7 h-7 rounded-full" />
-                            {(() => {
-                              const user = useSelector((state: RootState) => state.auth?.user);
-                              console.log('state.auth.user:', user);
-                              return <span className="">{user?.name || "Guest"}</span>;
-                            })()}
-                        </div>
+                        {auth && auth.user ? (
+                            <>
+                                <div
+                                    className="flex items-center gap-1 cursor-pointer"
+                                    onClick={() => setIsOpen(!isOpen)}
+                                >
+                                    <img src={avatarDefault} alt="Avatar" className="w-7 h-7 rounded-full" />
+                                    <span className="">{auth.user.name}</span>
+                                </div>
 
-                        {isOpen && (
-                            <div className="absolute right-0 mt-2 w-40 bg-white text-black shadow-lg rounded-lg z-50">
-                                <ul className="py-2">
-                                    <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Tài khoản của tôi</li>
-                                    <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Đơn mua</li>
-                                    <li className="px-4 py-2 text-red-500 hover:bg-gray-100 cursor-pointer">Đăng xuất</li>
-                                </ul>
+                                {isOpen && (
+                                    <div className="absolute right-0 mt-2 w-40 bg-white text-black shadow-lg rounded-lg z-50">
+                                        <ul className="py-2">
+                                            <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Tài khoản của tôi</li>
+                                            <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Đơn mua</li>
+                                            <li className="px-4 py-2 text-red-500 hover:bg-gray-100 cursor-pointer">Đăng xuất</li>
+                                        </ul>
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <div className="flex items-center gap-3">
+                                {/* <a href="http://localhost:8000/login" className="hover:opacity-80">Đăng nhập</a> */}
+                                <a href="http://34.58.241.34:8000/login" className="hover:opacity-80">Đăng nhập</a>
                             </div>
                         )}
                     </div>
