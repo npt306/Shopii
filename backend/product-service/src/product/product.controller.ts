@@ -1,8 +1,23 @@
-import { Controller, Get, Param, Post, Body, Delete, UseInterceptors, UploadedFile } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Post,
+  Body,
+  Delete,
+  UseInterceptors,
+  UploadedFile,
+  Query,
+  Patch,
+  ParseIntPipe,
+  NotFoundException,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ProductService } from './product.service';
 import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto'; // Import DTO
+import { BlockProductDto } from './dto/block-product.dto';
+import { DeleteProductDto } from './dto/delete-product.dto';
 
 @Controller('product')
 export class ProductController {
@@ -59,4 +74,44 @@ export class ProductController {
     await this.productService.deleteVideo(url);
   }
 
+  // Admin routes
+  @Get('admin/products')
+  async getAdminProducts(
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('limit', ParseIntPipe) limit: number = 10,
+    @Query('status') status?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.productService.getAdminProducts(page, limit, status, search);
+  }
+
+  @Get('admin/products/:id')
+  async getAdminProduct(@Param('id', ParseIntPipe) id: number) {
+    const product = await this.productService.getAdminProduct(id);
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+    return product;
+  }
+
+  @Patch('admin/products/:id/approve')
+  async approveProduct(@Param('id', ParseIntPipe) id: number) {
+    return this.productService.approveProduct(id);
+  }
+
+  @Patch('admin/products/:id/block')
+  async blockProduct(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() blockProductDto: BlockProductDto,
+  ) {
+    return this.productService.blockProduct(id, blockProductDto.reason);
+  }
+
+  @Delete('admin/products/:id') // Keep as DELETE for RESTful consistency
+  async deleteProduct(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() deleteProductDto: DeleteProductDto,
+  ) {
+    return this.productService.deleteProduct(id, deleteProductDto.reason);
+  }
 }
