@@ -1,4 +1,4 @@
-.voucher-page {
+.shopee-page {
     background-color: #f6f6f6;
     min-height: 100vh;
   }
@@ -42,7 +42,7 @@
   }
   
   @media (max-width: 768px) {
-    .voucher-page {
+    .shopee-page {
       padding: 10px;
     }
   }

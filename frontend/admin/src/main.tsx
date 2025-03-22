@@ -9,6 +9,8 @@ import { AddVoucherPage } from './page/AddVoucher.tsx';
 import { VoucherListPage } from './page/VoucherListPage.tsx';
 import { VoucherDetailPage } from './page/VoucherDetailPage.tsx';
 import { EditVoucherPage } from './page/EditVoucher.tsx';
+import { AdminProductListPage } from './page/AdminProductListPage.tsx';
+import { AdminProductDetailPage } from './page/AdminProductDetailPage.tsx';
 
 const router = createBrowserRouter(
   [
@@ -36,6 +38,15 @@ const router = createBrowserRouter(
       path: "/admin/vouchers/edit/:id",
       element: <EditVoucherPage />,
     },
+    {
+      path: '/admin/products',
+      element: <AdminProductListPage />,
+    },
+    {
+      path: '/admin/products/:id',
+      element: <AdminProductDetailPage />,
+    },
+
   ],
   {
     future: {
