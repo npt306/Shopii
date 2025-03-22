@@ -21,7 +21,7 @@ export class ProductController {
   async getProductDetail(@Param('id') id: number) {
     try {
       const response = await this.httpService
-        .get(`http://localhost:3001/product/classifications/${id}`)
+        .get(`http://34.58.241.34:3001/product/classifications/${id}`)
         .toPromise();
       if (response && response.data) {
         return response.data;
@@ -38,7 +38,7 @@ export class ProductController {
   async getProductList() {
     try {
       const response = await this.httpService
-        .get(`http://localhost:3001/product/`)
+        .get(`http://34.58.241.34:3001/product/`)
         .toPromise();
       if (response && response.data) {
         return response.data;
@@ -60,7 +60,7 @@ export class ProductController {
     @Query('search') search?: string,
   ) {
     try {
-      let url = `http://localhost:3001/product/admin/products?page=${page}&limit=${limit}`;
+      let url = `http://34.58.241.34:3001/product/admin/products?page=${page}&limit=${limit}`;
       if (status) {
         url += `&status=${status}`;
       }
@@ -79,7 +79,7 @@ export class ProductController {
   async getAdminProduct(@Param('id', ParseIntPipe) id: number) {
     try {
       const { data } = await firstValueFrom(
-        this.httpService.get(`http://localhost:3001/product/admin/products/${id}`),
+        this.httpService.get(`http://34.58.241.34:3001/product/admin/products/${id}`),
       );
       return data;
     } catch (error) {
@@ -92,7 +92,7 @@ export class ProductController {
     try {
       const { data } = await firstValueFrom(
         this.httpService.patch(
-          `http://localhost:3001/product/admin/products/${id}/approve`,
+          `http://34.58.241.34:3001/product/admin/products/${id}/approve`,
           {},
         ),
       );
@@ -110,7 +110,7 @@ export class ProductController {
     try {
       const { data } = await firstValueFrom(
         this.httpService.patch(
-          `http://localhost:3001/product/admin/products/${id}/block`,
+          `http://34.58.241.34:3001/product/admin/products/${id}/block`,
           body,
         ),
       );
@@ -128,7 +128,7 @@ export class ProductController {
     try {
       const { data } = await firstValueFrom(
         this.httpService.delete(
-          `http://localhost:3001/product/admin/products/${id}`,
+          `http://34.58.241.34:3001/product/admin/products/${id}`,
           { data: body }, // Send reason in the request body for DELETE
         ),
       );
