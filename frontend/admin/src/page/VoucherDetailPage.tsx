@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
 import { useParams, Link } from 'react-router-dom';
-import '../css/voucherPage.css';
+import '../css/general.css';
 
 interface Voucher {
   id: number;
@@ -87,7 +87,7 @@ export const VoucherDetailPage = () => {
   }
 
   return (
-    <Container fluid className="voucher-page py-4">
+    <Container fluid className="shopee-page py-4">
       <div className="breadcrumb-placeholder mb-3">
         <h5 className="text-secondary">
           Trang chủ / Quản lý voucher / Chi tiết voucher
