@@ -54,29 +54,34 @@ export const AdminProductListPage = () => {
       'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css';
     document.head.appendChild(bootstrapLink);
     document.title = 'Quản lý sản phẩm';
+    fetchProducts();
+  }, [page, limit, statusFilter]); // Removed searchQuery from here
 
     const fetchProducts = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const url = `/api/product/admin/products?page=${page}&limit=${limit}&status=${statusFilter}&search=${searchQuery}`;
-        const response = await fetch(url);
-        if (response.ok) {
-          const data: AdminProductListResponse = await response.json();
-          setProducts(data.products);
-          setTotal(data.total);
-        } else {
-          setError('Không thể tải danh sách sản phẩm.');
+        setLoading(true);
+        setError(null);
+        try {
+            let url = `/api/product/admin/products?page=${page}&limit=${limit}`;
+            if (statusFilter) {
+                url += `&status=${statusFilter}`;
+            }
+            if (searchQuery) {
+                url += `&search=${encodeURIComponent(searchQuery)}`;
+            }
+            const response = await fetch(url);
+            if (response.ok) {
+                const data: AdminProductListResponse = await response.json();
+                setProducts(data.products);
+                setTotal(data.total);
+            } else {
+                setError('Không thể tải danh sách sản phẩm.');
+            }
+        } catch (err) {
+          setError('Đã xảy ra lỗi khi tải danh sách sản phẩm.');
+        } finally {
+            setLoading(false);
         }
-      } catch (err) {
-        setError('Đã xảy ra lỗi khi tải danh sách sản phẩm.');
-      } finally {
-        setLoading(false);
-      }
     };
-
-    fetchProducts();
-  }, [page, limit, statusFilter, searchQuery]);
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -98,10 +103,11 @@ export const AdminProductListPage = () => {
     setSearchQuery(event.target.value);
   };
 
-  const handleSearchSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    setPage(1); // Reset to page 1 when searching
-  };
+    const handleSearchSubmit = (event: React.FormEvent) => {
+        event.preventDefault();
+        setPage(1);
+        fetchProducts();
+    };
 
   const handleApprove = async (id: number) => {
     try {
@@ -276,7 +282,11 @@ export const AdminProductListPage = () => {
                   {products.map((product) => (
                     <tr key={product.id}>
                       <td>{product.id}</td>
-                      <td>{product.name}</td>
+                      <td>
+                        <Link to={`/admin/products/${product.id}`}>
+                            {product.name}
+                        </Link>
+                      </td>
                       <td>
                         <span
                           className={`badge ${
@@ -299,13 +309,8 @@ export const AdminProductListPage = () => {
                       <td>{product.minPrice.toLocaleString()} ₫</td>
                       <td>{product.maxPrice.toLocaleString()} ₫</td>
                       <td>
-                        <Link
-                          to={`/admin/products/${product.id}`}
-                          className="btn btn-sm btn-outline-info me-2"
-                        >
-                          Xem
-                        </Link>
-                        {product.status === 'Pending' && (
+                        {/*{(product.status === 'Pending' || product.status === 'Violated') && (*/}
+                        {['Pending', 'Violated'].includes(product.status) && (
                           <Button
                             variant="outline-success"
                             size="sm"
@@ -315,14 +320,17 @@ export const AdminProductListPage = () => {
                             Duyệt
                           </Button>
                         )}
-                        <Button
-                          variant="outline-warning"
-                          size="sm"
-                          className="me-2"
-                          onClick={() => handleBlockClick(product.id)}
-                        >
-                          Chặn
-                        </Button>
+                        {/*(product.status === 'Pending' || product.status === 'Approved') && (*/}
+                        {['Pending','Approved'].includes(product.status) && (
+                          <Button
+                            variant="outline-warning"
+                            size="sm"
+                            className="me-2"
+                            onClick={() => handleBlockClick(product.id)}
+                          >
+                            Chặn
+                          </Button>
+                        )}
                         <Button
                           variant="outline-danger"
                           size="sm"

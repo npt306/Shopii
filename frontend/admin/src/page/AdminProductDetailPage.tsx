@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Spinner, Table, Alert } from 'react-bootstrap';
 import { useParams, Link } from 'react-router-dom';
 import '../css/general.css';
 
@@ -117,7 +117,7 @@ export const AdminProductDetailPage = () => {
                   </p>
                   <p>
                     <strong>Danh mục:</strong>{' '}
-                    {product.categories.join(', ')}
+                    {product.categories ? product.categories.join(', ') : 'N/A'}
                   </p>
                   <p>
                     <strong>Số lượng đã bán:</strong> {product.soldQuantity}

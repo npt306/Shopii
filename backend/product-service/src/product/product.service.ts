@@ -327,103 +327,149 @@ export class ProductService {
   }
 
   // Admin methods
-  async getAdminProducts(
-    page: number,
-    limit: number,
-    status?: string,
-    search?: string,
-  ): Promise<AdminProductListDto> {
-    const queryBuilder = this.productRepository.createQueryBuilder('product');
+    async getAdminProducts(
+        page: number,
+        limit: number,
+        status?: string,
+        search?: string,
+    ): Promise<AdminProductListDto> {
+        const queryBuilder = this.productRepository.createQueryBuilder('product');
 
-    if (status) {
-      queryBuilder.andWhere('product.status = :status', { status });
-    }
+        if (status) {
+            queryBuilder.andWhere('product.Status = :status', { status });
+        }
 
-    if (search) {
-      queryBuilder.andWhere('product.name ILIKE :search', {
-        search: `%${search}%`,
-      });
-    }
+        if (search) {
+            queryBuilder.andWhere('product.Name ILIKE :search', { search: `%${search}%` });
+        }
 
-    const [products, total] = await queryBuilder
-      .leftJoinAndSelect('product.details', 'details') // Include details for price
-      .skip((page - 1) * limit)
-      .take(limit)
-      .orderBy('product.ProductID', 'DESC')
-      .getManyAndCount();
+        const [products, total] = await queryBuilder
+            .leftJoinAndSelect('product.details', 'details')  // Include details for price
+            .skip((page - 1) * limit)
+            .take(limit)
+            .orderBy('product.ProductID', 'DESC')
+            .getManyAndCount();
+        
+        if (!products) {
+            return {
+                products: [],
+                total: 0,
+                page,
+                limit
+            }
+        }
 
-    const productList: any[] = products.map((product) => {
-      let minPrice = Infinity;
-      let maxPrice = -Infinity;
+        const productList: any[] = products.map(product => {
+            let minPrice = Infinity;
+            let maxPrice = -Infinity;
 
-      // Find min and max price among product details
-      if (product.details && product.details.length > 0) {
-        product.details.forEach((detail) => {
-          if (detail.Price < minPrice) {
-            minPrice = detail.Price;
-          }
-          if (detail.Price > maxPrice) {
-            maxPrice = detail.Price;
-          }
+            // Find min and max price among product details
+            if (product.details && product.details.length > 0) {
+                product.details.forEach(detail => {
+                    if (detail.Price < minPrice) {
+                        minPrice = detail.Price;
+                    }
+                    if (detail.Price > maxPrice) {
+                        maxPrice = detail.Price;
+                    }
+                });
+            }
+            return {
+                id: product.ProductID,
+                name: product.Name,
+                status: product.status,
+                createdAt: product.CreatedAt,
+                updatedAt: product.UpdatedAt,
+                minPrice: minPrice === Infinity ? 0 : minPrice,  // Set to 0 if no details
+                maxPrice: maxPrice === -Infinity ? 0 : maxPrice,  // Set to 0 if no details
+            };
         });
-      }
-      return {
-        id: product.ProductID,
-        name: product.Name,
-        status: product.status,
-        createdAt: product.CreatedAt,
-        updatedAt: product.UpdatedAt,
-        minPrice: minPrice === Infinity ? 0 : minPrice, // Set to 0 if no details
-        maxPrice: maxPrice === -Infinity ? 0 : maxPrice, // Set to 0 if no details
-      };
-    });
 
-    return {
-      products: productList,
-      total,
-      page,
-      limit,
-    };
-  }
-
-  async getAdminProduct(id: number): Promise<Product | null> {
-    const product = await this.productRepository.findOne({
-      where: { ProductID: id },
-      relations: ['classifications', 'details', 'details.Dimension'],
-    });
-    if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
-    }
-    return product;
-  }
-
-  async approveProduct(id: number): Promise<Product> {
-    const product = await this.productRepository.findOneBy({ ProductID: id });
-    if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
-    }
-    product.status = ProductStatus.APPROVED;
-    return this.productRepository.save(product);
-  }
-
-  async blockProduct(id: number, reason: string): Promise<Product> {
-    const product = await this.productRepository.findOneBy({ ProductID: id });
-    if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
-    }
-    product.status = ProductStatus.VIOLATED;
-    console.log(`Product ${id} blocked. Reason: ${reason}`);
-    return this.productRepository.save(product);
-  }
-
-  async deleteProduct(id: number, reason: string): Promise<void> {
-    const product = await this.productRepository.findOneBy({ ProductID: id });
-    if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
+        return {
+            products: productList,
+            total,
+            page,
+            limit,
+        };
     }
 
-    // Soft delete
-    await this.productRepository.softDelete(id);
-    console.log(`Product ${id} deleted. Reason: ${reason}`);
-  }
+    async getAdminProduct(id: number): Promise<ProductDto> {
+        const product = await this.productRepository.findOne({
+            where: { ProductID: id },
+            relations: ['classifications', 'details', 'details.Dimension'],
+        });
+
+        if (!product) {
+            throw new NotFoundException(`Product with ID ${id} not found`);
+        }
+        const categoryIds = product.Categories;
+        const categories = await this.categoriesRepository
+          .createQueryBuilder('category')
+          .where('category.CategoryID IN (:...categoryIds)', { categoryIds })
+          .getMany();
+
+        const classifications = await this.productClassificationTypeRepository
+          .createQueryBuilder('classification')
+          .where('classification.ProductID = :productId', {
+            productId: product.ProductID,
+          })
+          .getMany();
+
+        const productDto: ProductDto = {
+          name: product.Name,
+          description: product.Description,
+          categories: categories.map((c) => c.CategoryName),
+          images: product.Images,
+          soldQuantity: product.SoldQuantity,
+          rating: product.Rating,
+          coverImage: product.CoverImage,
+          video: product.Video,
+          quantity: product.Quantity,
+          reviews: product.Reviews,
+          classifications: classifications.map((c) => ({
+            classTypeName: c.ClassTypeName,
+            level: c.Level,
+          })),
+          details: product.details.map((d) => ({
+            type_id: d.ProductDetailTypeID,
+            type_1: d.Type_1,
+            type_2: d.Type_2,
+            image: d.Image,
+            price: d.Price,
+            quantity: d.Quantity,
+          })),
+        };
+        return productDto;
+    }
+
+    async approveProduct(id: number): Promise<Product> {
+        const product = await this.productRepository.findOneBy({ ProductID: id });
+        if (!product) {
+            throw new NotFoundException(`Product with ID ${id} not found`);
+        }
+        product.status = ProductStatus.APPROVED;
+        return this.productRepository.save(product);
+    }
+
+    async blockProduct(id: number, reason: string): Promise<Product> {
+        const product = await this.productRepository.findOneBy({ ProductID: id });
+        if (!product) {
+            throw new NotFoundException(`Product with ID ${id} not found`);
+        }
+        product.status = ProductStatus.VIOLATED;
+        console.log(`Product ${id} blocked. Reason: ${reason}`);
+        return this.productRepository.save(product);
+    }
+
+
+    async deleteProduct(id: number, reason: string): Promise<void> {
+        const product = await this.productRepository.findOneBy({ ProductID: id });
+        if (!product) {
+            throw new NotFoundException(`Product with ID ${id} not found`);
+        }
+
+        // Soft delete
+        await this.productRepository.softDelete(id);
+        console.log(`Product ${id} deleted. Reason: ${reason}`);
+    }
 }
