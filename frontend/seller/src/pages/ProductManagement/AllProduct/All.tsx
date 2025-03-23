@@ -1,5 +1,6 @@
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Package } from 'lucide-react';
-import { useState } from 'react';
 import { X } from 'lucide-react';
 
 const All = () => {
@@ -12,6 +13,66 @@ const All = () => {
 
   const [showHeader, setShowHeader] = useState(true);
 
+  interface ProductDetail {
+    type_1: string;
+    type_2: string;
+    image: string;
+    price: number;
+    quantity: number;
+  }
+
+  interface Classification {
+    classTypeName: string;
+    level: number;
+  }
+
+  interface Product {
+    name: string;
+    description: string;
+    categories: string[];
+    images: string[];
+    soldQuantity: number;
+    rating: string;
+    coverImage: string;
+    video: string;
+    quantity: number;
+    reviews: number;
+    classifications: Classification[];
+    details: ProductDetail[];
+  }
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get<Product[]>('http://localhost:3001/product/seller/1');
+        setProducts(response.data);
+        setLoading(false);
+      } catch (err) {
+        if (err instanceof Error) {
+          setError('Error fetching products: ' + err.message);
+        } else {
+          setError('An unknown error occurred');
+        }
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  const handleEdit = (productId: string, detailIndex: number) => {
+    console.log(`Editing product ${productId}, detail ${detailIndex}`);
+    // Implement edit functionality here
+  };
+
+  const handleDelete = (productId: string, detailIndex: number) => {
+    console.log(`Deleting product ${productId}, detail ${detailIndex}`);
+    // Implement delete functionality here
+  };
 
 
   const handleMouseEnter = () => {
@@ -59,6 +120,9 @@ const All = () => {
     setActiveView(view);
     setShowHeader(view === 'list');
   };
+
+  if (loading) return <div className="text-center p-4">Loading...</div>;
+  if (error) return <div className="text-center p-4 text-red-500">{error}</div>;
 
   return (
     <div className="p-4">
@@ -406,20 +470,66 @@ const All = () => {
             </thead>
           )}
           <tbody>
-            {/* Empty State */}
-            <tr>
-              <td colSpan={7} className="text-center py-8 text-gray-500">
-                <div className="flex flex-col items-center">
-                  <Package className="w-16 h-16 text-gray-400 mb-4" />
-                  <h2 className="text-xl font-semibold text-gray-700 mb-2">
-                    Không tìm thấy sản phẩm
-                  </h2>
-                  <p className="text-gray-500">
-                    Rất tiếc, chúng tôi không thể tìm thấy sản phẩm bạn đang tìm kiếm.
-                  </p>
-                </div>
-              </td>
-            </tr>
+            {products.length > 0 ? (
+              products.map((product) => (
+                product.details.map((detail, detailIndex) => (
+                  <tr key={`${product.name}-${detailIndex}`} className="border-b hover:bg-gray-50">
+                    <td className="p-3 border">
+                      {`${product.name} - ${detail.type_1}${detail.type_2 ? ` - ${detail.type_2}` : ''}`}
+                    </td>
+                    <td className="p-3 border">{product.soldQuantity}</td>
+                    <td className="p-3 border">{detail.price.toLocaleString()} VND</td>
+                    <td className="p-3 border">{detail.quantity}</td>
+                    <td className="p-3 border">
+                      <div className="flex flex-col">
+                        <div className="mb-2">{product.description.slice(0, 100)}...</div>
+                        {detail.image && (
+                          <img
+                            src={detail.image}
+                            alt={`${product.name} - ${detail.type_1}`}
+                            className="w-24 h-24 object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = 'https://via.placeholder.com/100';
+                            }}
+                          />
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-3 border">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEdit(product.name, detailIndex)}
+                          className="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(product.name, detailIndex)}
+                          className="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ))
+            ) : (
+              <tr>
+                <td colSpan={7} className="text-center py-8 text-gray-500">
+                  <div className="flex flex-col items-center">
+                    <Package className="w-16 h-16 text-gray-400 mb-4" />
+                    <h2 className="text-xl font-semibold text-gray-700 mb-2">
+                      Không tìm thấy sản phẩm
+                    </h2>
+                    <p className="text-gray-500">
+                      Rất tiếc, chúng tôi không thể tìm thấy sản phẩm bạn đang tìm kiếm.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

@@ -37,4 +37,9 @@ export class CategoryService {
         return buildTree(null);
     }
 
+    async getCategoryNames(): Promise<string[]> {
+        const categories = await this.categoriesRepository.find();
+        return categories.map(category => category.CategoryName);
+    }
+
 }

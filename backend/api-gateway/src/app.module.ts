@@ -2,11 +2,10 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { ApigatewayModule } from './apigateway/apigateway.module';
-import { ProductModule } from './modules/product/product.modele';
+import { ProductModule } from './modules/product/product.module';
 import { VouchersModule } from './modules/vouchers/vouchers.module';
 import { APP_GUARD } from '@nestjs/core';
-import { PermissionsGuard } from "../../user_auth/src/guards/permission.guard";
+import { PermissionsGuard } from './guard/permission.guard';
 
 @Module({
   imports: [
@@ -19,7 +18,6 @@ import { PermissionsGuard } from "../../user_auth/src/guards/permission.guard";
         },
       ],
     }),
-    ApigatewayModule,
     ProductModule,
     VouchersModule,
   ],

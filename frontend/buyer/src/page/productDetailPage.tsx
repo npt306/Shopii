@@ -13,45 +13,45 @@ import {
 import { ProductDetail } from "../types/productDetail";
 import { HomeLayout } from "../layout/home";
 import { RatingStars } from "../helpers/utility/calculateRatingStars";
-import { QuantitySelector } from "../components/common/quantitySelector";
+import AddToCartNotification from "../components/features/addToCartNotification";
 
-const PRODUCT_URL = "http://localhost:3000/product/detail/";
+const PRODUCT_SERVICE_URL = "http://34.58.241.34:3001";
+const ORDER_SERVICE_URL = "http://34.58.241.34:3004";
+
+const CUSTOMER_ID_TEST = 2;
 
 export const ProductDetailPage = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const { id } = useParams<{ id: string }>();
   const [productDetail, setProductDetail] = useState<ProductDetail | null>(
     null
   );
+  const [stateVoucherShopDialog, setStateVoucherShopDialog] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
 
+  // set quantity selector
+  const [quantity, setQuantity] = useState(1);
+  const increase = () => {
+    if (selectedDetail != null) {
+      if (quantity < selectedDetail?.quantity) setQuantity(quantity + 1);
+    }
+  };
+
+  const decrease = () => {
+    if (selectedDetail != null) {
+      if (quantity >= 2) setQuantity(quantity - 1);
+    }
+  };
+
+  // set product image
   const productThumbnails = [
     productDetail?.video,
     ...(productDetail?.images || []),
   ].filter(Boolean);
 
-  useEffect(() => {
-    const fetchProductDetail = async () => {
-      try {
-        const response = await axios.get(`${PRODUCT_URL}${id}`);
-        setProductDetail(response.data);
-        console.log(response.data);
-      } catch (error) {
-        console.error("Error fetching product detail:", error);
-      }
-    };
-
-    if (id) {
-      fetchProductDetail();
-    }
-  }, [id]);
-
   const [selectedMedia, setSelectedMedia] = useState<string | null>(
     productThumbnails[0] || null
   );
-  const [selectedType1, setSelectedType1] = useState("");
-  const [selectedType2, setSelectedType2] = useState("");
-
-  const [liked, setLiked] = useState(false);
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -66,6 +66,10 @@ export const ProductDetailPage = () => {
       setCurrentIndex(currentIndex - 1);
     }
   };
+
+  // set classification
+  const [selectedType1, setSelectedType1] = useState("");
+  const [selectedType2, setSelectedType2] = useState("");
 
   // Determine if both types are available
   const hasType1 =
@@ -97,9 +101,103 @@ export const ProductDetailPage = () => {
     );
   };
 
+  // fetch product detail
+  useEffect(() => {
+    const fetchProductDetail = async () => {
+      try {
+        const response = await axios.get(
+          `${PRODUCT_SERVICE_URL}/product/classifications/${id}`
+        );
+        setProductDetail(response.data);
+        console.log(response.data);
+      } catch (error) {
+        console.error("Error fetching product detail:", error);
+      }
+    };
+
+    if (id) {
+      fetchProductDetail();
+    }
+  }, [id]);
+
+  // const handleAddToCart = () => {
+  //   if (
+  //     productDetail?.classifications[0] != null &&
+  //     productDetail?.classifications[1] != null
+  //   ) {
+  //     for (let i = 0; i < productDetail.details.length; i++) {
+  //       if (
+  //         productDetail.details[i].type_1 == selectedType1 &&
+  //         productDetail.details[i].type_2 == selectedType2
+  //       ) {
+  //         console.log(productDetail.details[i].type_id);
+  //       }
+  //     }
+  //   }
+
+  //   if (
+  //     productDetail?.classifications[0] != null &&
+  //     productDetail?.classifications[1] == null
+  //   ) {
+  //     for (let i = 0; i < productDetail.details.length; i++) {
+  //       if (productDetail.details[i].type_1 == selectedType1) {
+  //         console.log(productDetail.details[i].type_id);
+  //       }
+  //     }
+  //   }
+
+  //   if (
+  //     productDetail?.classifications[0] == null &&
+  //     productDetail?.classifications[1] == null
+  //   ) {
+  //     console.log(productDetail?.details[0].type_id);
+  //   }
+  // };
+
+  const handleAddToCart = async () => {
+    if (!productDetail?.details || productDetail.details.length === 0) return;
+
+    const { classifications, details } = productDetail;
+    let matchedDetail;
+
+    if (classifications?.[0] != null && classifications?.[1] != null) {
+      matchedDetail = details.find(
+        (detail) =>
+          detail.type_1 === selectedType1 && detail.type_2 === selectedType2
+      );
+    } else if (classifications?.[0] != null && classifications?.[1] == null) {
+      matchedDetail = details.find((detail) => detail.type_1 === selectedType1);
+    } else if (classifications?.[0] == null && classifications?.[1] == null) {
+      matchedDetail = details[0]; // Chọn phần tử đầu tiên
+    }
+
+    if (matchedDetail) {
+      let data = {
+        customerId: CUSTOMER_ID_TEST,
+        productTypeId: matchedDetail.type_id,
+        quantity: quantity,
+      };
+
+      console.log("Raw data: ", data);
+
+      try {
+        const response = await axios.post(
+          `${ORDER_SERVICE_URL}/carts/add-to-cart/`,
+          data
+        );
+        setOpenDialog(true);
+        console.log("Response data:", response.data);
+      } catch (error) {
+        console.error("Error add product to cart:", error);
+      }
+    }
+  };
+
   return (
     <>
       <HomeLayout>
+        <AddToCartNotification open={openDialog} setOpen={setOpenDialog} />
+        <br />
         {(productDetail?.categories ?? []).map((item, index, array) => (
           <span className="text-blue-700" key={index}>
             {item}
@@ -410,7 +508,27 @@ export const ProductDetailPage = () => {
             )}
 
             <div className="mt-5 flex flex-row gap-2">
-              <QuantitySelector />
+              <div className="flex flex-row items-center gap-3">
+                <div className="flex items-center">
+                  <button
+                    className={`bg-gray-200 hover:bg-gray-200 transition px-4 py-2 w-10 h-10 flex justify-center items-center`}
+                    onClick={decrease}
+                  >
+                    <div className="text-2xl">-</div>
+                  </button>
+
+                  <div className="flex justify-center items-center px-4 py-2 w-10 h-10 text-xl">
+                    {quantity}
+                  </div>
+
+                  <button
+                    className={`bg-gray-200 hover:bg-gray-200 transition px-4 py-2 w-10 h-10 flex justify-center items-center`}
+                    onClick={increase}
+                  >
+                    <div className="text-2xl">+</div>
+                  </button>
+                </div>
+              </div>
               {selectedDetail && (
                 <div className="flex flex-row items-center text-base">
                   ({selectedDetail.quantity})
@@ -419,7 +537,10 @@ export const ProductDetailPage = () => {
             </div>
 
             <div className="mt-5 flex flex-row gap-2">
-              <div className="border border-orange-500 p-3 text-orange-500 bg-orange-100 cursor-pointer hover:bg-orange-200">
+              <div
+                onClick={() => handleAddToCart()}
+                className="border border-orange-500 p-3 text-orange-500 bg-orange-100 cursor-pointer hover:bg-orange-200"
+              >
                 Thêm Vào Giỏ Hàng
               </div>
               <div className="border border-orange-500 p-3 w-36 text-white bg-red-500 text-center cursor-pointer">
@@ -451,7 +572,7 @@ export const ProductDetailPage = () => {
                   </div>
                   <div
                     className="border border-orange-500 px-3 h-10 flex items-center justify-center text-white bg-red-500 cursor-pointer hover:bg-red-600 transition"
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={() => setStateVoucherShopDialog(true)}
                   >
                     Xem voucher
                   </div>
@@ -509,7 +630,7 @@ export const ProductDetailPage = () => {
 
           <div className="div"></div>
         </div>
-        {isModalOpen && (
+        {stateVoucherShopDialog && (
           <div className="fixed inset-0 flex items-center justify-center bg-black/50">
             <div className="bg-white p-6 shadow-lg w-96">
               <h2 className="text-lg font-semibold mb-4">Voucher của Shop</h2>
@@ -538,7 +659,7 @@ export const ProductDetailPage = () => {
               <div className="mt-4 flex justify-end">
                 <button
                   className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => setStateVoucherShopDialog(false)}
                 >
                   Đóng
                 </button>
