@@ -24,14 +24,14 @@ const ShopRegister = () => {
   const [currentStep, setCurrentStep] = useState<Step>('shopInformation');
   const [formData, setFormData] = useState<FormData>({
     shopInformation: {
-      shopName: '',
-      email: '',
+      shopName: localStorage.getItem('user_username') + "\'s Shop",
+      email: localStorage.getItem('user_email') || '',
       phone: '',
     },
     taxRegister: {
       businessType: '',
       businessAddress: '',
-      email: '',
+      email: localStorage.getItem('user_email') || '',
       taxCode: '',
     },
   });
@@ -58,11 +58,13 @@ const ShopRegister = () => {
   const handleFinalSubmit = async () => {
     try {
       console.log(formData);
-      const response = await axios.post('http://localhost:3003/Users/register-shop', formData);
-      // const response = await axios.post('http://34.58.241.34:3003/Users/register-shop', formData);
+      axios.defaults.withCredentials = true;
+      // const response = await axios.post('http://localhost:3003/Users/register-shop', formData);
+      const response = await axios.post('http://34.58.241.34:3003/Users/register-shop', formData);
       console.log('Response from server:', response.data);
       // Handle success
     } catch (error: any) {
+      console.log(error);
       console.error('Error submitting form:', error.response?.data || error.message);
       // Handle error
     }

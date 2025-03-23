@@ -4,7 +4,7 @@ import { useState } from "react";
 
 const GeneralInformation = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const [shopName, setShopName] = useState('bc_ml2zyn5');
+  const [shopName, setShopName] = useState(localStorage.getItem('shopName'));
   const [shopDesc, setShopDesc] = useState(
     'Shop của chúng tôi là nơi cung cấp đa dạng các sản phẩm chất lượng cao, đáp ứng nhu cầu mua sắm của mọi khách hàng. Với không gian trưng bày hiện đại và thân thiện, chúng tôi cam kết mang lại trải nghiệm mua sắm thoải mái và tiện lợi. Các sản phẩm tại shop bao gồm thời trang, phụ kiện, đồ gia dụng, và nhiều mặt hàng khác được chọn lọc kỹ lưỡng từ các thương hiệu uy tín. Đội ngũ nhân viên nhiệt tình, chuyên nghiệp luôn sẵn sàng hỗ trợ, tư vấn để bạn tìm được sản phẩm phù hợp nhất.'
   );

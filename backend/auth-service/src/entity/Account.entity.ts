@@ -2,6 +2,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToOne } from 'typeorm';
 import { User } from './User.entity';
 import { Seller } from './seller.entity';
+import { Address } from './address.entity';
 
 @Entity('Accounts')
 export class Account {
@@ -47,4 +48,10 @@ export class Account {
     onDelete: 'CASCADE'
   })
   seller: Seller;
+
+  @OneToOne(() => Address, (address) => address.account, {
+    cascade: true,
+    onDelete: 'CASCADE'
+  })
+  address: Address;
 }

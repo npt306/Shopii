@@ -8,9 +8,10 @@ import { Account } from 'src/entity/Account.entity';
 import { Seller } from 'src/entity/seller.entity';
 import { ConfigModule } from '@nestjs/config';
 import { JwtStrategy } from 'src/guards/jwt.stragtegy';
+import { Address } from 'src/entity/address.entity';
 
 @Module({
-  imports: [ConfigModule, HttpModule, TypeOrmModule.forFeature([Account, Seller, User])],
+  imports: [ConfigModule, HttpModule, TypeOrmModule.forFeature([Account, Seller, User, Address])],
   controllers: [UserController],
   providers: [UsersService, JwtStrategy],
   exports: [UsersService]

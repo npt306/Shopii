@@ -28,7 +28,7 @@ const BusinessInformation = () => {
             Loại hình kinh doanh
           </label>
           <div className="flex-grow">
-            <span className="py-2 text-black text-sm">Cá nhân</span>
+            <span className="py-2 text-black text-sm">{localStorage.getItem('sellerType')}</span>
           </div>
         </div>
 
@@ -41,7 +41,7 @@ const BusinessInformation = () => {
             {/* Hiển thị nội dung hoặc dấu sao */}
             <span className="py-2 text-black text-sm">
               {isVisible
-                ? "227 Nguyễn Văn Cừ, Phường 4, Quận 5, Thành phố Hồ Chí Minh"
+                ? `${localStorage.getItem('addressSpecific') || ''}, ${localStorage.getItem('addressWard') || ''}, ${localStorage.getItem('addressDistrict') || ''}, ${localStorage.getItem('addressProvince') || ''}`
                 : "********"}
             </span>
             {/* Nút con mắt */}
@@ -63,7 +63,7 @@ const BusinessInformation = () => {
           </label>
           <div className="flex-grow">
             <span className="py-2 text-black text-sm">
-              nptai212@clc.fitus.edu.vn
+              {localStorage.getItem('user_email') || 'Chưa cập nhật'}
             </span>
           </div>
         </div>
@@ -75,7 +75,7 @@ const BusinessInformation = () => {
           </label>
           <div className="flex-grow">
             <span className="py-2 text-black text-sm">
-              000000
+              {localStorage.getItem('TaxCode') || 'Chưa cập nhật'}
             </span>
           </div>
         </div>

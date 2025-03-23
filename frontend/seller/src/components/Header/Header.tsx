@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { ArrowRightOnRectangleIcon, CogIcon, BuildingStorefrontIcon   } from "@heroicons/react/20/solid";
+import axios from "axios";
 
 const Header = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -48,7 +49,7 @@ const Header = () => {
           alt="User Avatar"
           className="h-9 w-9 rounded-full mr-2"
         />
-        <span className="text-gray-800 text-sm">Nguyễn Văn A</span>
+        <span className="text-gray-800 text-sm">{localStorage.getItem('user_username')}</span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className="h-4 w-4 ml-2 text-gray-500"
@@ -103,7 +104,25 @@ const Header = () => {
           <div>
             <span
               className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 cursor-pointer flex items-center"
-              onClick={() => alert("Bạn đã đăng xuất!")}
+              onClick={async () => {
+                try {
+                  // Call logout API using axios
+                  axios.defaults.withCredentials = true;
+                  const response = await axios.post<{ success: boolean; message: string }>(
+                      `http://34.58.241.34:3003/Users/logout`
+                      // 'http://localhost:3003/Users/logout',
+                  );
+                  
+                  // Clear all items from localStorage
+                  localStorage.clear();
+                  
+                  // Redirect to login page
+                  // window.location.href = 'http://localhost:8000/home';
+                  window.location.href = 'http://34.58.241.34:3003/home';
+                } catch (error) {
+                  console.error('Logout failed:', error);
+                }
+              }}
             >
               <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2 text-gray-600" />
               Đăng xuất

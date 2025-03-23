@@ -10,6 +10,7 @@ import { User } from 'src/entity/User.entity';
 import { Seller } from 'src/entity/seller.entity';
 import axios from 'axios';
 import { MinimalRegisterDto } from 'src/dto/register.dto';
+import { Address } from 'src/entity/address.entity';
 
 @Injectable()
 export class UsersService {
@@ -21,6 +22,8 @@ export class UsersService {
   private clientId = process.env.KEYCLOAK_CLIENT_ID || 'your-client-id';
   private clientSecret = process.env.KEYCLOAK_CLIENT_SECRET || '';
   private redirectGateway = process.env.REDIRECT_GATEWAY;
+
+  private appsecret = "4d35aa9d02d17ba78481b94ebe9dedb3423df2a5a23fc83b0f1ba2181ac15765d0e058af990a8538943ffe51ae072036fc0e300a49b421a8eaa20301183c0c2f" //for jwt token
   //FOR TESTING LOCAL
   // public client_gateway = "http://localhost:3003";
   // public server_gateway = "http://localhost:8000";
@@ -41,6 +44,9 @@ export class UsersService {
 
     @InjectRepository(Seller)
     private readonly sellerRepository: Repository<Seller>,
+
+    @InjectRepository(Address)
+    private readonly addressRepository: Repository<Address>,
   ) {
   }
 
@@ -67,13 +73,13 @@ export class UsersService {
   async register(userDto: MinimalRegisterDto): Promise<any> {
     const adminToken = await this.getAdminToken();
     const createUserUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users`;
-  
+
     // Generate default values using only the provided email
     const defaultUsername = userDto.email.split('@')[0];
     const defaultPassword = userDto.password;
     const defaultFirstName = 'User';
     const defaultLastName = 'Account';
-  
+
     // Prepare payload for Keycloak registration with defaults
     const userPayload = {
       username: defaultUsername,
@@ -92,7 +98,7 @@ export class UsersService {
         },
       ],
     };
-  
+
     try {
       await firstValueFrom(
         this.httpService.post(createUserUrl, userPayload, {
@@ -106,7 +112,7 @@ export class UsersService {
       console.log(error);
       throw new HttpException('User registration failed', HttpStatus.BAD_REQUEST);
     }
-  
+
     // Retrieve the created user from Keycloak to get the user ID
     const searchUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users?email=${userDto.email}`;
     const searchResponse = await firstValueFrom(
@@ -119,10 +125,10 @@ export class UsersService {
     }
     const createdUser = searchResponse.data[0];
     const userId = createdUser.id;
-  
+
     // Determine roles to assign (default to ['buyer'] if not provided)
     const rolesToAssign: string[] = ['buyer'];
-  
+
     // Assign each role to the user in Keycloak
     for (const roleName of rolesToAssign) {
       const roleUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/roles/${roleName}`;
@@ -151,7 +157,7 @@ export class UsersService {
         throw new HttpException(`Failed to assign role ${roleName}`, HttpStatus.BAD_REQUEST);
       }
     }
-  
+
     // Generate the Account record using only the provided email and defaults
     const generatedAvatar = null;
     const defaultDoB = new Date('1900-01-01'); // Default birth date if not provided
@@ -167,17 +173,17 @@ export class UsersService {
       UpdatedAt: new Date(),
     });
     const savedAccount = await this.accountRepository.save(accountRecord);
-  
+
     // Save additional user information into the Users table
     const user = new User();
     user.account = savedAccount;
     user.CreatedAt = new Date();
     user.UpdatedAt = new Date();
     await this.usersRepository.save(user);
-  
+
     // Now trigger the email verification
     await this.triggerVerificationEmail(userId);
-  
+
     return {
       message: `User registered successfully and assigned roles: ${rolesToAssign.join(', ')}`,
       userId,
@@ -210,7 +216,6 @@ export class UsersService {
       throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
   }
-
 
   async loginAndExchange(username: string, password: string, permissions: string[]): Promise<any> {
     // Get the standard access token via login
@@ -269,7 +274,7 @@ export class UsersService {
         res.cookie('accessToken', standardAccessToken, {
           httpOnly: true,
           secure: false, // Should be true in production (HTTPS)
-          sameSite: 'lax', 
+          sameSite: 'lax',
           domain: this.domain,
           maxAge: 60 * 60 * 1000, // 1 hour
         });
@@ -421,32 +426,33 @@ export class UsersService {
     let taxCode: number = 0;
     let sellerType: string = 'Individual';
     let emailArray: string[] = [];
-  
+    let address = new Address();
+
     // Handle nested data structure from frontend
     if (data.shopInformation || data.taxRegister) {
       const shopEmail = data.shopInformation?.email;
       const taxEmail = data.taxRegister?.email;
-  
+
       // Use shop email for primary account lookup, but fall back to tax email if not available
       email = shopEmail || taxEmail;
-      
+
       // Track both emails when they differ
       emailArray = [];
       if (shopEmail) emailArray.push(shopEmail);
       if (taxEmail && taxEmail !== shopEmail) emailArray.push(taxEmail);
-  
+
       // If we have at least one email in the array, use it, otherwise create an array with the primary email
       if (emailArray.length === 0 && email) {
         emailArray = [email];
       }
-  
+
       shopName = data.shopInformation?.shopName;
-  
+
       // Parse tax code as number or default to 0
       if (data.taxRegister?.taxCode) {
         taxCode = parseInt(data.taxRegister.taxCode, 10) || 0;
       }
-  
+
       // Map business type to seller type
       if (data.taxRegister?.businessType) {
         switch (data.taxRegister.businessType) {
@@ -460,6 +466,18 @@ export class UsersService {
             sellerType = 'Individual';
         }
       }
+
+      //Handle address - this will be handled later in the address processing section
+      address.District = data.shopInformation.address.district;
+      address.Ward = data.shopInformation.address.ward;
+      address.Province = data.shopInformation.address.province;
+      address.SpecificAddress = data.shopInformation.address.addressDetail;
+      address.PhoneNumber = data.shopInformation.address.phone;
+      address.Fullname = data.shopInformation.address.fullName;
+    
+      address.IsDefault = true;
+      address.CreatedAt = new Date();
+      address.UpdatedAt = new Date();
     } else {
       // Support original format for backward compatibility
       email = Array.isArray(data.Email) ? data.Email[0] : data.Email;
@@ -467,25 +485,34 @@ export class UsersService {
       taxCode = data.TaxCode || 0;
       sellerType = data.SellerType || 'Individual';
     }
-  
+
     // Validate required data
     if (!email) {
       throw new HttpException('Seller email is required', HttpStatus.BAD_REQUEST);
     }
-  
+
     if (!shopName) {
       throw new HttpException('Shop name is required', HttpStatus.BAD_REQUEST);
     }
-  
+
     // Find the account by email
-    const account = await this.accountRepository.findOne({ where: { Email: email } });
-    if (!account) {
-      throw new HttpException('Account not found for the provided email', HttpStatus.BAD_REQUEST);
+    const decoded = jwt.decode(userAccessToken) as any;
+    if (!decoded || !decoded.email) {
+      throw new HttpException('Invalid access token or email not found in token', HttpStatus.BAD_REQUEST);
     }
-  
+    
+    // Use the email from the token for account lookup (more secure than using request data)
+    const tokenEmail = decoded.email;
+    
+    const account = await this.accountRepository.findOne({ where: { Email: tokenEmail } });
+    if (!account) {
+      throw new HttpException('Account not found for your email address', HttpStatus.BAD_REQUEST);
+    }
+
     // Use the Account's primary key (AccountId) as the seller's id
     const sellerId = account.AccountId;
-  
+    const addressAccountID = account.AccountId;
+
     // Prepare valid seller data
     const validSellerData: Partial<Seller> = {
       ShopName: shopName,
@@ -493,10 +520,10 @@ export class UsersService {
       SellerType: sellerType,
       Followers: 0,
     };
-  
+
     // Find existing seller or create new one
     let seller = await this.sellerRepository.findOne({ where: { id: sellerId } });
-  
+
     if (seller) {
       // Update existing seller
       seller = this.sellerRepository.merge(seller, {
@@ -516,20 +543,40 @@ export class UsersService {
       });
       await this.sellerRepository.save(seller);
     }
-  
+
+    // Process address information if provided
+    try {
+      // Check if the user already has an address
+      const existingAddress = await this.addressRepository.findOne({
+        where: { account: { AccountId: addressAccountID }, IsDefault: true }
+      });
+
+      if (existingAddress) {
+        // Update existing address
+        const updatedAddress = this.addressRepository.merge(existingAddress, address);
+        await this.addressRepository.save(updatedAddress);
+      } else {
+        // Create new address
+        address.account.AccountId = addressAccountID;
+        await this.addressRepository.save(address);
+      }
+    } catch (error) {
+      console.error('Error processing address information:', error);
+    }
+
     // Get user information from token rather than searching by email
     try {
       // Decode the token to get user info
       const decoded = jwt.decode(userAccessToken) as any;
       const userId = decoded.sub; // Subject claim contains the user ID
-  
+
       // Add the seller role to the user in Keycloak using admin token
       // We still need admin token for role assignment
       await this.addSellerRole(userId);
 
       //refresh token to update role
       this.refreshToken(refreshToken);
-      
+
       return {
         message: seller ? 'Seller updated successfully' : 'Seller created successfully',
         seller
@@ -556,10 +603,18 @@ export class UsersService {
         where: { account: { AccountId: account.AccountId } }
       });
 
-      // Check if user is also a seller
-      const seller = await this.sellerRepository.findOne({
+      const sellerInfo = await this.sellerRepository.findOne({
         where: { id: account.AccountId }
       });
+
+      const address = await this.addressRepository.find({
+        where: { account: { AccountId: account.AccountId } }
+      });
+
+      console.log(account.AccountId);
+      console.log(address);
+
+      console.log(sellerInfo);
 
       // Generate comprehensive profile object
       const profile = {
@@ -573,9 +628,9 @@ export class UsersService {
         status: account.Status,
         createdAt: account.CreatedAt,
         updatedAt: account.UpdatedAt,
-        isSeller: !!seller,
-        sellerInfo: seller || null,
-        userInfo: user || null
+        userInfo: user || null,
+        sellerInfo: sellerInfo || null,
+        address: address || null
       };
 
       return profile;
@@ -639,142 +694,127 @@ export class UsersService {
       console.log("User info fetched successfully");
       return response.data;
     } catch (error) {
+      console.log(error);
       console.error('Error fetching user info:', error.response?.data || error.message);
       throw new Error(`Failed to fetch user info: ${error.message}`);
     }
   }
 
-  async createUserSession(userInfo: any, tokens: any): Promise<any> {
+  // valide admin with username, passowrd and otp code (got from the authenticator app or other apps)
+  async authenticateAdmin(username: string, password: string, otpCode: string): Promise<any>  {
     try {
-      // Find account by email (if user already exists)
-      let account = await this.accountRepository.findOne({ where: { Email: userInfo.email } });
+      const keycloakUrl = this.keycloakBaseUrl;
+      const realm = this.realm;
+      const clientId = this.clientId;
+      const clientSecret = this.clientSecret;
 
-      if (!account) {
-        // Create new account if not found
-        account = this.accountRepository.create({
-          Email: userInfo.email,
-          Username: userInfo.preferred_username || userInfo.email,
-          Avatar: userInfo.picture || undefined,
-          PhoneNumber: userInfo.phone_number,
-          Status: 'active',
-          CreatedAt: new Date(),
-          UpdatedAt: new Date(),
-        });
-        await this.accountRepository.save(account);
+      // Authenticate with Keycloak using all credentials at once
+      const tokenEndpoint = `${keycloakUrl}/realms/${realm}/protocol/openid-connect/token`;
 
-        // Create user record linked to the account
-        const user = new User();
-        user.account = account;
-        user.CreatedAt = new Date();
-        user.UpdatedAt = new Date();
-        await this.usersRepository.save(user);
+      const params = new URLSearchParams();
+      params.append('grant_type', 'password');
+      params.append('client_id', clientId);
+      if (clientSecret) {
+        params.append('client_secret', clientSecret);
+      }
+      params.append('username', username);
+      params.append('password', password);
+      params.append('totp', otpCode);
+      params.append('scope', 'openid profile email');
+
+      const response = await axios.post(tokenEndpoint, params);
+
+      // Verify the user has admin role
+      const isAdmin = await this.verifyAdminRole(response.data.access_token);
+      if (!isAdmin) {
+        throw new HttpException('User is not an admin', HttpStatus.FORBIDDEN);
       }
 
-      // Return user session data
+      // Get user profile
+      const profile = await this.getUserInfo(response.data.access_token);
+
+      // Get RPT data
+      const rptData = await this.getRequestingPartyToken(response.data.access_token);
+
+      // Return tokens and profile
       return {
-        id: account.AccountId,
-        username: account.Username,
-        email: account.Email,
-        tokens: {
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
-          expires_in: tokens.expires_in
-        }
+        standardAccessToken: response.data.access_token,
+        rptAccessToken: rptData.access_token,
+        refresh_token: response.data.refresh_token,
+        profile
       };
     } catch (error) {
-      console.error('Error creating user session:', error);
-      throw new Error(`Failed to create user session: ${error.message}`);
+      console.error('Admin authentication error:', error.response?.data || error.message);
+      throw new HttpException('Authentication failed', HttpStatus.UNAUTHORIZED);
     }
   }
 
-  async sendEmailVerification(email: string): Promise<string> {
-    const adminToken = await this.getAdminToken();
-    const createUserUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users`;
-
-    // Create a temporary user in Keycloak with minimal information
-    const userPayload = {
-      username: email, // Use email as username for temporary user
-      email: email,
-      enabled: true, // Enable the user to receive emails
-      emailVerified: false, // Not verified yet
-      credentials: [
-        {
-          type: 'password',
-          value: Math.random().toString(36).slice(-8), // Generate random password
-          temporary: true, // Mark as temporary
-        },
-      ],
-    };
-
+  // Helper method to verify admin role
+  private async verifyAdminRole(accessToken: string): Promise<boolean> {
     try {
-      // Create the user
-      await firstValueFrom(
-        this.httpService.post(createUserUrl, userPayload, {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${adminToken}`,
-          },
-        }),
-      );
-
-      // Find the created user to get the ID
-      const searchUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users?email=${email}`;
-      const searchResponse = await firstValueFrom(
-        this.httpService.get(searchUrl, {
-          headers: { Authorization: `Bearer ${adminToken}` },
-        }),
-      );
-
-      if (!searchResponse.data || searchResponse.data.length === 0) {
-        throw new HttpException('User not found after creation', HttpStatus.BAD_REQUEST);
+      const tokenParts = accessToken.split('.');
+      if (tokenParts.length !== 3) {
+        throw new Error('Invalid token format');
       }
 
-      const userId = searchResponse.data[0].id;
+      const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
 
-      // Send verification email
-      const executeActionsUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users/${userId}/execute-actions-email`;
+      // Extract roles from token 
+      const roles = payload.realm_access?.roles || [];
 
-      await firstValueFrom(
-        this.httpService.put(
-          executeActionsUrl,
-          ['VERIFY_EMAIL'],
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${adminToken}`,
-            },
-          }
-        )
-      );
-
-      return userId;
+      // Check if user has admin role
+      return roles.includes('admin');
     } catch (error) {
-      console.error('Error creating temporary user or sending verification:', error.response?.data || error.message);
-      throw new HttpException('Failed to send email verification', HttpStatus.BAD_REQUEST);
+      console.error('Error verifying admin role:', error);
+      return false;
     }
   }
 
-  async checkEmailVerification(email: string): Promise<boolean> {
+  async logout(refreshToken: string, res?: any): Promise<any> {
     try {
-      const adminToken = await this.getAdminToken();
+      // 1. Invalidate the session at Keycloak
+      const keycloakLogoutUrl = `${this.keycloakBaseUrl}/realms/${this.realm}/protocol/openid-connect/logout`;
+      const params = new URLSearchParams();
+      params.append('client_id', this.clientId);
+      if (this.clientSecret) {
+        params.append('client_secret', this.clientSecret);
+      }
+      params.append('refresh_token', refreshToken);
 
-      // Find the user by email
-      const searchUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users?email=${email}`;
-      const searchResponse = await firstValueFrom(
-        this.httpService.get(searchUrl, {
-          headers: { Authorization: `Bearer ${adminToken}` },
-        }),
+      await firstValueFrom(
+        this.httpService.post(keycloakLogoutUrl, params.toString(), {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        })
       );
 
-      if (!searchResponse.data || searchResponse.data.length === 0) {
-        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      // 2. Clear cookies if response object is provided
+      if (res) {
+        res.clearCookie('accessToken', {
+          httpOnly: true,
+          secure: false, // Should be true in production (HTTPS)
+          sameSite: 'lax',
+          domain: this.domain,
+        });
+        
+        res.clearCookie('rptToken', {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax',
+          domain: this.domain,
+        });
+        
+        res.clearCookie('refreshToken', {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax',
+          domain: this.domain,
+        });
       }
 
-      const user = searchResponse.data[0];
-      return user.emailVerified === true;
+      return { message: 'Logout successful' };
     } catch (error) {
-      console.error('Error checking email verification status:', error.response?.data || error.message);
-      throw new HttpException('Failed to check email verification status', HttpStatus.INTERNAL_SERVER_ERROR);
+      console.error('Logout error:', error.response?.data || error.message);
+      throw new HttpException('Failed to logout', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }
