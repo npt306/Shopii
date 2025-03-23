@@ -8,8 +8,8 @@ export const userService = {
             axios.defaults.withCredentials = true;
             // localhost:3003 for testing
             // console.log(`http://34.58.241.34:3003/Users/login`);
-            // const response = await axios.post<LoginResponse>(`http://34.58.241.34:3003/Users/login`, { username, password });
-            const response = await axios.post<LoginResponse>(`http://localhost:3003/Users/login`, { username, password });
+            const response = await axios.post<LoginResponse>(`http://34.58.241.34:3003/Users/login`, { username, password });
+            // const response = await axios.post<LoginResponse>(`http://localhost:3003/Users/login`, { username, password });
             return response.data;
         } catch (error) {
             console.log(error);
@@ -65,4 +65,22 @@ export const userService = {
             throw new Error(axiosError.response?.data?.message || 'Email verification failed');
         }
     },
+
+    logout: async (): Promise<{ success: boolean; message: string }> => {
+        try {
+            axios.defaults.withCredentials = true;
+            const response = await axios.post<{ success: boolean; message: string }>(
+                // `http://34.58.241.34:3003/Users/logout`
+                'http://34.58.241.34:3003/Users/logout',
+            );
+            
+            // Clear all items from localStorage
+            localStorage.clear();
+            
+            return response.data;
+        } catch (error) {
+            const axiosError = error as AxiosError<{ message: string }>;
+            throw new Error(axiosError.response?.data?.message || 'Logout failed');
+        }
+    }
 };

@@ -69,7 +69,6 @@ export const LoginPage: React.FC = () => {
         user: {
           id: result.profile.accountId,
           name: result.profile.username,
-          roles: [] // Adjust roles as needed
         },
       }));
 

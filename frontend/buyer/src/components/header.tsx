@@ -3,6 +3,7 @@ import { useState } from 'react';
 import avatarDefault from "../assets/avatar_default.png";
 import { useSelector } from 'react-redux';
 import { RootState } from '../redux/authStore'; // Adjust the path to where your store is defined 
+import { userService } from '../services/userService';
 
 export const Header = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -19,8 +20,8 @@ export const Header = () => {
         <div className="flex flex-col bg-orange-500 text-white">
             <div className="px-30 py-3 flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                    {/* <a href="http://34.58.241.34:8001/portal/settings/shop/profile/" className="cursor-pointer hover:opacity-80">Kênh người bán</a> */}
-                    <a href="http://localhost:8001" className="cursor-pointer hover:opacity-80">Kênh người bán</a>
+                    <a href="http://34.58.241.34:8001/portal/settings/shop/profile/" className="cursor-pointer hover:opacity-80">Kênh người bán</a>
+                    {/* <a href="http://localhost:8001" className="cursor-pointer hover:opacity-80">Kênh người bán</a> */}
                     <div>Dowload app</div>
                     <div className="flex items-center gap-2">
                         <p>Kết nối</p>
@@ -88,7 +89,19 @@ export const Header = () => {
                                         <ul className="py-2">
                                             <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Tài khoản của tôi</li>
                                             <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Đơn mua</li>
-                                            <li className="px-4 py-2 text-red-500 hover:bg-gray-100 cursor-pointer">Đăng xuất</li>
+                                            <li 
+                                                className="px-4 py-2 text-red-500 hover:bg-gray-100 cursor-pointer"
+                                                onClick={async () => {
+                                                    try {
+                                                        const response = await userService.logout();
+                                                        window.location.assign('/home');
+                                                    } catch (error) {
+                                                        console.error('Logout failed:', error);
+                                                    }
+                                                }}
+                                            >
+                                                Đăng xuất
+                                            </li>
                                         </ul>
                                     </div>
                                 )}

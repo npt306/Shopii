@@ -5,7 +5,6 @@ interface AuthState {
   user: {
     id: string;
     name: string;
-    roles: string[];
   } | null;
 }
 
