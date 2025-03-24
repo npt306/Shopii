@@ -11,6 +11,7 @@ import { VoucherDetailPage } from './page/VoucherDetailPage.tsx';
 import { EditVoucherPage } from './page/EditVoucher.tsx';
 import { AdminProductListPage } from './page/AdminProductListPage.tsx';
 import { AdminProductDetailPage } from './page/AdminProductDetailPage.tsx';
+import UserManagement from './page/user-management/main_page.tsx';
 
 const router = createBrowserRouter(
   [
@@ -45,6 +46,10 @@ const router = createBrowserRouter(
     {
       path: '/admin/products/:id',
       element: <AdminProductDetailPage />,
+    },
+    {
+      path: '/admin/users',
+      element: <UserManagement />,
     },
 
   ],
