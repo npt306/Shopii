@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
 import { UserDto, LoginResponse, RefreshTokenResponse, RegisterResponse } from "../interfaces/user";
+import { EnvValue } from "../env-value/envValue";
 
 // API service to connect with the NestJS backend
 export const userService = {
@@ -8,7 +9,7 @@ export const userService = {
             axios.defaults.withCredentials = true;
             // localhost:3003 for testing
             // console.log(`http://34.58.241.34:3003/Users/login`);
-            const response = await axios.post<LoginResponse>(`http://34.58.241.34:3003/Users/login`, { username, password });
+            const response = await axios.post<LoginResponse>(EnvValue.backend_login_url, { username, password });
             // const response = await axios.post<LoginResponse>(`http://localhost:3003/Users/login`, { username, password });
             return response.data;
         } catch (error) {
@@ -21,7 +22,7 @@ export const userService = {
     register: async (userData: any): Promise<RegisterResponse> => {
         try {
             axios.defaults.withCredentials = true;
-            const response = await axios.post<RegisterResponse>(`http://34.58.241.34:3003/Users/register`, userData);
+            const response = await axios.post<RegisterResponse>(EnvValue.backend_register_url, userData);
             // const response = await axios.post<RegisterResponse>(`http://localhost:3003/Users/register`, userData);
             return response.data;
         } catch (error) {
@@ -47,7 +48,7 @@ export const userService = {
     refreshToken: async (refreshToken: string): Promise<RefreshTokenResponse> => {
         try {
             axios.defaults.withCredentials = true;
-            const response = await axios.post<RefreshTokenResponse>('/Users/refresh_token', { refresh_token: refreshToken });
+            const response = await axios.post<RefreshTokenResponse>(EnvValue.backend_refresh_token_url, { refresh_token: refreshToken });
             return response.data;
         } catch (error) {
             const axiosError = error as AxiosError<{ message: string }>;
@@ -71,7 +72,7 @@ export const userService = {
             axios.defaults.withCredentials = true;
             const response = await axios.post<{ success: boolean; message: string }>(
                 // `http://34.58.241.34:3003/Users/logout`
-                'http://34.58.241.34:3003/Users/logout',
+                EnvValue.backend_logout_url,
             );
             
             // Clear all items from localStorage

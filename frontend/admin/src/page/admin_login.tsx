@@ -75,7 +75,7 @@ export const AdminLoginPage = () => {
 
     try {
       // const response = await fetch("http://localhost:3003/Users/login-admin", {
-      const response = await fetch("http://34.58.241.34:3003/Users/login-admin", {
+      const response = await fetch("http://34.58.241.34:8002/Users/login-admin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

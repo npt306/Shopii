@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { KeycloakMiddleware } from './middleware/keycloak.middleware';
 import { env } from 'process';
 import * as cookieParser from 'cookie-parser';
+import { EnvValue } from './environment-value/env-value';
 
 async function bootstrap() {
   try {
@@ -13,8 +14,9 @@ async function bootstrap() {
     app.use(new KeycloakMiddleware().use);
     app.enableCors({
       // `http://34.58.241.34:8000` 
-      origin: [`http://34.58.241.34:8000`, `http://34.58.241.34:8001`, `http://34.58.241.34:8002`], // frontend URL
+      // origin: [`http://34.58.241.34:8000`, `http://34.58.241.34:8001`, `http://34.58.241.34:8002`], // frontend URL
       // origin: [`http://localhost:8000`, `http://localhost:8001`], // frontend URLs
+      origin: EnvValue.origin,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true, // Important for cookies to work cross-domain

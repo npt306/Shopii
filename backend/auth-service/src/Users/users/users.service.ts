@@ -11,6 +11,8 @@ import { Seller } from 'src/entity/seller.entity';
 import axios from 'axios';
 import { MinimalRegisterDto } from 'src/dto/register.dto';
 import { Address } from 'src/entity/address.entity';
+import { KeycloakService } from 'src/admin-check/keycloakService';
+import { EnvValue } from 'src/environment-value/env-value';
 
 @Injectable()
 export class UsersService {
@@ -24,14 +26,6 @@ export class UsersService {
   private redirectGateway = process.env.REDIRECT_GATEWAY;
 
   private appsecret = "4d35aa9d02d17ba78481b94ebe9dedb3423df2a5a23fc83b0f1ba2181ac15765d0e058af990a8538943ffe51ae072036fc0e300a49b421a8eaa20301183c0c2f" //for jwt token
-  //FOR TESTING LOCAL
-  // public client_gateway = "http://localhost:3003";
-  // public server_gateway = "http://localhost:8000";
-  // public domain = "localhost"
-  //FOR DEPLOYED
-  public domain = "34.58.241.34"
-  public client_gateway = "http://34.58.241.34";
-  public server_gateway = "http://34.58.241.34";
 
   constructor(
     private readonly httpService: HttpService,
@@ -47,6 +41,8 @@ export class UsersService {
 
     @InjectRepository(Address)
     private readonly addressRepository: Repository<Address>,
+
+    private readonly keycloakService: KeycloakService
   ) {
   }
 
@@ -275,7 +271,7 @@ export class UsersService {
           httpOnly: true,
           secure: false, // Should be true in production (HTTPS)
           sameSite: 'lax',
-          domain: this.domain,
+          domain: EnvValue.domain,
           maxAge: 60 * 60 * 1000, // 1 hour
         });
 
@@ -283,7 +279,7 @@ export class UsersService {
           httpOnly: true,
           secure: false,
           sameSite: 'lax',
-          domain: this.domain,
+          domain: EnvValue.domain,
           maxAge: 60 * 60 * 1000,
         });
 
@@ -291,7 +287,7 @@ export class UsersService {
           httpOnly: true,
           secure: false,
           sameSite: 'lax',
-          domain: this.domain,
+          domain: EnvValue.domain,
           maxAge: 24 * 60 * 60 * 1000, // 24 hours
         });
       }
@@ -313,7 +309,7 @@ export class UsersService {
   async triggerVerificationEmail(userId: string): Promise<void> {
     const adminToken = await this.getAdminToken();
     const clientId = this.clientId;
-    const redirectUri = `http://34.58.241.34:8000/login`; // Adjust accordingly
+    const redirectUri = EnvValue.redirect_uri; // Adjust accordingly
     // const redirectUri = `http://localhost:8000/login`; // Adjust accordingly
     const executeActionsUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users/${userId}/execute-actions-email?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
 
@@ -736,6 +732,13 @@ export class UsersService {
       // Get RPT data
       const rptData = await this.getRequestingPartyToken(response.data.access_token);
 
+      // Check if user has otp configured
+      await this.keycloakService.init(); //connect to keycloak
+      const otpConfigured = await this.keycloakService.isOTPProperlyConfigured(profile.sub);
+      if (!otpConfigured) {
+        throw new HttpException('User does not have OTP configured', HttpStatus.FORBIDDEN);
+      }
+
       // Return tokens and profile
       return {
         standardAccessToken: response.data.access_token,
@@ -793,21 +796,21 @@ export class UsersService {
           httpOnly: true,
           secure: false, // Should be true in production (HTTPS)
           sameSite: 'lax',
-          domain: this.domain,
+          domain: EnvValue.domain,
         });
         
         res.clearCookie('rptToken', {
           httpOnly: true,
           secure: false,
           sameSite: 'lax',
-          domain: this.domain,
+          domain: EnvValue.domain,
         });
         
         res.clearCookie('refreshToken', {
           httpOnly: true,
           secure: false,
           sameSite: 'lax',
-          domain: this.domain,
+          domain: EnvValue.domain,
         });
       }
 
