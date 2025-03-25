@@ -603,14 +603,14 @@ export class UsersService {
         where: { id: account.AccountId }
       });
 
-      const address = await this.addressRepository.find({
-        where: { account: { AccountId: account.AccountId } }
-      });
+      // const address = await this.addressRepository.find({
+      //   where: { account: { AccountId: account.AccountId } }
+      // });
 
-      console.log(account.AccountId);
-      console.log(address);
+      // console.log(account.AccountId);
+      // console.log(address);
 
-      console.log(sellerInfo);
+      // console.log(sellerInfo);
 
       // Generate comprehensive profile object
       const profile = {
@@ -626,7 +626,7 @@ export class UsersService {
         updatedAt: account.UpdatedAt,
         userInfo: user || null,
         sellerInfo: sellerInfo || null,
-        address: address || null
+        // address: address || null
       };
 
       return profile;
