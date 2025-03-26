@@ -4,8 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { VouchersModule } from './vouchers/vouchers.module';
 import { join } from 'path';
 import { Voucher } from './vouchers/entities/voucher.entity';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+
 
 @Module({
   imports: [
@@ -28,7 +27,7 @@ import { AppService } from './app.service';
     }),
     VouchersModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
