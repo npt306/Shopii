@@ -8,7 +8,7 @@ export class EnvValue {
 
     // http://localhost:3003
     // http://34.58.241.34:3003
-    public static backend_url = 'http://34.58.241.34:3003'
+    public static backend_url = 'http://34.58.241.34:3003';
 
     // public static backend_login_url: "http://34.58.241.34:8002/Users/send-verification-email";
     // public static backend_login_url: "http://34.58.241.34:8002/Users/check-email-verification";

@@ -23,6 +23,7 @@ export const userService = {
     register: async (userData: any): Promise<RegisterResponse> => {
         try {
             axios.defaults.withCredentials = true;
+            console.log(EnvValue.backend_url + '/Users/register');
             const response = await axios.post<RegisterResponse>(EnvValue.backend_url + '/Users/register', userData);
             // const response = await axios.post<RegisterResponse>(`http://localhost:3003/Users/register`, userData);
             return response.data;

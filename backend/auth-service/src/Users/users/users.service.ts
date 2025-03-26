@@ -312,7 +312,6 @@ export class UsersService {
     const redirectUri = EnvValue.redirect_uri; // Adjust accordingly
     // const redirectUri = `http://localhost:8000/login`; // Adjust accordingly
     const executeActionsUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users/${userId}/execute-actions-email?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
-
     try {
       await firstValueFrom(
         this.httpService.put(
@@ -327,6 +326,7 @@ export class UsersService {
         )
       );
     } catch (error) {
+      console.log(error)
       console.log('Error triggering verification email:', error.response ? error.response.data : error);
       throw new HttpException('Failed to trigger email verification', HttpStatus.BAD_REQUEST);
     }
