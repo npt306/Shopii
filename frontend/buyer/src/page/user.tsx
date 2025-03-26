@@ -1,5 +1,4 @@
-import "../css/userPage.css";
-// import "../css/pf.css";
+import "../css/page/userPage.css";
 import React, { useState, useEffect } from "react";
 
 import { HeaderProduct } from "../components/headerProduct.tsx";
