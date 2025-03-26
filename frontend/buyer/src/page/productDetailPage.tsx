@@ -14,9 +14,8 @@ import { ProductDetail } from "../types/productDetail";
 import { HomeLayout } from "../layout/home";
 import { RatingStars } from "../helpers/utility/calculateRatingStars";
 import AddToCartNotification from "../components/features/addToCartNotification";
-
-const PRODUCT_SERVICE_URL = "http://34.58.241.34:3001";
-const ORDER_SERVICE_URL = "http://34.58.241.34:3004";
+import { formatPrice } from "../helpers/utility/formatPrice";
+import { PRODUCT_SERVICE_URL, ORDER_SERVICE_URL } from "../config/url";
 
 const CUSTOMER_ID_TEST = 2;
 
@@ -119,40 +118,6 @@ export const ProductDetailPage = () => {
       fetchProductDetail();
     }
   }, [id]);
-
-  // const handleAddToCart = () => {
-  //   if (
-  //     productDetail?.classifications[0] != null &&
-  //     productDetail?.classifications[1] != null
-  //   ) {
-  //     for (let i = 0; i < productDetail.details.length; i++) {
-  //       if (
-  //         productDetail.details[i].type_1 == selectedType1 &&
-  //         productDetail.details[i].type_2 == selectedType2
-  //       ) {
-  //         console.log(productDetail.details[i].type_id);
-  //       }
-  //     }
-  //   }
-
-  //   if (
-  //     productDetail?.classifications[0] != null &&
-  //     productDetail?.classifications[1] == null
-  //   ) {
-  //     for (let i = 0; i < productDetail.details.length; i++) {
-  //       if (productDetail.details[i].type_1 == selectedType1) {
-  //         console.log(productDetail.details[i].type_id);
-  //       }
-  //     }
-  //   }
-
-  //   if (
-  //     productDetail?.classifications[0] == null &&
-  //     productDetail?.classifications[1] == null
-  //   ) {
-  //     console.log(productDetail?.details[0].type_id);
-  //   }
-  // };
 
   const handleAddToCart = async () => {
     if (!productDetail?.details || productDetail.details.length === 0) return;
@@ -389,7 +354,9 @@ export const ProductDetailPage = () => {
             <div className="bg-gray-100 p-5 mt-5 flex flex-row">
               <div className="flex flex-row gap-1 text-3xl items-center text-red-500">
                 <div className="underline underline-offset-2 text-xl">đ</div>
-                <div className="">{productDetail?.details[0].price}</div>
+                <div className="">
+                  {formatPrice(Number(productDetail?.details[0].price))}
+                </div>
               </div>
 
               {/* <div className="flex flex-row gap-1 items-center text-gray-400 line-through ml-1">
@@ -440,7 +407,7 @@ export const ProductDetailPage = () => {
                         className={`p-2 border text-xs flex flex-row items-center gap-1 transition-all duration-300 
                                         ${
                                           selectedType1 === uniqueType
-                                            ? "border-orange-500 bg-orange-100 text-black"
+                                            ? "border-orange-500 text-black"
                                             : "border-gray-300 text-gray-500 hover:border-orange-400"
                                         }
                                         ${
@@ -486,7 +453,7 @@ export const ProductDetailPage = () => {
                         className={`border text-xs flex flex-row items-center gap-1 transition-all duration-300 
                                         ${
                                           selectedType2 === uniqueType
-                                            ? "border-orange-500 bg-orange-100 text-black"
+                                            ? "border-orange-500 text-black"
                                             : "border-gray-300 text-gray-500 hover:border-orange-400"
                                         }
                                         ${
@@ -624,11 +591,43 @@ export const ProductDetailPage = () => {
             </div>
           </div>
 
-          <div className="p-3 bg-gray-200 font-medium text-xl mt-5 ml-1">
+          <div className="p-3 bg-gray-200 font-medium text-xl mt-5">
             MÔ TẢ SẢN PHẨM
           </div>
 
-          <div className="div"></div>
+          <div className="h-[100vh] w-full bg-red-200">
+            <p>
+              🔰🔰🔰 LAM DIGITAL XIN KÍNH CHÀO QUÍ KHÁCH🔰🔰🔰 LAM Digital là
+              nhà nhập khẩu và phân phối chuyên nghiệp các sản phẩm phụ kiện,
+              cáp sạc, đầu chuyển, thiết bị âm thanh, ánh sáng... Chúng tôi mong
+              muốn cung cấp sản phẩm chất lượng tốt, với dịch vụ hậu mãi online
+              '\n' uy tín và đi kèm giá cả phải chăng. Các sản phẩm của shop
+              được dán nhãn bảo hành uy tín và mặc định bảo hành 1 đổi 1 đối với
+              lỗi của nhà sản xuất trong vòng ít nhất 3 tháng.
+              _______________________________ ✅ CHI TIẾT SẢN PHẨM Cáp chuyển
+              USB Type C sang USB 3.0 và HDMI được sử dụng để kết nối các thiết
+              bị có hỗ trợ cổng kết nối USB Type C sang các thiết bị trình chiếu
+              như màn hình máy chiếu hoặc Tivi có hỗ trợ cổng kết nối HDMI. Cáp
+              chuyển đổi USB type C có độ phân giải lên đến 4K và tương thích
+              tốt với các thiết bị của Apple. Tên sản phẩm : HUB Chuyển Mở Rộng
+              Type-C Sang HDMI, USB 3.0 và Type-C Màu sắc : Đen + Nhôm Phay
+              Nguyên Khối Chất liệu : Hợp Kim Nhôm Đầu Vào : USB Type-C Đầu Ra :
+              - HDMI 4K @ 30 Hz - USB 3.0 high speed 5Gbps/ - USB Type C - PD
+              100W Tương Thích: Quý Khách Kiểm Tra Thiết Bị Có Cỗng Type C Hỗ
+              Trợ Thunderbolt Hoặc DisplayPort. - Các thiết bị Windows có tương
+              thích tốt. - Các thiết bị MacOS (Macbook, iPad, iPhone 15 v.v...)
+              có tương thích tốt. - Các thiết bị Samsung có hỗ trợ Samsung Dex.
+              - Các thiết bị Android khác nên kiểm tra với nhà sản xuất. Kích
+              thước sản phẩm : 12 x 59 x 54 mm Nguồn pin cấp : Tương thích với
+              sạc nhanh 100 Watt. Tặng kèm: Đèn Ngủ USB Siêu Sáng 1W. Bảo Hành:
+              Bao hành 6 tháng 1 gửi đổi 1 do lỗi nhà sản xuất (không áp dụng
+              với sản phẩm cáp sạc). Tem nhãn sẽ được dán trên sản phẩm trước
+              khi gửi hàng. Công ty TNHH LAM Digital hoạt động với phương châm
+              Uy Tín – Minh Bạch - Chất Lượng. Chúng tôi cố gắng từng ngày để
+              đạt được sự tín nhiệm của quý khách hàng. Rất mong được sự ủng hộ
+              của quý khách!
+            </p>
+          </div>
         </div>
         {stateVoucherShopDialog && (
           <div className="fixed inset-0 flex items-center justify-center bg-black/50">
