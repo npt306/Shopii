@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
+import axios from 'axios';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,7 +7,7 @@ import { Repository } from 'typeorm';
 import { Cart } from './entities/cart.entity';
 import { DeleteCartDto } from './dto/delete-cart.dto';
 
-interface CartItem {
+type CartItem = {
   CustomerID: number;
   ProductTypeID: number;
   Quantity: number;
@@ -20,9 +21,19 @@ interface CartItem {
   ProductQuantity: number;
   SellerID: number;
   ShopName: string;
-}
+  ProductName: string;
+};
 
-interface GroupedCart {
+type ProductDetail = {
+  type_id: string;
+  type_1: string;
+  type_2: string;
+  image: string;
+  price: number;
+  quantity: number;
+};
+
+type GroupedCart = {
   shopName: string;
   sellerId: number;
   items: {
@@ -34,22 +45,23 @@ interface GroupedCart {
     price: number;
     quantity: number;
     availableQuantity: number;
+    details: ProductDetail[];
   }[];
-}
+};
 
 @Injectable()
 export class CartsService {
   constructor(
     @InjectRepository(Cart)
     private cartRepository: Repository<Cart>,
-  ) { }
+  ) {}
 
   async addToCart(createCartDto: CreateCartDto) {
     const cart = await this.cartRepository.findOne({
       where: {
         customerId: createCartDto.customerId,
-        productTypeId: createCartDto.productTypeId
-      }
+        productTypeId: createCartDto.productTypeId,
+      },
     });
     if (cart) {
       cart.quantity += createCartDto.quantity;
@@ -59,7 +71,7 @@ export class CartsService {
       const newCart = this.cartRepository.create({
         ...createCartDto,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
       return this.cartRepository.save(newCart);
     }
@@ -69,8 +81,8 @@ export class CartsService {
     const cart = await this.cartRepository.findOne({
       where: {
         customerId: updateCartDto.customerId,
-        productTypeId: updateCartDto.productTypeId
-      }
+        productTypeId: updateCartDto.productTypeId,
+      },
     });
     if (cart) {
       cart.quantity = updateCartDto.quantity;
@@ -82,16 +94,16 @@ export class CartsService {
   }
 
   async deleteFromCart(deleteCartDto: DeleteCartDto) {
-    const cart = await this.cartRepository.findOne({
+    const item = await this.cartRepository.findOne({
       where: {
         customerId: deleteCartDto.customerId,
-        productTypeId: deleteCartDto.productTypeId
-      }
+        productTypeId: deleteCartDto.productTypeId,
+      },
     });
-    if (cart) {
+    if (item) {
       return this.cartRepository.delete({
-        customerId: cart.customerId,
-        productTypeId: cart.productTypeId
+        customerId: item.customerId,
+        productTypeId: item.productTypeId,
       });
     } else {
       return { message: 'Item not found in cart' };
@@ -99,7 +111,8 @@ export class CartsService {
   }
 
   async getCart(customerId: number) {
-    const cartItems = await this.cartRepository.query(`
+    const cartItems = await this.cartRepository.query(
+      `
         SELECT 
             c."CustomerID",
             c."ProductTypeID",
@@ -113,6 +126,7 @@ export class CartsService {
             p."Price",
             p."Quantity" as "ProductQuantity",
             pro."SellerID",
+            pro."Name" as "ProductName",
             s."ShopName"
         FROM public."Carts" c
         JOIN public."ProductDetailType" p 
@@ -122,37 +136,85 @@ export class CartsService {
         JOIN public."Sellers" s
             ON pro."SellerID" = s."id"
         WHERE c."CustomerID" = $1
-    `, [customerId]);
+    `,
+      [customerId],
+    );
+
+    // console.log(cartItems);
+
+    const productDetails = await Promise.all(
+      cartItems.map(async (item) => {
+        try {
+          const response = await axios.get(
+            `http://34.58.241.34:3001/product/classifications/${item.ProductID}`,
+          );
+          // console.log(response.data.details);
+          return response.data.details || [];
+        } catch (error) {
+          console.error('Error fetching product detail:', error);
+          return null;
+        }
+      }),
+    );
 
     // Group items by shop
-    const groupedByShop = cartItems.reduce((acc: GroupedCart[], item: CartItem) => {
-      const shopIndex = acc.findIndex(shop => shop.sellerId === item.SellerID);
+    const groupedByShop = cartItems.reduce(
+      (acc: GroupedCart[], item: CartItem, index: number) => {
+        const shopIndex = acc.findIndex(
+          (shop) => shop.sellerId === item.SellerID,
+        );
 
-      const cartItem = {
-        productId: item.ProductID,
-        productTypeId: item.ProductTypeID,
-        type1: item.Type_1,
-        type2: item.Type_2,
-        image: item.Image,
-        price: item.Price,
-        quantity: item.Quantity,
-        availableQuantity: item.ProductQuantity
-      };
+        const cartItem = {
+          productId: item.ProductID,
+          productName: item.ProductName,
+          productTypeId: item.ProductTypeID,
+          type1: item.Type_1,
+          type2: item.Type_2,
+          image: item.Image,
+          price: item.Price,
+          quantity: item.Quantity,
+          availableQuantity: item.ProductQuantity,
+          details: productDetails[index].map((d) => ({
+            type_id: d.type_id,
+            type_1: d.type_1,
+            type_2: d.type_2,
+            image: d.image,
+            price: d.price,
+            quantity: d.quantity,
+          })),
+        };
 
-      if (shopIndex === -1) {
-        // Add new shop group
-        acc.push({
-          shopName: item.ShopName,
-          sellerId: item.SellerID,
-          items: [cartItem]
-        });
-      } else {
-        // Add item to existing shop group
-        acc[shopIndex].items.push(cartItem);
-      }
-      return acc;
-    }, []);
+        // console.log(cartItem.details);
+
+        if (shopIndex === -1) {
+          // Add new shop group
+          acc.push({
+            shopName: item.ShopName,
+            sellerId: item.SellerID,
+            items: [cartItem],
+          });
+        } else {
+          // Add item to existing shop group
+          acc[shopIndex].items.push(cartItem);
+        }
+        return acc;
+      },
+      [],
+    );
     return groupedByShop;
+  }
+
+  async deleteAllCart(customerId: number) {
+    try {
+      const msg = await this.cartRepository.query(
+        `DELETE FROM "Carts" WHERE "CustomerID" = ${customerId};`,
+      );
+    } catch (error) {
+      throw new BadRequestException('Something bad happened', {
+        cause: new Error(),
+        description: `${error.message}`,
+      });
+    }
   }
 
   create(createCartDto: CreateCartDto) {
