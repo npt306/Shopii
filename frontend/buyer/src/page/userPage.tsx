@@ -54,7 +54,7 @@ export const UserPage = () => {
           setActiveComponent(<Profile userId={parsedData.accountId} />);
           try {
             const response = await axios.get(
-              `${EnvValue.api_gateway_url}/users/${parsedData.accountId}`
+              `${EnvValue.api_gateway_url}/api/users/${parsedData.accountId}`
             );
             if (response.data) {      
 
