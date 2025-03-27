@@ -113,7 +113,7 @@ export const Header = () => {
                   <div className="absolute right-0 mt-2 w-40 bg-white text-black shadow-lg rounded-lg z-50">
                     <ul className="py-2">
                       <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                        Tài khoản của tôi
+                        <a href="/user">Tài khoản của tôi</a>
                       </li>
                       <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
                         Đơn mua
