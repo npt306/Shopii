@@ -3,6 +3,8 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository, ObjectLiteral } from 'typeorm';
 import { VouchersService } from './vouchers.service';
 import { Voucher } from './entities/voucher.entity';
+import { VoucherHistory } from './entities/voucher-history.entity';
+import { UserVoucher } from './entities/user-voucher.entity';
 import { CreateVoucherDto } from './dto/create-voucher.dto';
 import { UpdateVoucherDto } from './dto/update-voucher.dto';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
@@ -32,6 +34,8 @@ const createMockRepository = <T extends ObjectLiteral>(): MockRepository<T> => (
 describe('VouchersService', () => {
   let service: VouchersService;
   let repository: MockRepository<Voucher>;
+  let voucherHistoryRepository: MockRepository<VoucherHistory>;
+  let userVoucherRepository: MockRepository<UserVoucher>;
 
   const mockVoucher: Voucher = {
     id: 1,
@@ -64,11 +68,22 @@ describe('VouchersService', () => {
           provide: getRepositoryToken(Voucher),
           useValue: createMockRepository<Voucher>(),
         },
+        {
+          provide: getRepositoryToken(VoucherHistory),
+          useValue: createMockRepository<VoucherHistory>(),
+        },
+         {
+          provide: getRepositoryToken(UserVoucher),
+          useValue: createMockRepository<UserVoucher>(),
+        },
+
       ],
     }).compile();
 
     service = module.get<VouchersService>(VouchersService);
     repository = module.get<MockRepository<Voucher>>(getRepositoryToken(Voucher));
+    voucherHistoryRepository = module.get<MockRepository<VoucherHistory>>(getRepositoryToken(VoucherHistory));
+    userVoucherRepository = module.get<MockRepository<UserVoucher>>(getRepositoryToken(UserVoucher));
   });
 
   it('should be defined', () => {
