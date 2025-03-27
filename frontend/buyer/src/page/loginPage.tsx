@@ -8,6 +8,7 @@ import {
   Card,
   Alert,
 } from "react-bootstrap";
+
 import "../css/page/loginPage.css";
 import { setCredentials } from "../redux/authSlice";
 import { useDispatch } from "react-redux";
@@ -166,8 +167,8 @@ export const LoginPage: React.FC = () => {
             className="text-xs text-amber-900 text-decoration-none"
           >
             <svg
-              width="200"
-              height="40"
+              width={200}
+              height={40}
               viewBox="0 0 192 65"
               className="shopee-svg-icon icon-shopee-logo fill-orange-600"
             >

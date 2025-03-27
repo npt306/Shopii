@@ -1,179 +1,323 @@
 import "../../../css/user/profile.css";
 import React, { useState, useEffect } from "react";
-export const Profile = () => {
-    return (
-        <div className="CAysXD" role="main">
-            <div style={{ display: "contents" }}>
-                <div className="utB99K">
-                <div className="SFztPl">
-                    <h1 className="BVrKV_">Hồ sơ của tôi</h1>
-                    <div className="QcW5xy">Quản lý thông tin hồ sơ để bảo mật tài khoản</div>
-                </div>
-                <div className="RCnc9v">
-                    <div className="HrBg9Q">
-                    <form>
-                        <table className="bQkdAY">
-                        <tbody>
-                            <tr>
-                            <td className="f1ZOv_">
-                                <label>Tên đăng nhâp</label>
-                            </td>
-                            <td className="o6L4e0">
-                                <div className="e_Vt__">
-                                <div className="PBfYlq">username</div>
-                                <button className="clo49Q" />
-                                </div>
-                            </td>
-                            </tr>
-                            <tr>
-                            <td className="f1ZOv_">
-                                <label>Tên</label>
-                            </td>
-                            <td className="o6L4e0">
-                                <div>
-                                <div className="NGoa5Z">
-                                    <input
-                                    type="text"
-                                    placeholder=""
-                                    className="kKnR04"
-                                    defaultValue="dtententen"
-                                    />
-                                </div>
-                                </div>
-                            </td>
-                            </tr>
-                            <tr>
-                            <td className="f1ZOv_">
-                                <label>Email</label>
-                            </td>
-                            <td className="o6L4e0">
-                                <div className="e_Vt__">
-                                <div className="PBfYlq">us************@gmail.com</div>
-                                <button className="clo49Q">Thay đổi</button>
-                                </div>
-                            </td>
-                            </tr>
-                            <tr>
-                            <td className="f1ZOv_">
-                                <label>Số điện thoại</label>
-                            </td>
-                            <td className="o6L4e0">
-                                <div className="e_Vt__">
-                                <div className="PBfYlq">*********21</div>
-                                <button className="clo49Q">Thay đổi</button>
-                                </div>
-                            </td>
-                            </tr>
-                            <tr>
-                            <td className="f1ZOv_">
-                                <label>Giới tính</label>
-                            </td>
-                            <td className="o6L4e0">
-                                <div className="prDHtK">
-                                <div className="stardust-radio-group" role="radiogroup">
-                                    <div
-                                    className="stardust-radio"
-                                    tabIndex={0}
-                                    role="radio"
-                                    aria-checked="false"
-                                    >
-                                    <div className="stardust-radio-button">
-                                        <div className="stardust-radio-button__outer-circle">
-                                        <div className="stardust-radio-button__inner-circle" />
-                                        </div>
-                                    </div>
-                                    <div className="stardust-radio__content">
-                                        <div className="stardust-radio__label">Nam</div>
-                                    </div>
-                                    </div>
-                                    <div
-                                    className="stardust-radio"
-                                    tabIndex={0}
-                                    role="radio"
-                                    aria-checked="false"
-                                    >
-                                    <div className="stardust-radio-button">
-                                        <div className="stardust-radio-button__outer-circle">
-                                        <div className="stardust-radio-button__inner-circle" />
-                                        </div>
-                                    </div>
-                                    <div className="stardust-radio__content">
-                                        <div className="stardust-radio__label">Nữ</div>
-                                    </div>
-                                    </div>
-                                    <div
-                                    className="stardust-radio stardust-radio--checked"
-                                    tabIndex={0}
-                                    role="radio"
-                                    aria-checked="true"
-                                    >
-                                    <div className="stardust-radio-button stardust-radio-button--checked">
-                                        <div className="stardust-radio-button__outer-circle">
-                                        <div className="stardust-radio-button__inner-circle" />
-                                        </div>
-                                    </div>
-                                    <div className="stardust-radio__content">
-                                        <div className="stardust-radio__label">Khác</div>
-                                    </div>
-                                    </div>
-                                </div>
-                                </div>
-                            </td>
-                            </tr>
-                            <tr>
-                            <td className="f1ZOv_">
-                                <label>Ngày sinh</label>
-                            </td>
-                            <td className="o6L4e0">
-                                <div className="e_Vt__">
-                                <div className="PBfYlq">**/01/20**</div>
-                                <button className="clo49Q">Thay đổi</button>
-                                </div>
-                            </td>
-                            </tr>
-                            <tr>
-                            <td className="f1ZOv_">
-                                <label />
-                            </td>
-                            <td className="o6L4e0">
-                                <button
-                                type="button"
-                                className="btn btn-solid-primary btn--m btn--inline"
-                                aria-disabled="false"
-                                >
-                                Lưu
-                                </button>
-                            </td>
-                            </tr>
-                        </tbody>
-                        </table>
-                    </form>
-                    </div>
-                    <div className="nv7bOz">
-                    <div className="TJWfNh">
-                        <div className="nMPYiw" role="header">
-                        <div
-                            className="cW0oBM"
-                            style={{
-                            backgroundImage:
-                                'url("src/assets/avatar_default.png")'
-                            }}
-                        />
-                        </div>
-                        <input className="XbWdh7" type="file" accept=".jpg,.jpeg,.png" />
-                        <button type="button" className="btn btn-light btn--m btn--inline">
-                        Chọn ảnh
-                        </button>
-                        <div className="T_8sqN">
-                        <div className="JIExfq">Dụng lượng file tối đa 1 MB</div>
-                        <div className="JIExfq">Định dạng:.JPEG, .PNG</div>
-                        </div>
-                    </div>
-                    </div>
-                </div>
-                </div>
-            </div>
-        </div>
+import axios from "axios";
+import { toast } from "react-toastify";
+import { EnvValue } from "../../../env-value/envValue";
 
-    );
+interface ProfileProps {
+  userId: number;
+}
+
+export const Profile: React.FC<ProfileProps> = ({ userId }) => {
+  const [formData, setFormData] = useState<{
+    AccountId: number;
+    Username: string;
+    Email: string;
+    PhoneNumber: string;
+    Sex: boolean;
+    DoB: string;
+    Avatar: string | null;
+  }>({
+    AccountId: userId,
+    Username: "username",
+    Email: "user@example.com",
+    PhoneNumber: "0987654321",
+    Sex: false, // true = Male, false = Female
+    DoB: "2/2/2222",
+    Avatar: null,
+  });
+
+  const [changeForm, setChangeForm] = useState(false);
+  const [changeAvatar, setChangeAvatar] = useState(false);
+  const [avtFile, setAvtFile] = useState<File | null>(null); //Avatar upload
+
+  useEffect(() => {
+    const fetchUserDetail = async () => {
+      try {
+        const response = await axios.get(
+          `${EnvValue.api_gateway_url}/users/${userId}`
+        );
+        // console.log(response.data);
+        setFormData(response.data);
+      } catch (error) {
+        console.error("Error fetching product detail:", error);
+      }
+    };
+
+    if (userId) {
+      fetchUserDetail();
+    }
+  }, [userId]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, files } = e.target;
+    setChangeForm(true);
+    // console.log(e.target);
+
+    if (files && files.length > 0) {
+      const _file = files[0];
+      setAvtFile(_file);
+      // console.log();
+      setFormData((prev) => ({
+        ...prev,
+        Avatar: URL.createObjectURL(files[0]),
+      }));
+      setChangeAvatar(true);
+      return;
+    }
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        type === "radio"
+          ? value === "Nam"
+          : type === "date"
+          ? new Date(value).toISOString().split("T")[0]
+          : value,
+    }));
+    // console.log(formData);
+  };
+  const checkValidForm = () => {
+    console.log(formData);
+    const { Username, Email, PhoneNumber, DoB } = formData;
+  
+    const usernamePattern = new RegExp("^[A-Za-z][A-Za-z0-9_.]{2,}$");
+    if (!Username.match(usernamePattern)) {
+      toast.error("Tên đăng nhập phải bắt đầu bằng chữ cái và có ít nhất 3 ký tự.");
+      return false;
+    }
+  
+    const emailPattern = new RegExp("^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$");
+    if (!Email.match(emailPattern)) {
+      toast.error("Email không hợp lệ.");
+      return false;
+    }
+  
+    const phonePattern = new RegExp("^(?:0|\\+84)?\\d{9,12}$");
+    if (!PhoneNumber.match(phonePattern) && PhoneNumber !== "N/A") {
+      toast.error("Số điện thoại không hợp lệ");
+      return false;
+    }
+  
+    // Validate Date of Birth (Must be at least 18 years old)
+    // if (DoB) {
+    //   const birthDate = new Date(DoB);
+    //   const today = new Date();
+    //   const age = today.getFullYear() - birthDate.getFullYear();
+    //   if (
+    //     age < 18 ||
+    //     (age === 18 && today < new Date(birthDate.setFullYear(birthDate.getFullYear() + 18)))
+    //   ) {
+    //     toast.error("Bạn phải ít nhất 18 tuổi.");
+    //     return false;
+    //   }
+    // }
+  
+    return true;
+  };
+  const handleSubmit = async () => { 
+    if (checkValidForm()) {
+      try {
+        // Send profile update request
+        const response = await axios.post(
+          `${EnvValue.api_gateway_url}/users/update-profile`,
+          formData
+        );
+  
+        // if (response && response.data) {
+        //   // Update localStorage with the new user data
+        //   const updatedUserProfile = {
+        //     ...JSON.parse(localStorage.getItem("userProfile") || "{}"), // Get current profile
+        //     accountId: formData.AccountId,
+        //     email: formData.Email,
+        //     username: formData.Username,
+        //     avatar: formData.Avatar,
+        //     dateOfBirth: formData.DoB,
+        //     phoneNumber: formData.PhoneNumber,
+        //     sex: formData.Sex,
+        //     updatedAt: new Date().toISOString(),
+        //   };
+  
+        //   localStorage.setItem("userProfile", JSON.stringify(updatedUserProfile));
+  
+          if (changeAvatar && avtFile) {
+            const avatarFormData = new FormData();
+            avatarFormData.append("file", avtFile);
+            const avatarResponse = await axios.post(
+              `${EnvValue.api_gateway_url}/users/update-avatar/${userId}`,
+              avatarFormData,
+              { headers: { "Content-Type": "multipart/form-data" } }
+            );
+            if (avatarResponse) setChangeAvatar(false);
+          }
+  
+          setChangeForm(false);
+          toast.success("Cập nhật hồ sơ thành công");
+        // }
+      } catch (error) {
+        console.error("Error updating user:", error);
+        toast.error("Profile can't update!");
+      }
+    }
+  };
+  
+
+  return (
+    <div className="user-container" role="main">
+      <div style={{ display: "contents" }}>
+        <div className="pt-0 px-7.5 pb-2.5">
+          <div className="border-b border-zinc-100 py-2.5">
+            <h1 className="profile-title">Hồ sơ của tôi</h1>
+            <div className="mt-2 text-neutral-600">
+              Quản lý thông tin hồ sơ để bảo mật tài khoản
+            </div>
+          </div>
+          <div className="pt-7 flex flex-row items-start">
+            <form className="flex flex-1" onSubmit={handleSubmit}>
+              <div className="flex flex-1">
+                <div className="w-9/10 grid grid-cols-10 gap-4">
+                  {/* UPDATE FORM */}
+                  <input
+                    type="number"
+                    name="AccountId"
+                    defaultValue={userId}
+                    hidden
+                  />
+                  {/* Username */}
+                  <div className="form-label py-3 pr-1 text-base col-span-3">
+                    <label>Tên đăng nhập</label>
+                  </div>
+                  <div className="form-info-input pl-3 col-span-7">
+                    <input
+                      type="text"
+                      name="Username"
+                      className="form-input-enable text-base"
+                      value={formData.Username || ""}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  {/* Email */}
+                  <div className="form-label py-3 pr-1 text-base col-span-3">
+                    <label>Email</label>
+                  </div>
+                  <div className="form-info-input pl-3 col-span-7">
+                    <input
+                      type="email"
+                      name="Email"
+                      pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$"
+                      className="form-input-enable text-base"
+                      value={formData.Email || ""}
+                      onChange={handleInputChange}
+                      disabled
+                    />
+                  </div>
+                  {/* Phone number */}
+                  <div className="form-label py-3 pr-1 text-base col-span-3">
+                    <label>Số điện thoại</label>
+                  </div>
+                  <div className="form-info-input pl-3 col-span-7">
+                    <input
+                      type="text"
+                      name="PhoneNumber"
+                      className="form-input-enable text-base"
+                      pattern="\d{9}"
+                      value={formData.PhoneNumber || ""}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  {/* Sex */}
+                  <div className="form-label py-3 pr-1 text-base col-span-3">
+                    <label>Giới tính</label>
+                  </div>
+                  <div className="form-info-input pl-3 col-span-7">
+                    <div className="radio-group">
+                      <label className="radio-label">
+                        <input
+                          type="radio"
+                          name="Sex"
+                          value="Nam"
+                          checked={formData.Sex === true}
+                          onChange={handleInputChange}
+                          className="radio-input"
+                        />
+                        Nam
+                      </label>
+                      <label className="radio-label">
+                        <input
+                          type="radio"
+                          name="Sex"
+                          value="Nữ"
+                          checked={formData.Sex === false}
+                          onChange={handleInputChange}
+                          className="radio-input"
+                        />
+                        Nữ
+                      </label>
+                    </div>
+                  </div>
+                  {/* DoB */}
+                  <div className="form-label py-3 pr-1 text-base col-span-3">
+                    <label>Ngày sinh</label>
+                  </div>
+                  <div className="form-info-input pl-3 col-span-7">
+                    <input
+                      type="date"
+                      name="DoB"
+                      className="date-picker"
+                      value={formData.DoB || ""}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  {/* BUTTON */}
+                  <div className="col-span-6"></div>
+                  <div className="form-info-input pl-3 col-span-4">
+                    <button
+                      type="button"
+                      className={`btn btn-solid-primary inline-flex ${
+                        changeForm ? "" : "!bg-gray-400 !cursor-not-allowed"
+                      }`}
+                      onClick={() => handleSubmit()}
+                    >
+                      Lưu
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Avatar Section */}
+              <div className="avatar-container">
+                <div className="flex flex-col items-center">
+                  <div className="avatar-show">
+                    <div
+                      className="avatar border border-gray-200"
+                      style={{
+                        backgroundImage: `url(${
+                          formData.Avatar || "https://storage.googleapis.com/shopii-image/user_avatar/c4f96264-90f0-4dda-a6bb-ebe4b502a9a7_avatar_default.png"
+                        })`,
+                      }}
+                    />
+                  </div>
+                  <label className="btn btn-light inline-flex cursor-pointer">
+                    Chọn ảnh
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png"
+                      className="hidden"
+                      name="Avatar"
+                      onChange={handleInputChange}
+                    />
+                  </label>
+                  <div className="block mt-3 text-neutral-400 text-sm leading-5">
+                    <div>Dung lượng file tối đa 1 MB</div>
+                    <div>Định dạng: .JPEG, .PNG</div>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };

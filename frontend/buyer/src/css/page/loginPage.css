@@ -94,3 +94,11 @@
   position: absolute;
   width: 400px;
 }
+
+.shopee-svg-icon {
+  color: #ee4d2d;
+}
+.icon-shopee-logo {
+  min-width: 200px;
+  min-height: 40px;
+}
