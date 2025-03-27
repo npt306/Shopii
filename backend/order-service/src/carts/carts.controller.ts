@@ -41,6 +41,11 @@ export class CartsController {
     return this.cartsService.getCart(+customerId);
   }
 
+  @Get('/basic/:customerId')
+  getBasicCart(@Param('customerId') customerId: string) {
+    return this.cartsService.getBasicCart(+customerId);
+  }
+
   // auto generate
   @Get(':id')
   findOne(@Param('id') id: string) {

@@ -108,7 +108,7 @@ export const ProductDetailPage = () => {
           `${PRODUCT_SERVICE_URL}/product/classifications/${id}`
         );
         setProductDetail(response.data);
-        console.log(response.data);
+        // console.log(response.data);
       } catch (error) {
         console.error("Error fetching product detail:", error);
       }
@@ -141,6 +141,7 @@ export const ProductDetailPage = () => {
         customerId: CUSTOMER_ID_TEST,
         productTypeId: matchedDetail.type_id,
         quantity: quantity,
+        productId: id,
       };
 
       console.log("Raw data: ", data);
