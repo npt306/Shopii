@@ -4,11 +4,7 @@ import { AppService } from './app.service';
 
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './users/user.module';
-import { VoucherModule } from './vouchers/voucher.module';
 import { User } from './users/entities/user.entity';
-import { UserVoucher } from './vouchers/entities/user-voucher.entity';
-import { Voucher } from './vouchers/entities/voucher.entity';
-import { VoucherHistory } from './vouchers/entities/voucher-history.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
@@ -25,12 +21,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
-        entities: [User, Voucher, VoucherHistory, UserVoucher],
+        entities: [User],
         synchronize: false,
       }),
     }),
     UserModule,
-    VoucherModule,
   ],
   controllers: [AppController],
   providers: [AppService],

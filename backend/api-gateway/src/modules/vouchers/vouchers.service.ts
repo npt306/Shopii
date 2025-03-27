@@ -30,4 +30,34 @@ export class VouchersService {
     const response = await firstValueFrom(this.httpService.delete(`/vouchers/${id}`));
     return response.data;
   }
+
+
+  async getActiveVouchers(userId: number): Promise<any> {
+    const response = await firstValueFrom(
+      this.httpService.get('/vouchers/all', { params: { userId } })
+    );
+    return response.data;
+  }
+
+  async getUserVouchers(userId: number): Promise<any> {
+    const response = await firstValueFrom(
+      this.httpService.get('/vouchers/user-vouchers', { params: { userId } })
+    );
+    return response.data;
+  }
+
+  async getUserVoucherHistory(userId: number): Promise<any> {
+    const response = await firstValueFrom(
+      this.httpService.get('/vouchers/history', { params: { userId } })
+    );
+    return response.data;
+  }
+
+  async userClaimVoucher(dto: any): Promise<any> {
+    const response = await firstValueFrom(
+      this.httpService.post('/vouchers/claim', dto)
+    );
+    return response.data;
+  }
+
 }
