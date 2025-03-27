@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button, Form, Container, Row, Col, Card, Alert } from "react-bootstrap";
-import "../css/loginPage.css";
+import "../css/page/loginPage.css";
 import { setCredentials } from "../redux/authSlice";
 import { useDispatch } from "react-redux";
 import { userService } from "../services/userService";

@@ -35,7 +35,7 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
     const fetchUserDetail = async () => {
       try {
         const response = await axios.get(
-          `${EnvValue.backend_url}/users/${userId}`
+          `${EnvValue.api_gateway_url}/users/${userId}`
         );
         // console.log(response.data);
         setFormData(response.data);
@@ -93,7 +93,7 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
     }
   
     const phonePattern = new RegExp("^(?:0|\\+84)?\\d{9,12}$");
-    if (!PhoneNumber.match(phonePattern)) {
+    if (!PhoneNumber.match(phonePattern) && PhoneNumber !== "N/A") {
       toast.error("Số điện thoại không hợp lệ");
       return false;
     }
@@ -119,7 +119,7 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
       try {
         // Send profile update request
         const response = await axios.post(
-          `${EnvValue.backend_url}/users/update-profile`,
+          `${EnvValue.api_gateway_url}/users/update-profile`,
           formData
         );
   
@@ -143,7 +143,7 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
             const avatarFormData = new FormData();
             avatarFormData.append("file", avtFile);
             const avatarResponse = await axios.post(
-              `${EnvValue.backend_url}/users/update-avatar/${userId}`,
+              `${EnvValue.api_gateway_url}/users/update-avatar/${userId}`,
               avatarFormData,
               { headers: { "Content-Type": "multipart/form-data" } }
             );
@@ -208,7 +208,7 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
                       className="form-input-enable text-base"
                       value={formData.Email || ""}
                       onChange={handleInputChange}
-                      required
+                      disabled
                     />
                   </div>
                   {/* Phone number */}

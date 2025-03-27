@@ -1,4 +1,5 @@
 export class EnvValue {
+    
     // http://localhost:3003/Users/login
 
     // public static backend_login_url: "http://34.58.241.34:3003/Users/login";
@@ -8,8 +9,11 @@ export class EnvValue {
 
     // http://localhost:3003
     // http://34.58.241.34:3003
-    public static backend_url = 'http://34.58.241.34:3003'
 
+    public static backend_url = 'http://34.58.241.34:3003'
+    // public static backend_url = 'http://localhost:3000'
+    public static api_gateway_url = 'http://localhost:3002/api'
+    
     // public static backend_login_url: "http://34.58.241.34:8002/Users/send-verification-email";
     // public static backend_login_url: "http://34.58.241.34:8002/Users/check-email-verification";
 }

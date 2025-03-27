@@ -13,7 +13,7 @@ export const VoucherAdd: React.FC<{ userId: number }> = ({ userId }) => {
     const handleAddVoucherWithCode = async () => {
       try {
         const response = await axios.post(
-          `${EnvValue.backend_url}/vouchers/claim/`,
+          `${EnvValue.api_gateway_url}/vouchers/claim/`,
           {
             OwnerId: userId,
             VoucherCode: voucherCode, // Sending VoucherCode

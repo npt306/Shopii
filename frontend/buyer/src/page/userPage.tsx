@@ -1,4 +1,4 @@
-import "../css/userPage.css";
+import "../css/page/userPage.css";
 import React, { useState, useEffect } from "react";
 import { ToastContainer } from "react-toastify";
 import axios from "axios";
@@ -54,7 +54,7 @@ export const UserPage = () => {
           setActiveComponent(<Profile userId={parsedData.accountId} />);
           try {
             const response = await axios.get(
-              `${EnvValue.backend_url}/users/${parsedData.accountId}`
+              `${EnvValue.api_gateway_url}/users/${parsedData.accountId}`
             );
             if (response.data) {      
 
