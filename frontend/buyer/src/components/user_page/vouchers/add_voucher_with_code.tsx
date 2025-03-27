@@ -22,15 +22,12 @@ export const VoucherAdd: React.FC<{ userId: number }> = ({ userId }) => {
         console.log(response.data);
         if (response.data === true) {
           toast.success("Đã nhận đươc voucher");
-          // setClaimed(true);
         } else {
           toast.error("Không tìm thấy voucher");
-          // setClaimed(true);
         }
       } catch (error) {
         console.error("Cant claim voucher", error);
       }
-      // console.log("Code ", voucherCode);
     };
     return (
       <div className="voucher-add">

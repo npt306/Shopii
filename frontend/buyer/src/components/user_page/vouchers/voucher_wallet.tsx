@@ -9,9 +9,6 @@ import { VoucherItem } from "./voucher_wallet_item";
 import {VoucherWalletProps, Voucher} from "./vouchers_interfaces"
 import { VoucherAdd } from "./add_voucher_with_code";
 
-// ADD VOUCHER WITH CODE
-
-
 export const VoucherWallet: React.FC<VoucherWalletProps> = ({ userId }) => {
   const [selectedTab, setSelectedTab] = useState("Tất Cả ");
   const tabs = [

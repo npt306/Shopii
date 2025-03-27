@@ -42,11 +42,14 @@ export const VoucherItem: React.FC<{ voucher: Voucher; userId: number }> = ({
     return (
       <div className={`voucher-item w-full ${claimed && "!hidden"} pr-1`}>
         <div className="voucher-badge">x{voucher.per_customer_limit}</div>
-        <div className="voucher-img">
+        <div className="voucher-img w-[120px] flex flex-col">
           <img
+            width={56}
+            // height={80}
             src="https://down-vn.img.susercontent.com/file/e6a3b7beffa95ca492926978d5235f79"
             alt="Voucher"
           />
+          <div className="text-xs text-white">SHOPEE</div>
         </div>
         <div className="voucher-content">
           <div className="text-lg font-medium">{voucher.name}</div>
@@ -67,10 +70,10 @@ export const VoucherItem: React.FC<{ voucher: Voucher; userId: number }> = ({
           {/* <div className="text-xs text-gray-500">HSD: {formattedEndsAt}</div> */}
         </div>
         <button
-          className="border border-orange-600 !text-orange-600 mr-4 p-2"
+          className="border border-orange-600 !text-orange-600 leading-[0.875rem] mr-4 w-14 px-2 py-0.75 !text-xs rounded-xs shadow"
           onClick={() => handleClaimVoucher(voucher.id)}
         >
-          Dùng sau
+          Dùng Sau
         </button>
       </div>
     );

@@ -10,7 +10,7 @@ interface ProfileProps {
 
 export const Profile: React.FC<ProfileProps> = ({ userId }) => {
   const [formData, setFormData] = useState<{
-    AccountID: number;
+    AccountId: number;
     Username: string;
     Email: string;
     PhoneNumber: string;
@@ -18,7 +18,7 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
     DoB: string;
     Avatar: string | null;
   }>({
-    AccountID: 0,
+    AccountId: userId,
     Username: "username",
     Email: "user@example.com",
     PhoneNumber: "0987654321",
@@ -80,19 +80,13 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
     console.log(formData);
     const { Username, Email, PhoneNumber, DoB } = formData;
   
-    // Validate Username
     const usernamePattern = new RegExp("^[A-Za-z][A-Za-z0-9_.]{2,}$");
-
-
     if (!Username.match(usernamePattern)) {
       toast.error("Tên đăng nhập phải bắt đầu bằng chữ cái và có ít nhất 3 ký tự.");
       return false;
     }
   
-    // Validate Email using regex
     const emailPattern = new RegExp("^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$");
-
-
     if (!Email.match(emailPattern)) {
       toast.error("Email không hợp lệ.");
       return false;
@@ -120,36 +114,52 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
   
     return true;
   };
-  const handleSubmit = async () => {
+  const handleSubmit = async () => { 
     if (checkValidForm()) {
       try {
+        // Send profile update request
         const response = await axios.post(
           `${EnvValue.backend_url}/users/update-profile`,
           formData
         );
-
-        if (changeAvatar && avtFile) {
-          const formData = new FormData();
-          formData.append("file", avtFile);
-          const response = await axios.post(
-            `${EnvValue.backend_url}/users/update-avatar/${userId}`,
-            formData,
-            {
-              headers: { "Content-Type": "multipart/form-data" },
-            }
-          );
-          if (response) setChangeAvatar(false);
-        }
-        // console.log("Updated user:", response.data);
-
-        setChangeForm(false);
-        if (response) toast.success("Cập nhật hồ sơ thành công");
+  
+        // if (response && response.data) {
+        //   // Update localStorage with the new user data
+        //   const updatedUserProfile = {
+        //     ...JSON.parse(localStorage.getItem("userProfile") || "{}"), // Get current profile
+        //     accountId: formData.AccountId,
+        //     email: formData.Email,
+        //     username: formData.Username,
+        //     avatar: formData.Avatar,
+        //     dateOfBirth: formData.DoB,
+        //     phoneNumber: formData.PhoneNumber,
+        //     sex: formData.Sex,
+        //     updatedAt: new Date().toISOString(),
+        //   };
+  
+        //   localStorage.setItem("userProfile", JSON.stringify(updatedUserProfile));
+  
+          if (changeAvatar && avtFile) {
+            const avatarFormData = new FormData();
+            avatarFormData.append("file", avtFile);
+            const avatarResponse = await axios.post(
+              `${EnvValue.backend_url}/users/update-avatar/${userId}`,
+              avatarFormData,
+              { headers: { "Content-Type": "multipart/form-data" } }
+            );
+            if (avatarResponse) setChangeAvatar(false);
+          }
+  
+          setChangeForm(false);
+          toast.success("Cập nhật hồ sơ thành công");
+        // }
       } catch (error) {
         console.error("Error updating user:", error);
-        toast.error("Profile cant update!");
+        toast.error("Profile can't update!");
       }
     }
   };
+  
 
   return (
     <div className="user-container" role="main">

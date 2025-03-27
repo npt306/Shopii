@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException,HttpException, HttpStatus} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -43,7 +43,12 @@ export class UserService {
     const user = await this.userRepository.findOne({
       where: { AccountId: updateUserDto.AccountId },
     });
-
+    const user2 = await this.userRepository.findOne({
+      where: { Email: updateUserDto.Email },
+    });
+    if(user.AccountId != user2.AccountId) {
+      throw new HttpException('Email already exists', HttpStatus.BAD_REQUEST);
+    }
     console.log('DTO:', updateUserDto);
 
     if (!user) {
@@ -53,14 +58,16 @@ export class UserService {
     }
 
     // Selectively update properties
-    if (updateUserDto.Email !== undefined) user.Email = updateUserDto.Email;
+    if (updateUserDto.Email !== undefined) 
+      user.Email = updateUserDto.Email;
     if (updateUserDto.Username !== undefined)
       user.Username = updateUserDto.Username;
     if (updateUserDto.PhoneNumber !== undefined)
       user.PhoneNumber = updateUserDto.PhoneNumber;
-    if (updateUserDto.Sex !== undefined) user.Sex = updateUserDto.Sex;
-
-    if (updateUserDto.DoB !== undefined) user.DoB = updateUserDto.DoB;
+    if (updateUserDto.Sex !== undefined) 
+      user.Sex = updateUserDto.Sex;
+    if (updateUserDto.DoB !== undefined) 
+      user.DoB = updateUserDto.DoB;
 
     return this.userRepository.save(user); // ✅ Save changes
   }
@@ -103,14 +110,4 @@ export class UserService {
     return user;
   }
 
-  async fetchUserInfo(email:string): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: { Email: email },
-      select: ["AccountId", "Email", "Username", "Avatar"],
-    });
-    if (!user) {
-      throw new NotFoundException(`User with email ${email} not found`);
-    }
-    return user;
-  }  
 }

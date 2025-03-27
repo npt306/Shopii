@@ -35,8 +35,4 @@ export class UserController {
     return this.usersService.getUserProfile(id);
   }
   
-  @Get('/fetch-info/:email')
-  getInfo(@Param('email') email:string) {
-    return this.usersService.fetchUserInfo(email);
-  }
 }
