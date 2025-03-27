@@ -3,9 +3,28 @@ import axios from 'axios';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Index, Repository } from 'typeorm';
 import { Cart } from './entities/cart.entity';
 import { DeleteCartDto } from './dto/delete-cart.dto';
+
+type BasicItem = {
+  ProductID: number;
+  SellerID: number;
+  ProductTypeID: number;
+  Image: string;
+  Price: number;
+  ProductName: string;
+};
+
+type BasicCart = {
+  sellerId: number;
+  items: {
+    productId: number;
+    productTypeId: number;
+    image: string;
+    price: number;
+  }[];
+};
 
 type CartItem = {
   CustomerID: number;
@@ -63,17 +82,50 @@ export class CartsService {
         productTypeId: createCartDto.productTypeId,
       },
     });
+
+    const relatedProduct = await this.cartRepository.query(
+      `SELECT "ProductTypeID"
+       FROM "Carts"
+       WHERE "ProductID" = $1
+       AND "ProductTypeID" != $2`,
+      [cart?.productId, cart?.productTypeId],
+    );
+
     if (cart) {
       cart.quantity += createCartDto.quantity;
       cart.updatedAt = new Date();
-      return this.cartRepository.save(cart);
+      await this.cartRepository.save(cart);
+      relatedProduct.map(async (item, index) => {
+        let res = await this.cartRepository.findOne({
+          where: {
+            productTypeId: item.ProductTypeID,
+          },
+        });
+        if (res) {
+          res.updatedAt = new Date();
+          await this.cartRepository.save(res);
+        }
+      });
+      return 'Add to cart success';
     } else {
       const newCart = this.cartRepository.create({
         ...createCartDto,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-      return this.cartRepository.save(newCart);
+      this.cartRepository.save(newCart);
+      relatedProduct.map(async (item) => {
+        let res = await this.cartRepository.findOne({
+          where: {
+            productTypeId: item.ProductTypeID,
+          },
+        });
+        if (res) {
+          res.updatedAt = new Date();
+          await this.cartRepository.save(res);
+        }
+      });
+      return 'Add to cart success';
     }
   }
 
@@ -84,10 +136,31 @@ export class CartsService {
         productTypeId: updateCartDto.productTypeId,
       },
     });
+
+    const relatedProduct = await this.cartRepository.query(
+      `SELECT "ProductTypeID"
+       FROM "Carts"
+       WHERE "ProductID" = $1
+       AND "ProductTypeID" != $2`,
+      [cart?.productId, cart?.productTypeId],
+    );
+
     if (cart) {
       cart.quantity = updateCartDto.quantity;
       cart.updatedAt = new Date();
-      return this.cartRepository.save(cart);
+      await this.cartRepository.save(cart);
+      relatedProduct.map(async (item) => {
+        let res = await this.cartRepository.findOne({
+          where: {
+            productTypeId: item.ProductTypeID,
+          },
+        });
+        if (res) {
+          res.updatedAt = new Date();
+          await this.cartRepository.save(res);
+        }
+      });
+      return 'Update cart success';
     } else {
       return { message: 'Item not found in cart' };
     }
@@ -108,6 +181,69 @@ export class CartsService {
     } else {
       return { message: 'Item not found in cart' };
     }
+  }
+
+  async getBasicCart(customerId: number) {
+    const countResult = await this.cartRepository.query(
+      `SELECT COUNT(*) FROM public."Carts" WHERE "CustomerID" = $1`,
+      [customerId],
+    );
+
+    const rowCount = parseInt(countResult[0].count, 10); // Chuyển kiểu string sang number
+
+    const cartItems = await this.cartRepository.query(
+      `
+        SELECT 
+            c."ProductTypeID",
+            p."ProductID",
+            p."Image",
+            p."Price",
+            pro."SellerID",
+            pro."Name" as "ProductName"
+        FROM public."Carts" c
+        JOIN public."ProductDetailType" p 
+            ON c."ProductTypeID" = p."ProductDetailTypeID"
+        JOIN public."Products" pro
+            ON p."ProductID" = pro."ProductID"
+        WHERE c."CustomerID" = $1
+        ORDER BY c."UpdateAt" DESC
+        LIMIT 5;
+    `,
+      [customerId],
+    );
+
+    const res = cartItems.reduce((acc: BasicCart[], item: BasicItem) => {
+      const shopIndex = acc.findIndex(
+        (shop) => shop.sellerId === item.SellerID,
+      );
+
+      const cartItem = {
+        productId: item.ProductID,
+        productName: item.ProductName,
+        productTypeId: item.ProductTypeID,
+        image: item.Image,
+        price: item.Price,
+      };
+
+      // console.log(cartItem.details);
+
+      if (shopIndex === -1) {
+        // Add new shop group
+        acc.push({
+          sellerId: item.SellerID,
+          items: [cartItem],
+        });
+      } else {
+        // Add item to existing shop group
+        acc[shopIndex].items.push(cartItem);
+      }
+      return acc;
+    }, []);
+
+    return {
+      res,
+      numberItem: rowCount,
+    };
   }
 
   async getCart(customerId: number) {
@@ -136,6 +272,7 @@ export class CartsService {
         JOIN public."Sellers" s
             ON pro."SellerID" = s."id"
         WHERE c."CustomerID" = $1
+        ORDER BY c."UpdateAt" DESC;
     `,
       [customerId],
     );

@@ -1,5 +1,6 @@
 export class CreateCartDto {
-    customerId: number;
-    productTypeId: number;
-    quantity: number;  
+  customerId: number;
+  productId: number;
+  productTypeId: number;
+  quantity: number;
 }

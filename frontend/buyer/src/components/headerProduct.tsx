@@ -8,6 +8,9 @@ import { formatPrice } from "../helpers/utility/formatPrice";
 import { BasicItem, BasicSellerCart, BasicCart } from "../types/basicCart";
 import axios from "axios";
 
+import { ORDER_SERVICE_URL } from "../config/url";
+const localhost = "http://localhost:3004";
+
 type Account = {
   accountId: string;
 };
@@ -28,7 +31,7 @@ export const HeaderProduct = () => {
       try {
         setLoading(true);
         const response = await axios.get<BasicCart>(
-          `http://localhost:3004/carts/basic/${res?.accountId}`
+          `${ORDER_SERVICE_URL}/carts/basic/${res?.accountId}`
         );
         // console.log("1", response.data);
         // console.log("2", response.data.res);
