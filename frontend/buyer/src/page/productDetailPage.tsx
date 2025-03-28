@@ -120,7 +120,7 @@ export const ProductDetailPage = () => {
       try {
         const response = await axios.get(
           // `${PRODUCT_SERVICE_LOCALHOST}/product/classifications/${id}`
-          `${API_GATEWAY_URL}/product/detail/${id}`
+          `${API_GATEWAY_URL}api/product/detail/${id}`
         );
         setProductDetail(response.data);
         // console.log(response.data);
