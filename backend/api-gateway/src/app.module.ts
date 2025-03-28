@@ -5,6 +5,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { ProductModule } from './modules/product/product.module';
 import { VouchersModule } from './modules/vouchers/vouchers.module';
 import { UsersModule } from './modules/users/user.module';
+import { OrderModule } from './modules/order/order.module';
 
 import { APP_GUARD } from '@nestjs/core';
 import { PermissionsGuard } from './guard/permission.guard';
@@ -23,6 +24,7 @@ import { PermissionsGuard } from './guard/permission.guard';
     ProductModule,
     VouchersModule,
     UsersModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [

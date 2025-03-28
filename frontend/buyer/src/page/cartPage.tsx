@@ -53,7 +53,7 @@ export const CartPage = () => {
         setLoading(true);
         const response = await axios.get(
           // `${ORDER_SERVICE_LOCALHOST}/carts/${id}`
-          `${API_GATEWAY_URL}/carts/${id}`
+          `${API_GATEWAY_URL}/order/carts/${id}`
         );
         // console.log(response.data);
         setData(response.data);
@@ -253,7 +253,7 @@ export const CartPage = () => {
     try {
       const res = await axios.post(
         // `${ORDER_SERVICE_LOCALHOST}/carts/delete-from-cart`,
-        `${API_GATEWAY_URL}/carts/delete-from-cart`,
+        `${API_GATEWAY_URL}/order/carts/delete-from-cart`,
         { testUserId, productTypeId }
       );
     } catch (error) {
@@ -281,7 +281,7 @@ export const CartPage = () => {
       try {
         const res = await axios.post(
           // `${ORDER_SERVICE_LOCALHOST}/carts/delete-from-cart`,
-          `${API_GATEWAY_URL}/carts/delete-from-cart`,
+          `${API_GATEWAY_URL}/order/carts/delete-from-cart`,
           { testUserId, productTypeId }
         );
         console.log(res);
@@ -318,7 +318,7 @@ export const CartPage = () => {
     try {
       const res = await axios.post(
         // `${ORDER_SERVICE_LOCALHOST}/carts/update-cart`,
-        `${API_GATEWAY_URL}/carts/update-cart`,
+        `${API_GATEWAY_URL}/order/carts/update-cart`,
         {
           testUserId,
           productTypeId,
