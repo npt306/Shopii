@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Categories } from './entities/category.entity';
@@ -40,6 +40,71 @@ export class CategoryService {
     async getCategoryNames(): Promise<string[]> {
         const categories = await this.categoriesRepository.find();
         return categories.map(category => category.CategoryName);
+    }
+
+    async getCategoryById(id: number): Promise<Categories> {
+        const category = await this.categoriesRepository.findOne({
+            where: { CategoryID: id }
+        });
+
+        if (!category) {
+            throw new NotFoundException(`Category with ID ${id} not found`);
+        }
+
+        return category;
+    }
+
+    async createCategory(categoryData: Partial<Categories>): Promise<Categories> {
+        // Check if a category with the same name already exists
+        const existingCategory = await this.categoriesRepository.findOne({
+            where: { CategoryName: categoryData.CategoryName }
+        });
+
+        if (existingCategory) {
+            throw new ConflictException('A category with this name already exists');
+        }
+
+        const newCategory = this.categoriesRepository.create(categoryData);
+        return this.categoriesRepository.save(newCategory);
+    }
+
+    async updateCategory(id: number, categoryData: Partial<Categories>): Promise<Categories> {
+        const category = await this.getCategoryById(id);
+
+        // Check if trying to change to an existing category name
+        if (categoryData.CategoryName) {
+            const existingCategory = await this.categoriesRepository.findOne({
+                where: { CategoryName: categoryData.CategoryName }
+            });
+
+            if (existingCategory && existingCategory.CategoryID !== id) {
+                throw new ConflictException('A category with this name already exists');
+            }
+        }
+
+        this.categoriesRepository.merge(category, categoryData);
+        return this.categoriesRepository.save(category);
+    }
+
+    async deleteCategory(id: number): Promise<void> {
+        const category = await this.getCategoryById(id);
+
+        // Check if the category has any children before deleting
+        const childCategories = await this.categoriesRepository.find({
+            where: { ParentID: id }
+        });
+
+        if (childCategories.length > 0) {
+            throw new ConflictException('Cannot delete a category with child categories');
+        }
+
+        await this.categoriesRepository.remove(category);
+    }
+
+    async toggleCategoryStatus(id: number, isActive: boolean): Promise<Categories> {
+        const category = await this.getCategoryById(id);
+        category.isActive = isActive;
+        return this.categoriesRepository.save(category);
     }
 
 }

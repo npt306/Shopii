@@ -12,6 +12,7 @@ import { EditVoucherPage } from './page/EditVoucher.tsx';
 import { AdminProductListPage } from './page/AdminProductListPage.tsx';
 import { AdminProductDetailPage } from './page/AdminProductDetailPage.tsx';
 import UserManagement from './page/user-management/main_page.tsx';
+import { CategoryManagementPage } from './page/AdminCategoryManage.tsx';
 
 const router = createBrowserRouter(
   [
@@ -24,16 +25,16 @@ const router = createBrowserRouter(
       element: <AdminLoginPage />,
     },
     {
-        path: "/admin/vouchers",
-        element: <VoucherListPage />,
+      path: "/admin/vouchers",
+      element: <VoucherListPage />,
     },
     {
       path: "/admin/vouchers/add",
       element: <AddVoucherPage />,
     },
     {
-        path: "/admin/vouchers/:id",
-        element: <VoucherDetailPage />,
+      path: "/admin/vouchers/:id",
+      element: <VoucherDetailPage />,
     },
     {
       path: "/admin/vouchers/edit/:id",
@@ -51,6 +52,10 @@ const router = createBrowserRouter(
       path: '/admin/users',
       element: <UserManagement />,
     },
+    {
+      path: '/admin/categories/*',
+      element: <CategoryManagementPage />,
+    },
 
   ],
   {
@@ -61,7 +66,7 @@ const router = createBrowserRouter(
 );
 
 createRoot(document.getElementById('root')!).render(
-<StrictMode>
-  <RouterProvider router={router} />
-</StrictMode>,
+  <StrictMode>
+    <RouterProvider router={router} />
+  </StrictMode>,
 );

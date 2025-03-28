@@ -10,4 +10,7 @@ export class Categories {
 
     @Column({ nullable: true })
     ParentID: number;
+
+    @Column({ default: true })
+    isActive: boolean;
 }
