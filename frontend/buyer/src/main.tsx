@@ -51,7 +51,15 @@ const router = createBrowserRouter(
       element: <UserPage />,
     },
     {
+<<<<<<< HEAD
       path: "/cart/:id",
+=======
+      path: "/user/:id",
+      element: <UserPage />,
+    },
+    {
+      path: "/cart",
+>>>>>>> 5d23b988 (Fix issues in AddAddressModal component)
       element: <CartPage />,
     },
   ],
