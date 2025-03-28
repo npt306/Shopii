@@ -89,6 +89,7 @@ export class ProductService {
       .getMany();
 
     const productDto: ProductDto = {
+      productID: product.ProductID,
       name: product.Name,
       description: product.Description,
       categories: categories.map((c) => c.CategoryName),
@@ -156,6 +157,7 @@ export class ProductService {
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.classifications', 'classifications')
       .leftJoinAndSelect('product.details', 'details')
+      .leftJoinAndSelect('details.Dimension', 'dimension') // Join the dimensions
       .where('product.SellerID = :sellerId', { sellerId })
       .getMany();
 
@@ -179,6 +181,7 @@ export class ProductService {
           .getMany();
 
         const productDto: ProductDto = {
+          productID: product.ProductID,
           name: product.Name,
           description: product.Description,
           categories: categories.map((c) => c.CategoryName),
@@ -200,6 +203,12 @@ export class ProductService {
             image: d.Image,
             price: d.Price,
             quantity: d.Quantity,
+            dimension: d.Dimension ? {
+              weight: d.Dimension.Weight,
+              length: d.Dimension.Length,
+              width: d.Dimension.Width,
+              height: d.Dimension.Height,
+            } : null,
           })),
         };
 
@@ -249,6 +258,59 @@ export class ProductService {
     }
 
     return savedProduct;
+  }
+
+  async deleteProductDetail(productId: number, detailId: number): Promise<void> {
+    const product = await this.productRepository.findOneBy({ ProductID: productId });
+    if (!product) {
+      throw new Error('Product not found');
+    }
+
+    const detailToDelete = await this.productDetailRepository.findOneBy({ ProductDetailTypeID: detailId, ProductID: productId });
+    if (!detailToDelete) {
+      throw new Error('Detail not found');
+    }
+
+    await this.productDetailRepository.delete({ ProductDetailTypeID: detailToDelete.ProductDetailTypeID });
+
+    // Delete the associated dimension
+    if (detailToDelete.Dimension) {
+      await this.productDimensionsRepository.delete({ ProductDimensionsID: detailToDelete.Dimension.ProductDimensionsID });
+    }
+
+    // Check if this was the last detail for the product
+    const remainingDetails = await this.productDetailRepository.find({ where: { ProductID: productId } });
+    if (remainingDetails.length === 0) {
+      // Delete classifications
+      await this.productClassificationTypeRepository.delete({ ProductID: productId });
+
+      // Delete the product
+      await this.productRepository.delete({ ProductID: productId });
+    }
+  }
+
+  async updateProductDetail(detailId: number, updateData: Partial<ProductDetailType>): Promise<ProductDetailType> {
+    const detailToUpdate = await this.productDetailRepository.findOneBy({ ProductDetailTypeID: detailId });
+    if (!detailToUpdate) {
+      throw new Error('Detail not found');
+    }
+
+    if (updateData.Dimension) {
+      if (!detailToUpdate.Dimension) {
+        throw new Error('Dimension not found');
+      }
+
+      const dimensionToUpdate = await this.productDimensionsRepository.findOneBy({ ProductDimensionsID: detailToUpdate.Dimension.ProductDimensionsID });
+      if (!dimensionToUpdate) {
+        throw new Error('Dimension not found');
+      }
+
+      Object.assign(dimensionToUpdate, updateData.Dimension);
+      await this.productDimensionsRepository.save(dimensionToUpdate);
+    }
+
+    Object.assign(detailToUpdate, updateData);
+    return this.productDetailRepository.save(detailToUpdate);
   }
 
   async uploadImage(file: Express.Multer.File): Promise<string> {

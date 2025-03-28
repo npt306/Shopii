@@ -1,8 +1,51 @@
+import React, { useState, useEffect } from 'react';
 import { Package } from 'lucide-react';
-import { useState } from 'react';
 import { X } from 'lucide-react';
 
-const Restock = () => {
+interface Dimension {
+    weight: string;
+    length: string;
+    width: string;
+    height: string;
+}
+
+interface ProductDetail {
+    type_id: number;
+    type_1: string;
+    type_2: string;
+    image: string;
+    price: number;
+    quantity: number;
+    dimension: Dimension;
+}
+
+interface Classification {
+    classTypeName: string;
+    level: number;
+}
+
+interface Product {
+    productID: number;
+    name: string;
+    description: string;
+    categories: string[];
+    images: string[];
+    soldQuantity: number;
+    rating: string;
+    coverImage: string;
+    video: string;
+    quantity: number;
+    reviews: number;
+    classifications: Classification[];
+    details: ProductDetail[];
+}
+
+interface AllProps {
+    products: Product[];
+}
+
+const Restock: React.FC<AllProps> = ({ products: initialProducts }) => {
+    const [products, setProducts] = useState<Product[]>(initialProducts);
 
     const [isTooltipVisible1, setIsTooltipVisible1] = useState(false);
     const [isTooltipVisible2, setIsTooltipVisible2] = useState(false);
@@ -28,12 +71,21 @@ const Restock = () => {
         setIsPermanentTooltip(false);
     };
 
+    const totalDetailsLength = products.reduce((total, product) => {
+        const detailsLength = Array.isArray(product.details) ? (product.details as ProductDetail[]).flat().length : (product.details as ProductDetail[]).length;
+        return total + detailsLength;
+    }, 0);
+
+    useEffect(() => {
+        setProducts(initialProducts);
+    }, [initialProducts]);
+
     return (
         <div className="p-4">
             {/* Header */}
             <div className="flex items-center justify-between mb-4 text-black">
                 <div className="flex items-center space-x-2">
-                    <h1 className="text-lg font-bold">0 Sản Phẩm</h1>
+                    <h1 className="text-lg font-bold">{totalDetailsLength} Sản Phẩm</h1>
                 </div>
             </div>
 
@@ -45,6 +97,11 @@ const Restock = () => {
                             <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">
                                 <div className="flex items-center">
                                     Tên sản phẩm
+                                </div>
+                            </th>
+                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">
+                                <div className="flex items-center">
+                                    Tên ngành hàng
                                 </div>
                             </th>
                             <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">
@@ -181,20 +238,45 @@ const Restock = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {/* Empty State */}
-                        <tr>
-                            <td colSpan={7} className="text-center py-8 text-gray-500">
-                                <div className="flex flex-col items-center">
-                                    <Package className="w-16 h-16 text-gray-400 mb-4" />
-                                    <h2 className="text-xl font-semibold text-gray-700 mb-2">
-                                        Không tìm thấy sản phẩm
-                                    </h2>
-                                    <p className="text-gray-500">
-                                        Rất tiếc, chúng tôi không thể tìm thấy sản phẩm bạn đang tìm kiếm.
-                                    </p>
-                                </div>
-                            </td>
-                        </tr>
+                        {products.length > 0 ? (
+                            products.map((product) =>
+                                product.details.map((detail, detailIndex) => (
+                                    <tr key={`${product.name}-${detailIndex}`} className="border-b hover:bg-gray-50">
+                                        <td className="p-3 border text-black">
+                                            {`${product.name} - ${detail.type_1}${detail.type_2 ? ` - ${detail.type_2}` : ''}`}
+                                        </td>
+                                        <td className="p-3 border text-black">
+                                            {product.categories.join(' - ')}
+                                        </td>
+                                        <td className="p-3 border text-black">{detail.price.toLocaleString()} VND</td>
+                                        <td className="p-3 border text-black">{detail.quantity}</td>
+                                        <td className="p-3 border text-black">
+                                            {detail.quantity <= 10 ? (
+                                                <span className="text-red-500 font-medium">Cần nhập thêm hàng</span>
+                                            ) : detail.quantity <= 20 ? (
+                                                <span className="text-yellow-500 font-medium">Sắp hết hàng</span>
+                                            ) : (
+                                                <span className="text-green-500">Đủ hàng</span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))
+                            )
+                        ) : (
+                            <tr>
+                                <td colSpan={7} className="text-center py-8 text-gray-500">
+                                    <div className="flex flex-col items-center">
+                                        <Package className="w-16 h-16 text-gray-400 mb-4" />
+                                        <h2 className="text-xl font-semibold text-gray-700 mb-2">
+                                            Không tìm thấy sản phẩm
+                                        </h2>
+                                        <p className="text-gray-500">
+                                            Rất tiếc, chúng tôi không thể tìm thấy sản phẩm bạn đang tìm kiếm.
+                                        </p>
+                                    </div>
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             </div>

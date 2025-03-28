@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import axios from 'axios';
 import { useParams, useNavigate } from "react-router-dom";
 import OrangeButton from "../../../components/common/OrangeButton";
-import { Search, Edit2 } from "lucide-react";
+import { Search, ChevronDown } from "lucide-react";
 
 import All from "./All";
 import AllActived from "./AllActived";
@@ -14,8 +15,55 @@ import Deleted from "./Deleted";
 import Unlisted from "./Unlisted";
 import Draft from "./Draft";
 
+interface Dimension {
+    weight: string;
+    length: string;
+    width: string;
+    height: string;
+}
+
+interface ProductDetail {
+    type_id: number;
+    type_1: string;
+    type_2: string;
+    image: string;
+    price: number;
+    quantity: number;
+    dimension: Dimension;
+}
+
+interface Classification {
+    classTypeName: string;
+    level: number;
+}
+
+interface Product {
+    productID: number;
+    name: string;
+    description: string;
+    categories: string[];
+    images: string[];
+    soldQuantity: number;
+    rating: string;
+    coverImage: string;
+    video: string;
+    quantity: number;
+    reviews: number;
+    classifications: Classification[];
+    details: ProductDetail[];
+}
+
 
 const AllProduct = () => {
+    const [products, setProducts] = useState<Product[]>([]);
+    const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+    const [searchText, setSearchText] = useState('');
+    const [categories, setCategories] = useState<string[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+
+
     const { type: currentType = "live" } = useParams<{ type: string }>();
     const { param: currentParam = "all" } = useParams<{ param: string }>();
 
@@ -65,7 +113,42 @@ const AllProduct = () => {
         { key: "draft", label: "Bản nháp (0)" },
     ];
 
+    const fetchProducts = async () => {
+        try {
+            const response = await axios.get<Product[]>('http://34.58.241.34:3001/product/seller/1');
+            setProducts(response.data);
+            setFilteredProducts(response.data);
+            setLoading(false);
+        } catch (err) {
+            if (err instanceof Error) {
+                setError('Error fetching products: ' + err.message);
+            } else {
+                setError('An unknown error occurred');
+            }
+            setLoading(false);
+        }
+    };
+
+    const fetchCategories = async () => {
+        try {
+            const response = await axios.get('http://34.58.241.34:3001/categories/names');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+            return [];
+        }
+    };
+
     useEffect(() => {
+        fetchProducts();
+
+        const getCategories = async () => {
+            const categoryNames = await fetchCategories();
+            setCategories(categoryNames);
+        };
+
+        getCategories();
+
         const activeType = typeRefs.current.find(
             (type) => type?.getAttribute("data-key") === currentType
         );
@@ -101,19 +184,69 @@ const AllProduct = () => {
             const { offsetWidth, offsetLeft } = activePost;
             setInkBarStyleP({ width: offsetWidth, left: offsetLeft });
         }
+        applyFilters();
     }, [currentType, currentParam]);
 
     const handleTypeChange = (type: string) => {
         navigate(`/portal/product/list/${type}`);
+        resetFilters();
     };
 
     const handleParamChange = (type: string, param: string) => {
         navigate(`/portal/product/list/${type}/${param}`);
+        resetFilters();
     };
 
     const handleClick = () => {
         navigate('/portal/product/new');
+        resetFilters();
     };
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchText(e.target.value);
+    };
+
+    // Handle category selection change
+    const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedCategory(e.target.value);
+    };
+
+    // Apply filters
+    const applyFilters = () => {
+        let result = [...products];
+
+        // Filter by search text (product name, type_1, type_2)
+        if (searchText.trim() !== '') {
+            const searchLower = searchText.toLowerCase();
+            result = result.filter(product =>
+                // Search by product name
+                product.name.toLowerCase().includes(searchLower) ||
+                // Search by type_1 and type_2 in product details
+                product.details.some(detail =>
+                    (detail.type_1 && detail.type_1.toLowerCase().includes(searchLower)) ||
+                    (detail.type_2 && detail.type_2.toLowerCase().includes(searchLower))
+                )
+            );
+        }
+
+        // Filter by category
+        if (selectedCategory !== '') {
+            result = result.filter(product =>
+                product.categories.includes(selectedCategory)
+            );
+        }
+        setFilteredProducts(result);
+    };
+
+    // Reset filters
+    const resetFilters = () => {
+        setSearchText('');
+        setSelectedCategory('');
+        setFilteredProducts(products);
+    };
+
+    if (loading) return <div className="text-center p-4">Loading...</div>;
+    if (error) return <div className="text-center p-4 text-red-500">{error}</div>;
 
     return (
         <div className="p-2 pt-4">
@@ -292,16 +425,28 @@ const AllProduct = () => {
                         <div className="flex items-center space-x-2 mb-2">
                             <span className="text-gray-700 text-sm font-medium">Lọc nhanh</span>
                             <button
-                                className={`px-3 py-1 border rounded bg-white ${selectedType === "not" ? "border-orange-500 text-orange-500" : "border-gray-300 text-black"
-                                    }`}
-                                onClick={() => setSelectedType("not")}
+                                className={`px-3 py-1 border rounded bg-white ${selectedType === "not" ? "border-orange-500 text-orange-500" : "border-gray-300 text-black"}`}
+                                onClick={() => {
+                                    setSelectedType("not");
+                                    let result = [...products];
+                                    result = result.filter(product =>
+                                        product.details.some(detail => detail.quantity === 0)
+                                    );
+                                    setFilteredProducts(result);
+                                }}
                             >
                                 Hết hàng (0)
                             </button>
                             <button
-                                className={`px-3 py-1 border rounded bg-white ${selectedType === "notyet" ? "border-orange-500 text-orange-500" : "border-gray-300 text-black"
-                                    }`}
-                                onClick={() => setSelectedType("notyet")}
+                                className={`px-3 py-1 border rounded bg-white ${selectedType === "notyet" ? "border-orange-500 text-orange-500" : "border-gray-300 text-black"}`}
+                                onClick={() => {
+                                    setSelectedType("notyet");
+                                    let result = [...products];
+                                    result = result.filter(product =>
+                                        product.details.some(detail => detail.quantity > 0 && detail.quantity <= 20)
+                                    );
+                                    setFilteredProducts(result);
+                                }}
                             >
                                 Sắp hết hàng (0)
                             </button>
@@ -374,11 +519,13 @@ const AllProduct = () => {
                             <div className="relative">
                                 <input
                                     type="text"
-                                    placeholder="    Tìm Tên sản phẩm, SKU sản phẩm, SKU phân loại, Mã sản phẩm"
-                                    className="w-full px-5 py-2 border border-gray-400 text-black bg-white rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500"
+                                    placeholder="Tìm Tên sản phẩm"
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-400 text-black bg-white rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500"
+                                    value={searchText}
+                                    onChange={handleSearchChange}
                                 />
-                                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600">
-                                    <Search size={16} />
+                                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                    <Search size={18} />
                                 </div>
                             </div>
                         </div>
@@ -386,13 +533,18 @@ const AllProduct = () => {
                         {/* Category Search */}
                         <div className="w-80">
                             <div className="relative">
-                                <input
-                                    type="text"
-                                    placeholder="Tìm kiếm theo ngành hàng"
-                                    className="w-full px-4 py-2 border border-gray-400 text-black bg-white rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500"
-                                />
-                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600">
-                                    <Edit2 size={16} />
+                                <select
+                                    className="w-full px-4 py-2 border border-gray-400 text-black bg-white rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 appearance-none"
+                                    value={selectedCategory}
+                                    onChange={handleCategoryChange}
+                                >
+                                    <option value="">Chọn ngành hàng</option>
+                                    {categories.map((category, index) => (
+                                        <option key={index} value={category}>{category}</option>
+                                    ))}
+                                </select>
+                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none">
+                                    <ChevronDown size={16} />
                                 </div>
                             </div>
                         </div>
@@ -405,13 +557,15 @@ const AllProduct = () => {
                 <div className="flex gap-4 mt-4">
                     <button
                         type="button"
-                        className="text-sm text-white bg-blue-500 px-4 py-2 border border-blue-500 hover:bg-blue-600 transition"
+                        className="text-sm text-white bg-blue-500 px-4 py-2 border border-blue-500 hover:bg-blue-600 transition rounded"
+                        onClick={applyFilters}
                     >
                         Áp dụng
                     </button>
                     <button
                         type="button"
-                        className="text-sm text-black bg-gray-100 px-4 py-2 border border-gray-300 hover:bg-gray-200 transition"
+                        className="text-sm text-black bg-gray-100 px-4 py-2 border border-gray-300 hover:bg-gray-200 transition rounded"
+                        onClick={resetFilters}
                     >
                         Đặt lại
                     </button>
@@ -420,9 +574,9 @@ const AllProduct = () => {
 
             {/* Nội dung tab */}
             <div className="m-3 bg-white p-4 rounded shadow">
-                {currentType === "all" && <All />}
-                {currentType === "live" && currentParam === "all" && <AllActived />}
-                {currentType === "live" && currentParam === "restock" && <Restock />}
+                {currentType === "all" && <All products={filteredProducts} />}
+                {currentType === "live" && currentParam === "all" && <AllActived products={filteredProducts} />}
+                {currentType === "live" && currentParam === "restock" && <Restock products={filteredProducts} />}
                 {currentType === "live" && currentParam === "need_optimized" && <Need_optimized />}
                 {currentType === "violation" && currentParam === "banned" && <Banned />}
                 {currentType === "violation" && currentParam === "deboosted" && <Deboosted />}

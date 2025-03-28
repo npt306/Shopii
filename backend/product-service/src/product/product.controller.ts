@@ -1,12 +1,13 @@
-import { Controller, Get, Param, Post, Body, Delete, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Param, Post, Body, Delete, UseInterceptors, UploadedFile, Put } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ProductService } from './product.service';
 import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto'; // Import DTO
+import { ProductDetailType } from './entities/product-detail-type.entity';
 
 @Controller('product')
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(private readonly productService: ProductService) { }
 
   @Get(':id')
   async findOne(@Param('id') id: number): Promise<Product | null> {
@@ -33,6 +34,22 @@ export class ProductController {
     @Body() createProductDto: CreateProductDto,
   ): Promise<Product> {
     return this.productService.addProduct(createProductDto);
+  }
+
+  @Delete(':productId/detail/:detailIndex')
+  async deleteProductDetail(
+    @Param('productId') productId: number,
+    @Param('detailIndex') detailIndex: number,
+  ): Promise<void> {
+    await this.productService.deleteProductDetail(productId, detailIndex);
+  }
+
+  @Put('detail/:detailId')
+  async updateProductDetail(
+    @Param('detailId') detailId: number,
+    @Body() updateData: Partial<ProductDetailType>,
+  ): Promise<ProductDetailType> {
+    return this.productService.updateProductDetail(detailId, updateData);
   }
 
   @Post('uploadIMG')

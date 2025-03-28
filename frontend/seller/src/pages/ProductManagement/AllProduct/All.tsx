@@ -1,9 +1,58 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
 import { Package } from 'lucide-react';
 import { X } from 'lucide-react';
+import EditProductVariantModal from '../EditProduct/EditProduct';
+import { toast } from "react-toastify";
 
-const All = () => {
+
+interface Dimension {
+  weight: string;
+  length: string;
+  width: string;
+  height: string;
+}
+
+interface ProductDetail {
+  type_id: number;
+  type_1: string;
+  type_2: string;
+  image: string;
+  price: number;
+  quantity: number;
+  dimension: Dimension;
+}
+
+interface Classification {
+  classTypeName: string;
+  level: number;
+}
+
+interface Product {
+  productID: number;
+  name: string;
+  description: string;
+  categories: string[];
+  images: string[];
+  soldQuantity: number;
+  rating: string;
+  coverImage: string;
+  video: string;
+  quantity: number;
+  reviews: number;
+  classifications: Classification[];
+  details: ProductDetail[];
+}
+
+interface AllProps {
+  products: Product[];
+}
+
+interface ExpandedDescriptions {
+  [key: string]: boolean;
+}
+
+const All: React.FC<AllProps> = ({ products: initialProducts }) => {
+  const [products, setProducts] = useState<Product[]>(initialProducts);
   const [activeView, setActiveView] = useState('list');
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
   const [isTooltipVisible1, setIsTooltipVisible1] = useState(false);
@@ -13,67 +62,110 @@ const All = () => {
 
   const [showHeader, setShowHeader] = useState(true);
 
-  interface ProductDetail {
-    type_1: string;
-    type_2: string;
-    image: string;
-    price: number;
-    quantity: number;
-  }
+  const [expandedDescriptions, setExpandedDescriptions] = useState<ExpandedDescriptions>({});
 
-  interface Classification {
-    classTypeName: string;
-    level: number;
-  }
+  const fallbackImageBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAABmJLR0QA/wD/AP+gvaeTAAAAO0lEQVR4nO3BAQ0AAADCoPdPbQ8HFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMA3/DkmAAGOkw0xAAAAAElFTkSuQmCC';
+  const totalDetailsLength = products.reduce((total, product) => {
+    const detailsLength = Array.isArray(product.details) ? (product.details as ProductDetail[]).flat().length : (product.details as ProductDetail[]).length;
+    return total + detailsLength;
+  }, 0);
 
-  interface Product {
-    name: string;
-    description: string;
-    categories: string[];
-    images: string[];
-    soldQuantity: number;
-    rating: string;
-    coverImage: string;
-    video: string;
-    quantity: number;
-    reviews: number;
-    classifications: Classification[];
-    details: ProductDetail[];
-  }
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const [selectedProductID, setSelectedProductID] = useState<number | null>(null);
+  const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const handleEdit = (productName: string, productId: number, typeId: number) => {
+    setSelectedProduct(productName);
+    setSelectedProductID(productId);
+    setSelectedVariantId(typeId);
+    setIsModalOpen(true);
+  };
+
+  const handleSave = async (productName: string | null, productId: number, detailId: number, updatedData: Partial<ProductDetail>) => {
+    try {
+      const response = await fetch(`http://34.58.241.34:3001/product/detail/${detailId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update detail ${detailId} of product ${productName}`);
+      }
+
+      setProducts(prevProducts => {
+        return prevProducts.map(product => {
+          if (product.productID === productId) {
+            return {
+              ...product,
+              details: product.details.map(detail =>
+                detail.type_id === detailId ? { ...detail, ...updatedData } : detail
+              )
+            };
+          }
+          return product;
+        });
+      });
+
+    } catch (error) {
+      console.error(`Error updating detail ${detailId} of product ${productId}:`, error);
+    }
+  };
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await axios.get<Product[]>('http://localhost:3001/product/seller/1');
-        setProducts(response.data);
-        setLoading(false);
-      } catch (err) {
-        if (err instanceof Error) {
-          setError('Error fetching products: ' + err.message);
-        } else {
-          setError('An unknown error occurred');
-        }
-        setLoading(false);
+    setProducts(initialProducts);
+  }, [initialProducts]);
+
+
+  const handleDelete = async (productId: number, typeId: number) => {
+    try {
+      const response = await fetch(`http://34.58.241.34:3001/product/${productId}/detail/${typeId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete detail ${typeId} of product ${productId}`);
       }
-    };
 
-    fetchProducts();
-  }, []);
+      // Cập nhật state để UI tự động refresh mà không cần reload trang
+      setProducts(prevProducts => {
+        return prevProducts.map(product => {
+          if (product.productID === productId) {
+            // Lọc bỏ detail có type_id tương ứng
+            return {
+              ...product,
+              details: product.details.filter(detail => detail.type_id !== typeId)
+            };
+          }
+          return product;
+        });
+      });
 
-  const handleEdit = (productId: string, detailIndex: number) => {
-    console.log(`Editing product ${productId}, detail ${detailIndex}`);
-    // Implement edit functionality here
+      toast.success(`Xóa sản phẩm thành công`, {
+        autoClose: 2000
+      });
+
+    } catch (error) {
+      console.error(`Error deleting detail ${typeId} of product ${productId}:`, error);
+      toast.error(`Failed to delete: ${error}`);
+    }
   };
 
-  const handleDelete = (productId: string, detailIndex: number) => {
-    console.log(`Deleting product ${productId}, detail ${detailIndex}`);
-    // Implement delete functionality here
+  const toggleDescription = (productId: string, detailIndex: number) => {
+    const key = `${productId}-${detailIndex}`;
+    setExpandedDescriptions(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
   };
 
+  const isDescriptionExpanded = (productId: string, detailIndex: number) => {
+    const key = `${productId}-${detailIndex}`;
+    return expandedDescriptions[key] || false;
+  };
 
   const handleMouseEnter = () => {
     if (!isPermanentTooltip) {
@@ -121,15 +213,14 @@ const All = () => {
     setShowHeader(view === 'list');
   };
 
-  if (loading) return <div className="text-center p-4">Loading...</div>;
-  if (error) return <div className="text-center p-4 text-red-500">{error}</div>;
+
 
   return (
     <div className="p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 text-black">
         <div className="flex items-center space-x-2">
-          <h1 className="text-lg font-bold">0 Sản Phẩm</h1>
+          <h1 className="text-lg font-bold">{totalDetailsLength} Sản Phẩm</h1>
           <span
             className="bg-gray-200 text-gray-600 text-sm px-2 py-1 rounded inline-flex items-center relative"
             onMouseEnter={handleMouseEnter}
@@ -264,6 +355,11 @@ const All = () => {
                 <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">
                   <div className="flex items-center">
                     Tên sản phẩm
+                  </div>
+                </th>
+                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">
+                  <div className="flex items-center">
+                    Tên ngành hàng
                   </div>
                 </th>
                 <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">
@@ -471,50 +567,86 @@ const All = () => {
           )}
           <tbody>
             {products.length > 0 ? (
-              products.map((product) => (
+              products.map((product) =>
                 product.details.map((detail, detailIndex) => (
                   <tr key={`${product.name}-${detailIndex}`} className="border-b hover:bg-gray-50">
-                    <td className="p-3 border">
+                    <td className="p-3 border text-black"></td>
+                    <td className="p-3 border text-black">
                       {`${product.name} - ${detail.type_1}${detail.type_2 ? ` - ${detail.type_2}` : ''}`}
                     </td>
-                    <td className="p-3 border">{product.soldQuantity}</td>
-                    <td className="p-3 border">{detail.price.toLocaleString()} VND</td>
-                    <td className="p-3 border">{detail.quantity}</td>
-                    <td className="p-3 border">
+                    <td className="p-3 border text-black">
+                      {product.categories.join(' - ')}
+                    </td>
+                    <td className="p-3 border text-black">{product.soldQuantity}</td>
+                    <td className="p-3 border text-black">{detail.price.toLocaleString()} VND</td>
+                    <td className="p-3 border text-black">{detail.quantity}</td>
+                    <td className="p-3 border text-black">
                       <div className="flex flex-col">
-                        <div className="mb-2">{product.description.slice(0, 100)}...</div>
+                        <div className="mb-2 text-black">
+                          {isDescriptionExpanded(product.name, detailIndex)
+                            ? product.description
+                            : (<>{product.description.slice(0, 100)}
+                              <span
+                                className="text-blue-500 cursor-pointer ml-1"
+                                onClick={() => toggleDescription(product.name, detailIndex)}
+                              >
+                                ...
+                              </span></>
+                            )
+                          }
+                          {isDescriptionExpanded(product.name, detailIndex) && (
+                            <span
+                              className="text-blue-500 cursor-pointer ml-1"
+                              onClick={() => toggleDescription(product.name, detailIndex)}
+                            >
+                              [Thu gọn]
+                            </span>
+                          )}
+                        </div>
                         {detail.image && (
                           <img
                             src={detail.image}
                             alt={`${product.name} - ${detail.type_1}`}
-                            className="w-24 h-24 object-cover"
+                            className="w-24 h-24 object-cover bg-gray-200"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
-                              target.src = 'https://via.placeholder.com/100';
+                              target.src = fallbackImageBase64;
                             }}
                           />
                         )}
                       </div>
                     </td>
-                    <td className="p-3 border">
-                      <div className="flex space-x-2">
+                    <td className="p-3 border text-black">
+                      <div className="flex space-x-4">
                         <button
-                          onClick={() => handleEdit(product.name, detailIndex)}
-                          className="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded"
+                          onClick={() => handleEdit(product.name, product.productID, detail.type_id)}
+                          className="bg-white text-black p-1 rounded focus:outline-none"
+                          title="Edit"
+                          style={{ border: 'none', boxShadow: 'none' }}
                         >
-                          Edit
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
                         </button>
                         <button
-                          onClick={() => handleDelete(product.name, detailIndex)}
-                          className="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded"
+                          onClick={() => {
+                            if (window.confirm("Are you sure you want to delete this item?")) {
+                              handleDelete(product.productID, detail.type_id);
+                            }
+                          }}
+                          className="bg-white text-black p-1 rounded focus:outline-none"
+                          title="Delete"
+                          style={{ border: 'none', boxShadow: 'none' }}
                         >
-                          Delete
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
                         </button>
                       </div>
                     </td>
                   </tr>
                 ))
-              ))
+              )
             ) : (
               <tr>
                 <td colSpan={7} className="text-center py-8 text-gray-500">
@@ -533,6 +665,16 @@ const All = () => {
           </tbody>
         </table>
       </div>
+
+      <EditProductVariantModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        productName={selectedProduct}
+        productId={selectedProductID}
+        variantId={selectedVariantId}
+        products={products}
+        onSave={handleSave}
+      />
     </div>
   );
 };
