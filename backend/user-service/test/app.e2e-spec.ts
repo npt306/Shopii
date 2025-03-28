@@ -1,18 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-<<<<<<< HEAD
 import { AppModule } from '../src/app.module';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
-=======
-import { App } from 'supertest/types';
-import { AppModule } from './../src/app.module';
-
-describe('AppController (e2e)', () => {
-  let app: INestApplication<App>;
->>>>>>> 5d23b988 (Fix issues in AddAddressModal component)
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
