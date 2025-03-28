@@ -162,7 +162,7 @@ export const ProductDetailPage = () => {
       try {
         const response = await axios.post(
           // `${ORDER_SERVICE_LOCALHOST}/carts/add-to-cart/`,
-          `${API_GATEWAY_URL}/carts/add-to-cart/`,
+          `${API_GATEWAY_URL}/order/carts/add-to-cart/`,
           data
         );
         setOpenDialog(true);
