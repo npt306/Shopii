@@ -7,7 +7,7 @@ export const AdminLoginPage = () => {
   useEffect(() => {
     const bootstrapLink = document.createElement("link");
     bootstrapLink.rel = "stylesheet";
-    bootstrapLink.href = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"; 
+    bootstrapLink.href = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css";
     document.head.appendChild(bootstrapLink);
     document.title = "Đăng nhập";
   }, []);
@@ -49,18 +49,18 @@ export const AdminLoginPage = () => {
   const handleSendOtp = () => {
     setOtpSent(true);
   }
-  
+
   const handleResendOtp = () => {
     setResent(30);
     const interval = setInterval(() => {
       setResent((prev) => {
         if (prev <= 1) {
-          clearInterval(interval); 
+          clearInterval(interval);
           return 0;
         }
         return prev - 1;
       });
-    }, 1000); 
+    }, 1000);
   }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

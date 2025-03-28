@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
-// Define the Category type
-interface Category {
-    CategoryID: number;
-    CategoryName: string;
-    ParentID?: number | null;
-    children?: Category[];
-    isActive?: boolean;
-}
-import { Routes, Route, Link, useNavigate, useParams } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate, useParams, Outlet } from 'react-router-dom';
 import {
     ChevronRight,
     Edit,
@@ -20,18 +11,35 @@ import {
     Save,
     X
 } from 'lucide-react';
+import { toast } from "react-toastify";
 
-// Category Edit Page Component
+
+// Define the Category type
+interface Category {
+    CategoryID: number;
+    CategoryName: string;
+    ParentID?: number | null;
+    children?: Category[];
+    isActive?: boolean;
+}
+
+// Category Edit/View Page Component
 const CategoryEditPage = () => {
     const [categoryName, setCategoryName] = useState('');
     const [parentCategory, setParentCategory] = useState<number | null>(null);
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isViewMode, setIsViewMode] = useState(false);
+
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
 
     useEffect(() => {
+        // Determine if it's view mode based on the route
+        setError(null);
+        setIsViewMode(window.location.pathname.includes('/view/'));
+
         const fetchCategoryDetails = async () => {
             try {
                 // Fetch all categories for parent dropdown
@@ -39,7 +47,7 @@ const CategoryEditPage = () => {
                 const categoriesData = await categoriesResponse.json();
                 setCategories(categoriesData);
 
-                // Fetch specific category details if editing existing category
+                // Fetch specific category details if editing or viewing existing category
                 if (id && id !== 'add') {
                     const categoryResponse = await fetch(`http://34.58.241.34:3001/categories/${id}`);
                     const categoryData = await categoryResponse.json();
@@ -59,11 +67,15 @@ const CategoryEditPage = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (isViewMode) return;
+
+        // Reset error trước khi thực hiện submit
+        setError(null);
+
         const categoryData = {
             CategoryName: categoryName,
             ParentID: parentCategory
         };
-
         try {
             const url = id && id !== 'add'
                 ? `http://34.58.241.34:3001/categories/${id}`
@@ -81,12 +93,15 @@ const CategoryEditPage = () => {
 
             if (response.ok) {
                 navigate('/admin/categories');
+
             } else {
+                // Parse error message from response
                 const errorData = await response.json();
                 setError(errorData.message || 'Failed to save category');
             }
         } catch (err) {
-            setError('An error occurred while saving the category');
+            // Đảm bảo luôn set error là string
+            setError(err instanceof Error ? err.message : 'An error occurred while saving the category');
         }
     };
 
@@ -123,13 +138,13 @@ const CategoryEditPage = () => {
                     <ChevronRight className="inline-block mx-2" size={16} />
                     Quản lý danh mục
                     <ChevronRight className="inline-block mx-2" size={16} />
-                    {id === 'add' ? 'Thêm Danh Mục' : 'Chỉnh Sửa Danh Mục'}
+                    {isViewMode ? 'Chi Tiết Danh Mục' : (id === 'add' ? 'Thêm Danh Mục' : 'Chỉnh Sửa Danh Mục')}
                 </div>
             </div>
 
             <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
                 <h2 className="text-xl font-semibold mb-6 text-gray-800">
-                    {id === 'add' ? 'Thêm Danh Mục Mới' : 'Chỉnh Sửa Danh Mục'}
+                    {isViewMode ? 'Chi Tiết Danh Mục' : (id === 'add' ? 'Thêm Danh Mục Mới' : 'Chỉnh Sửa Danh Mục')}
                 </h2>
 
                 {error && (
@@ -150,6 +165,7 @@ const CategoryEditPage = () => {
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                         placeholder="Nhập tên danh mục"
                         required
+                        disabled={isViewMode}
                     />
                 </div>
 
@@ -162,6 +178,7 @@ const CategoryEditPage = () => {
                         value={parentCategory || ''}
                         onChange={(e) => setParentCategory(e.target.value ? Number(e.target.value) : null)}
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        disabled={isViewMode}
                     >
                         <option value="">Không có danh mục cha</option>
                         {flattenCategories(categories)
@@ -179,18 +196,20 @@ const CategoryEditPage = () => {
                 </div>
 
                 <div className="flex items-center justify-between">
-                    <button
-                        type="submit"
-                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center"
-                    >
-                        <Save className="mr-2" /> Lưu
-                    </button>
+                    {!isViewMode && (
+                        <button
+                            type="submit"
+                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center"
+                        >
+                            <Save className="mr-2" /> Lưu
+                        </button>
+                    )}
                     <button
                         type="button"
                         onClick={() => navigate('/admin/categories')}
                         className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center"
                     >
-                        <X className="mr-2" /> Hủy
+                        <X className="mr-2" /> {isViewMode ? 'Quay Lại' : 'Hủy'}
                     </button>
                 </div>
             </form>
@@ -246,6 +265,7 @@ export const CategoryManagementPage = () => {
             if (response.ok) {
                 // Remove the deleted category from the state
                 const updatedCategories = categories.filter((c) => c.CategoryID !== categoryToDelete);
+
                 setCategories(updatedCategories);
                 setShowDeleteModal(false);
             } else {
@@ -388,14 +408,14 @@ export const CategoryManagementPage = () => {
 
             {/* Delete Confirmation Modal */}
             {showDeleteModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-                    <div className="bg-white p-6 rounded-lg shadow-xl">
-                        <h3 className="text-lg font-semibold mb-4">Xác Nhận Xóa</h3>
-                        <p className="mb-6">Bạn có chắc chắn muốn xóa danh mục này?</p>
+                <div className="fixed inset-0 z-50 flex justify-center items-center bg-transparent backdrop-blur-sm">
+                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+                        <h3 className="text-lg font-semibold mb-4 text-gray-800">Xác Nhận Xóa</h3>
+                        <p className="mb-6 text-gray-600">Bạn có chắc chắn muốn xóa danh mục này? Hành động này không thể hoàn tác.</p>
                         <div className="flex justify-end space-x-3">
                             <button
                                 onClick={() => setShowDeleteModal(false)}
-                                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
                             >
                                 Hủy
                             </button>
@@ -417,9 +437,12 @@ export const CategoryManagementPage = () => {
 export const CategoryManagementApp = () => {
     return (
         <Routes>
-            <Route path="/" element={<CategoryManagementPage />} />
-            <Route path="/add" element={<CategoryEditPage />} />
-            <Route path="/edit/:id" element={<CategoryEditPage />} />
+            <Route path="/" element={<Outlet />}>
+                <Route index element={<CategoryManagementPage />} />
+                <Route path="add" element={<CategoryEditPage />} />
+                <Route path="edit/:id" element={<CategoryEditPage />} />
+                <Route path="view/:id" element={<CategoryEditPage />} />
+            </Route>
         </Routes>
     );
 };

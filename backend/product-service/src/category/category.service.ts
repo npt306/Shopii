@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not } from 'typeorm';
 import { Categories } from './entities/category.entity';
 
 interface CategoryWithChildren extends Categories {
@@ -71,13 +71,16 @@ export class CategoryService {
     async updateCategory(id: number, categoryData: Partial<Categories>): Promise<Categories> {
         const category = await this.getCategoryById(id);
 
-        // Check if trying to change to an existing category name
+        // Kiểm tra nếu có thay đổi CategoryName
         if (categoryData.CategoryName) {
             const existingCategory = await this.categoriesRepository.findOne({
-                where: { CategoryName: categoryData.CategoryName }
+                where: {
+                    CategoryName: categoryData.CategoryName,
+                    CategoryID: Not(id)
+                }
             });
 
-            if (existingCategory && existingCategory.CategoryID !== id) {
+            if (existingCategory) {
                 throw new ConflictException('A category with this name already exists');
             }
         }
