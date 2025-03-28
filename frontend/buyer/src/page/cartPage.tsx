@@ -1,16 +1,22 @@
-import { HeaderCart } from "../components/headerCart";
-import { Footer } from "../components/footer";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import { FaCommentDots, FaChevronDown, FaTicketAlt } from "react-icons/fa";
-import { useState } from "react";
+
+import { HeaderCart } from "../components/layout/headerCart";
+import { Footer } from "../components/layout/footer";
+import OverQuantityNotification from "../components/features/overQuatityNotification";
+
 import "../css/common/inputField.css";
 import "../css/page/cartPage.css";
-import OverQuantityNotification from "../components/features/overQuatityNotification";
-import { formatPrice } from "../helpers/utility/formatPrice";
-import { useEffect } from "react";
-import { useParams } from "react-router-dom";
-import axios from "axios";
+
 import { Cart } from "../types/cart";
-import { ORDER_SERVICE_URL } from "../config/url";
+
+import { useCart } from "../context/cartContext";
+import { formatPrice } from "../helpers/utility/formatPrice";
+
+import { ORDER_SERVICE_LOCALHOST, API_GATEWAY_URL } from "../config/url";
 
 const products = [
   {
@@ -33,6 +39,8 @@ const products = [
 // );
 
 export const CartPage = () => {
+  let navigate = useNavigate();
+  const { updateCart } = useCart();
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<Cart[]>([]);
@@ -43,7 +51,10 @@ export const CartPage = () => {
     const fetchCart = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:3004/carts/${id}`);
+        const response = await axios.get(
+          // `${ORDER_SERVICE_LOCALHOST}/carts/${id}`
+          `${API_GATEWAY_URL}/carts/${id}`
+        );
         // console.log(response.data);
         setData(response.data);
       } catch (error) {
@@ -241,13 +252,14 @@ export const CartPage = () => {
 
     try {
       const res = await axios.post(
-        `http://localhost:3004/carts/delete-from-cart`,
+        // `${ORDER_SERVICE_LOCALHOST}/carts/delete-from-cart`,
+        `${API_GATEWAY_URL}/carts/delete-from-cart`,
         { testUserId, productTypeId }
       );
-      console.log(res);
     } catch (error) {
       console.error("Error delete product.", error);
     }
+    updateCart();
   };
 
   const [selectedProductCount, setSelectedProductCount] = useState(0);
@@ -268,13 +280,15 @@ export const CartPage = () => {
     selectedKeys.map(async (productTypeId) => {
       try {
         const res = await axios.post(
-          `http://localhost:3004/carts/delete-from-cart`,
+          // `${ORDER_SERVICE_LOCALHOST}/carts/delete-from-cart`,
+          `${API_GATEWAY_URL}/carts/delete-from-cart`,
           { testUserId, productTypeId }
         );
         console.log(res);
       } catch (error) {
         console.error("Error delete product.", error);
       }
+      updateCart();
     });
 
     setData(
@@ -302,15 +316,20 @@ export const CartPage = () => {
     quantity: number
   ) => {
     try {
-      const res = await axios.post(`http://localhost:3004/carts/update-cart`, {
-        testUserId,
-        productTypeId,
-        quantity,
-      });
+      const res = await axios.post(
+        // `${ORDER_SERVICE_LOCALHOST}/carts/update-cart`,
+        `${API_GATEWAY_URL}/carts/update-cart`,
+        {
+          testUserId,
+          productTypeId,
+          quantity,
+        }
+      );
       console.log(res);
     } catch (error) {
       console.error("Error update product.", error);
     }
+    updateCart();
   };
 
   useEffect(() => {
@@ -805,7 +824,10 @@ export const CartPage = () => {
                   Giỏ hàng của bạn còn trống
                 </div>
                 <button className="px-10 h-[2.5rem] bg-[#ee4d2d] hover:bg-orange-600">
-                  <div className="text-[1rem] text-center text-white">
+                  <div
+                    onClick={() => navigate("/home")}
+                    className="text-[1rem] text-center text-white"
+                  >
                     MUA NGAY
                   </div>
                 </button>

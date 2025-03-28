@@ -12,13 +12,15 @@ import { LoginPage } from "./page/loginPage.tsx";
 import { HomePage } from "./page/home.tsx";
 import { SearchProductPage } from "./page/search_product.tsx";
 import { CartPage } from "./page/cartPage.tsx";
-import CallbackPage from "./page/callback.tsx";
+import { ProductDetailPage } from "./page/productDetailPage.tsx";
 import { UserPage } from "./page/userPage.tsx";
+
+import CallbackPage from "./page/callback.tsx";
 import { store, persistor } from "./redux/authStore.ts";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 
-import { ProductDetailPage } from "./page/productDetailPage.tsx";
+import { CartProvider } from "./context/cartContext.tsx";
 
 const router = createBrowserRouter(
   [
@@ -66,7 +68,9 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <RouterProvider router={router} />
+        <CartProvider>
+          <RouterProvider router={router} />
+        </CartProvider>
       </PersistGate>
     </Provider>
   </StrictMode>

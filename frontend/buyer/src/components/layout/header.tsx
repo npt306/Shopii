@@ -7,10 +7,10 @@ import {
   FaChevronDown,
 } from "react-icons/fa";
 import { useState } from "react";
-import avatarDefault from "../assets/avatar_default.png";
+import avatarDefault from "../../assets/avatar_default.png";
 import { useSelector } from "react-redux";
-import { RootState } from "../redux/authStore"; // Adjust the path to where your store is defined
-import { userService } from "../services/userService";
+import { RootState } from "../../redux/authStore"; // Adjust the path to where your store is defined
+import { userService } from "../../services/userService";
 
 export const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,7 +24,7 @@ export const Header = () => {
   };
 
   return (
-    <div className="flex flex-col bg-orange-500 text-white">
+    <div className="flex flex-col bg-[#ee4d2d] text-white">
       <div className="px-30 py-3 flex justify-between items-center">
         <div className="flex items-center gap-4">
           <a
