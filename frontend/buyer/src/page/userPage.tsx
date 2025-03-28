@@ -16,7 +16,7 @@ import { ShopeeUpdate } from "../components/user_page/notifications/shopee_updat
 // My account
 import { Profile } from "../components/user_page/my_account/profile.tsx";
 import { BanksAndCards } from "../components/user_page/my_account/banks_and_cards.tsx";
-import { Addresses } from "../components/user_page/my_account/addresses.tsx";
+// import { Addresses } from "../components/user_page/my_account/addresses.tsx";
 import { ChangePasswords } from "../components/user_page/my_account/change_passwords.tsx";
 import { NotificationSettings } from "../components/user_page/my_account/notifications_settings.tsx";
 import { PrivacySettings } from "../components/user_page/my_account/privacy_settings.tsx";
@@ -28,6 +28,7 @@ import { VoucherManagement } from "../components/user_page/vouchers/voucher_mana
 // Others
 import { Purchase } from "../components/user_page/purchase.tsx";
 import { ShopeeCoin } from "../components/user_page/shopee_coin.tsx";
+import { Addressesupdate } from "../components/user_page/my_account/addresses.tsx";
 
 export const UserPage = () => {
   const [userData, setUserData] = useState<{
@@ -182,7 +183,7 @@ export const UserPage = () => {
                     component: <Profile userId={userData.AccountId} />,
                   },
                   { text: "Ngân hàng", component: <BanksAndCards /> },
-                  { text: "Địa chỉ", component: <Addresses /> },
+                  { text: "Địa chỉ", component: <Addressesupdate accountId={userData.AccountId} /> },
                   { text: "Đổi mật khẩu", component: <ChangePasswords /> },
                   {
                     text: "Cài đặt thông báo",

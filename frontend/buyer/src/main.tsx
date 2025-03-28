@@ -53,6 +53,10 @@ const router = createBrowserRouter(
       element: <UserPage />,
     },
     {
+      path: "/user/:id",
+      element: <UserPage />,
+    },
+    {
       path: "/cart/:id",
       element: <CartPage />,
     },

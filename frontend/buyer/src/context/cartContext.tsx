@@ -31,7 +31,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(true);
       const response = await axios.get<BasicCart>(
         // `${ORDER_SERVICE_LOCALHOST}/carts/basic/${res?.accountId}`
-        `${API_GATEWAY_URL}/carts/basic/${res?.accountId}`
+        `${API_GATEWAY_URL}/order/carts/basic/${res?.accountId}`
       );
       setCartData(response.data.res);
       setNumberItem(response.data.numberItem);
