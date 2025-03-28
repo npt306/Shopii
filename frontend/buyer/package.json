@@ -22,10 +22,11 @@
     "react-icons": "^5.4.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.1.5",
-
+<<<<<<< HEAD
     "react-toastify": "^11.0.5",
-
+=======
     "react-select": "^5.10.1",
+>>>>>>> 5d23b988 (Fix issues in AddAddressModal component)
     "redux-persist": "^6.0.0",
     "tailwindcss": "^4.0.3",
     "vite-svg-loader": "^5.1.0"
