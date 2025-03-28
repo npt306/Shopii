@@ -1,69 +1,48 @@
+// import classNames from "classnames";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import logoShopee from "../assets/logo_shopee_1.png";
 import { FaShoppingCart, FaSearch } from "react-icons/fa";
+
 import { Header } from "./header";
-import "../css/page/cartPage.css";
-import { formatPrice } from "../helpers/utility/formatPrice";
-import { BasicItem, BasicSellerCart, BasicCart } from "../types/basicCart";
-import axios from "axios";
 
-import { ORDER_SERVICE_URL } from "../config/url";
-const localhost = "http://localhost:3004";
+import logoShopee from "../../assets/logo_shopee_1.png";
+import "../../css/page/cartPage.css";
 
-type Account = {
-  accountId: string;
-};
+import { formatPrice } from "../../helpers/utility/formatPrice";
+
+import { useCart } from "../../context/cartContext";
+
+import { BasicItem } from "../../types/basicCart";
 
 export const HeaderProduct = () => {
   const [isVisible, setIsVisible] = useState(false);
-  const [cartData, setCartData] = useState<BasicSellerCart[]>([]);
-  const [numberItem, setNumberItem] = useState(0);
-  const [loading, setLoading] = useState(true);
   let navigate = useNavigate();
-
-  const res: Account | null = localStorage.getItem("userProfile")
-    ? JSON.parse(localStorage.getItem("userProfile")!)
-    : null;
+  const { cartData, numberItem, loading, res, updateCart } = useCart();
 
   useEffect(() => {
-    const fetchBasicCart = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get<BasicCart>(
-          `${ORDER_SERVICE_URL}/carts/basic/${res?.accountId}`
-        );
-        // console.log("1", response.data);
-        // console.log("2", response.data.res);
-        // console.log("3", response.data.numberItem);
-        setCartData(response.data.res);
-        setNumberItem(response.data.numberItem);
-      } catch (error) {
-        console.error("Error fetching product detail:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBasicCart();
+    updateCart(); // Khi component mount, lấy dữ liệu giỏ hàng
   }, []);
-
-  useEffect(() => {
-    console.log("Cart Data Updated:", cartData);
-    console.log("Number of Items Updated:", numberItem);
-  }, [cartData, numberItem]);
 
   const handleMoveToProduct = (productId: number) => {
     navigate(`/detail-product/${productId}`);
   };
 
-  // if (loading) return <p>Loading...</p>;
+  // const customClass = classNames(
+  //   "p-3 absolute left-[-10rem] -translate-x-1/2 top-[2rem] bg-grey-100 mt-2 text-black bg-white shadow-lg w-[25rem] h-[26.5rem] flex justify-center",
+  //   {
+  //     "items-center": numberItem >= 5, // Nếu number >= 5 thì thêm class "items-center"
+  //     "items-start": numberItem < 5, // Nếu number < 5 thì thêm class "items-start"
+  //   }
+  // );
 
   return (
     <>
       <Header />
       <div className="bg-[#ee4d2d] px-30 flex justify-center items-center text-white">
-        <div className="flex justify-center items-center cursor-pointer mr-10">
+        <div
+          onClick={() => navigate("/home")}
+          className="flex justify-center items-center cursor-pointer mr-10"
+        >
           <img
             src={logoShopee}
             alt="Avatar"
@@ -96,8 +75,8 @@ export const HeaderProduct = () => {
 
           {isVisible && (
             <div
-              className="p-3 absolute left-[-10rem] -translate-x-1/2 top-[2rem] bg-grey-100 mt-2 text-black bg-white shadow-lg w-[25rem] h-[26.5rem]
-              flex items-center justify-center"
+              className="p-3 absolute left-[-10rem] -translate-x-1/2 top-[2rem] bg-grey-100 mt-2 text-black bg-white shadow-lg w-[25rem] h-auto
+              flex items-center justify-center z-30"
               onMouseEnter={() => setIsVisible(true)}
               onMouseLeave={() => setIsVisible(false)}
             >
@@ -136,15 +115,15 @@ export const HeaderProduct = () => {
                   {cartData.length != 0 ? (
                     <>
                       <div className="flex flex-col">
-                        <div className="text-black mb-3">Sản Phẩm Mới Thêm</div>
+                        <div className="text-black">Sản Phẩm Mới Thêm</div>
                         {cartData.map((item) =>
-                          item.items.map((product) => (
+                          item.items.map((product: BasicItem) => (
                             <div
                               key={product.productTypeId} // 🔹 Thêm key để tránh cảnh báo React
                               onClick={() =>
                                 handleMoveToProduct(product.productId)
                               }
-                              className="flex flex-row justify-around items-center w-full h-[4rem] hover:bg-orange-00"
+                              className="flex flex-row justify-around items-center w-full h-[4rem] hover:bg-orange-100"
                             >
                               <img
                                 className="p-2 w-[4rem] h-full border-0.5 border-black"
@@ -192,7 +171,7 @@ export const HeaderProduct = () => {
                     <>
                       <div className="flex flex-col justify-center items-center gap-4">
                         <img
-                          className="object-contain flex items-center"
+                          className="object-contain flex items-center h-[10rem] w-[7rem]"
                           src="https://www.stickstuff.com/public/images/empty-cart.png"
                           alt=""
                         />
