@@ -9,6 +9,7 @@ import { OrderModule } from './modules/order/order.module';
 
 import { APP_GUARD } from '@nestjs/core';
 import { PermissionsGuard } from './guard/permission.guard';
+import { AccountsModule } from './modules/accounts/accounts.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { PermissionsGuard } from './guard/permission.guard';
     VouchersModule,
     UsersModule,
     OrderModule,
+    AccountsModule
   ],
   controllers: [AppController],
   providers: [
