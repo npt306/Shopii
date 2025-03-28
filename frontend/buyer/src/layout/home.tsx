@@ -1,8 +1,6 @@
 import { ReactNode } from "react";
 import { HeaderProduct } from "../components/headerProduct";
 import { Footer } from "../components/footer";
-import "../App.css";
-
 interface HomeLayoutProps {
   children: ReactNode;
 }

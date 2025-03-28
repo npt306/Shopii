@@ -2,8 +2,10 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { ProductModule } from './modules/product/product.modele';
+import { ProductModule } from './modules/product/product.module';
 import { VouchersModule } from './modules/vouchers/vouchers.module';
+import { UsersModule } from './modules/users/user.module';
+
 import { APP_GUARD } from '@nestjs/core';
 import { PermissionsGuard } from './guard/permission.guard';
 
@@ -20,11 +22,15 @@ import { PermissionsGuard } from './guard/permission.guard';
     }),
     ProductModule,
     VouchersModule,
+    UsersModule,
   ],
   controllers: [AppController],
-  providers: [AppService, {
+  providers: [
+    AppService,
+    {
       provide: APP_GUARD,
       useClass: PermissionsGuard,
-  }],
+    },
+  ],
 })
 export class AppModule {}

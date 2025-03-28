@@ -6,7 +6,7 @@ import { HttpModule } from '@nestjs/axios';
 @Module({
   imports: [
     HttpModule.register({
-      baseURL: 'http://172.17.0.1:3002', 
+      baseURL: 'http://34.58.241.34:3002', 
     }),
   ],
   controllers: [VouchersController],

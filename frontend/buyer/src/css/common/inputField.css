@@ -1,0 +1,11 @@
+/* Ẩn nút tăng/giảm trên trình duyệt Chrome, Safari, Edge */
+.no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Ẩn trên Firefox */
+.no-spinner {
+  -moz-appearance: textfield;
+}

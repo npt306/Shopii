@@ -1,0 +1,25 @@
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Số dòng tối đa */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.one-line-ellipsis {
+  white-space: nowrap; /* Không cho xuống dòng */
+  overflow: hidden; /* Ẩn nội dung vượt quá */
+  text-overflow: ellipsis; /* Hiển thị dấu "..." nếu nội dung bị cắt */
+  width: 14rem; /* Đảm bảo chiều rộng có giới hạn */
+}
+
+.mketV9 {
+  color: #ee4d2d;
+  font-size: 24px;
+  line-height: 28px;
+  margin-left: 5px;
+}
+
+.mketV8 {
+  color: #ee4d2d;
+  font-size: 14px;
+}
