@@ -51,7 +51,7 @@ jobs:
             docker rm backend-accounts-service || true
             docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/backend-accounts-service:latest || true
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/backend-accounts-service:latest
-            docker run -d --name backend-accounts-service -p 3003:3008 \
+            docker run -d --name backend-accounts-service -p 3008:3008 \
             -e DB_HOST=${{ secrets.DB_HOST }} \
             -e DB_PORT=${{ secrets.DB_PORT }} \
             -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
