@@ -1,12 +1,17 @@
-import logoShopee from "../assets/logo_shopee_2.png";
+import logoShopee from "../../assets/logo_shopee_2.png";
 import { FaSearch } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import { Header } from "./header";
 
 export const HeaderCart = () => {
+  let navigate = useNavigate();
   return (
     <>
       <Header />
-      <div className="px-30 flex justify-between items-center text-[#ee4d2d] bg-white">
+      <div
+        onClick={() => navigate("/home")}
+        className="px-30 flex justify-between items-center text-[#ee4d2d] bg-white"
+      >
         <div className="flex justify-center items-center cursor-pointer p-5 text-[#ee4d2d]">
           <img src={logoShopee} alt="Avatar" className="w-15 h-15 pb-1" />
           <span className="text-3xl">Shopee</span>

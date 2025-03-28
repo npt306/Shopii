@@ -8,4 +8,4 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
   controllers: [OrderController],
   providers: [],
 })
-export class ProductModule {}
+export class OrderModule {}

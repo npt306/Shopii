@@ -21,7 +21,7 @@ export class ProductController {
   async getProductDetail(@Param('id') id: number) {
     try {
       const response = await this.httpService
-        .get(`http://34.58.241.34:3001/product/classifications/${id}`)
+        .get(`${process.env.PRODUCT_SERVICE_URL}/product/classifications/${id}`)
         .toPromise();
       if (response && response.data) {
         return response.data;
@@ -38,7 +38,7 @@ export class ProductController {
   async getProductList() {
     try {
       const response = await this.httpService
-        .get(`http://34.58.241.34:3001/product/`)
+        .get(`${process.env.PRODUCT_SERVICE_URL}/product/`)
         .toPromise();
       if (response && response.data) {
         return response.data;
@@ -60,7 +60,7 @@ export class ProductController {
     @Query('search') search?: string,
   ) {
     try {
-      let url = `http://34.58.241.34:3001/product/admin/products?page=${page}&limit=${limit}`;
+      let url = `${process.env.PRODUCT_SERVICE_URL}/product/admin/products?page=${page}&limit=${limit}`;
       if (status) {
         url += `&status=${status}`;
       }
@@ -79,7 +79,9 @@ export class ProductController {
   async getAdminProduct(@Param('id', ParseIntPipe) id: number) {
     try {
       const { data } = await firstValueFrom(
-        this.httpService.get(`http://34.58.241.34:3001/product/admin/products/${id}`),
+        this.httpService.get(
+          `${process.env.PRODUCT_SERVICE_URL}/product/admin/products/${id}`,
+        ),
       );
       return data;
     } catch (error) {
@@ -92,7 +94,7 @@ export class ProductController {
     try {
       const { data } = await firstValueFrom(
         this.httpService.patch(
-          `http://34.58.241.34:3001/product/admin/products/${id}/approve`,
+          `${process.env.PRODUCT_SERVICE_URL}/product/admin/products/${id}/approve`,
           {},
         ),
       );
@@ -110,7 +112,7 @@ export class ProductController {
     try {
       const { data } = await firstValueFrom(
         this.httpService.patch(
-          `http://34.58.241.34:3001/product/admin/products/${id}/block`,
+          `${process.env.PRODUCT_SERVICE_URL}/product/admin/products/${id}/block`,
           body,
         ),
       );
@@ -128,7 +130,7 @@ export class ProductController {
     try {
       const { data } = await firstValueFrom(
         this.httpService.delete(
-          `http://34.58.241.34:3001/product/admin/products/${id}`,
+          `${process.env.PRODUCT_SERVICE_URL}/product/admin/products/${id}`,
           { data: body }, // Send reason in the request body for DELETE
         ),
       );
@@ -140,10 +142,7 @@ export class ProductController {
 
   private handleError(error: any) {
     if (error.response) {
-      throw new HttpException(
-        error.response.data,
-        error.response.status,
-      );
+      throw new HttpException(error.response.data, error.response.status);
     } else if (error.request) {
       throw new HttpException(
         'No response received from product service',

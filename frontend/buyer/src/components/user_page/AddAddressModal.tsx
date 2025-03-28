@@ -131,7 +131,7 @@ export const AddAddressModal = ({
     console.log("Form Data:", formData); // Debugging: Check the form data
     try {
       const response = await fetch(
-        `http://localhost:3009/address/account/${accountId}`,
+        `http://localhost:3005/address/account/${accountId}`,
         {
           method: "POST",
           headers: {
@@ -162,11 +162,11 @@ export const AddAddressModal = ({
         >
           ✕
         </button>
-        <h2 className="text-xl font-semibold mb-4">Add New Address</h2>
+        <h2 className="text-xl font-semibold mb-4">Thêm Địa Chỉ</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Full Name:
+              Họ và Tên:
             </label>
             <input
               name="FullName"
@@ -180,7 +180,7 @@ export const AddAddressModal = ({
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Phone Number:
+              Số Điện Thoại:
             </label>
             <input
               name="PhoneNumber"
@@ -194,48 +194,48 @@ export const AddAddressModal = ({
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Province:
+              Tỉnh/Thành Phố:
             </label>
             <Select
               options={provinceOptions}
               onChange={(selectedOption) =>
                 handleSelectChange(selectedOption, "Province")
               }
-              placeholder="Select Province"
+              placeholder="Chọn Tỉnh/Thành Phố"
               className="mt-1"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              District:
+              Quận/Huyện:
             </label>
             <Select
               options={districtOptions}
               onChange={(selectedOption) =>
                 handleSelectChange(selectedOption, "District")
               }
-              placeholder="Select District"
+              placeholder="Chọn Quận/Huyện"
               className="mt-1"
               isDisabled={!formData.Province} // Disable until a province is selected
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Ward:
+              Phường/Xã:
             </label>
             <Select
               options={wardOptions}
               onChange={(selectedOption) =>
                 handleSelectChange(selectedOption, "Ward")
               }
-              placeholder="Select Ward"
+              placeholder="Chọn Phường/Xã"
               className="mt-1"
               isDisabled={!formData.District} // Disable until a district is selected
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Specific Address:
+              Địa Chỉ Cụ Thể:
             </label>
             <input
               name="SpecificAddress"

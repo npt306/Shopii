@@ -4,7 +4,7 @@ import { ToastContainer } from "react-toastify";
 import axios from "axios";
 import { EnvValue } from "../env-value/envValue.ts";
 
-import { HeaderProduct } from "../components/headerProduct.tsx";
+import { HeaderProduct } from "../components/layout/headerProduct.tsx";
 import { DropdownItem } from "../components/user_page/dropdown_item.tsx";
 
 // Notifications
@@ -16,7 +16,7 @@ import { ShopeeUpdate } from "../components/user_page/notifications/shopee_updat
 // My account
 import { Profile } from "../components/user_page/my_account/profile.tsx";
 import { BanksAndCards } from "../components/user_page/my_account/banks_and_cards.tsx";
-import { Addresses } from "../components/user_page/my_account/addresses.tsx";
+// import { Addresses } from "../components/user_page/my_account/addresses.tsx";
 import { ChangePasswords } from "../components/user_page/my_account/change_passwords.tsx";
 import { NotificationSettings } from "../components/user_page/my_account/notifications_settings.tsx";
 import { PrivacySettings } from "../components/user_page/my_account/privacy_settings.tsx";
@@ -28,63 +28,64 @@ import { VoucherManagement } from "../components/user_page/vouchers/voucher_mana
 // Others
 import { Purchase } from "../components/user_page/purchase.tsx";
 import { ShopeeCoin } from "../components/user_page/shopee_coin.tsx";
+import { Addressesupdate } from "../components/user_page/my_account/addresses.tsx";
 
 export const UserPage = () => {
-    const [userData, setUserData] = useState<{
-      AccountId: number;
-      Username: string;
-      Email: string;
-      Avatar: string | null;
-    }>({
-      AccountId: 9,
-      Username: "username",
-      Email: "user@example.com",
-      Avatar: "https://storage.googleapis.com/shopii-image/user_avatar/c4f96264-90f0-4dda-a6bb-ebe4b502a9a7_avatar_default.png",
-    });
+  const [userData, setUserData] = useState<{
+    AccountId: number;
+    Username: string;
+    Email: string;
+    Avatar: string | null;
+  }>({
+    AccountId: 9,
+    Username: "username",
+    Email: "user@example.com",
+    Avatar:
+      "https://storage.googleapis.com/shopii-image/user_avatar/c4f96264-90f0-4dda-a6bb-ebe4b502a9a7_avatar_default.png",
+  });
 
-    const [activeComponent, setActiveComponent] = useState<React.ReactNode>(null);
+  const [activeComponent, setActiveComponent] = useState<React.ReactNode>(null);
 
-    useEffect(() => {
-      const fetchUserDetail = async () => {
-        const storedItems = localStorage.getItem("userProfile");
-        console.log("Stored items:", storedItems);
-    
-        if (storedItems) {
-          const parsedData = JSON.parse(storedItems);
-          setActiveComponent(<Profile userId={parsedData.accountId} />);
-          try {
-            const response = await axios.get(
-              `${EnvValue.api_gateway_url}/api/users/${parsedData.accountId}`
-            );
-            if (response.data) {      
+  useEffect(() => {
+    const fetchUserDetail = async () => {
+      const storedItems = localStorage.getItem("userProfile");
+      console.log("Stored items:", storedItems);
 
-              setUserData(prevState => ({
-                ...prevState, // Keep previous data
-                ...response.data, // Update with new data
-              }));
-              console.log("Fetched Data:", response.data);
-            }
-          } catch (error) {
-            console.error("Error fetching user detail:", error);
+      if (storedItems) {
+        const parsedData = JSON.parse(storedItems);
+        setActiveComponent(<Profile userId={parsedData.accountId} />);
+        try {
+          const response = await axios.get(
+            `${EnvValue.api_gateway_url}/api/users/${parsedData.accountId}`
+          );
+          if (response.data) {
+            setUserData((prevState) => ({
+              ...prevState, // Keep previous data
+              ...response.data, // Update with new data
+            }));
+            console.log("Fetched Data:", response.data);
           }
+        } catch (error) {
+          console.error("Error fetching user detail:", error);
         }
-      };
-    
-      document.title = "Hồ sơ";
-      fetchUserDetail();
-    }, []);
-    
-    // ✅ This ensures Profile updates with the latest userData
-    useEffect(() => {
-      // setActiveComponent(<Profile userId={userData.AccountId} />);
-    }, [userData]); // Runs whenever userData updates
-    
+      }
+    };
+
+    document.title = "Hồ sơ";
+    fetchUserDetail();
+  }, []);
+
+  // ✅ This ensures Profile updates with the latest userData
+  useEffect(() => {
+    // setActiveComponent(<Profile userId={userData.AccountId} />);
+  }, [userData]); // Runs whenever userData updates
+
   const [isOpen, setIsOpen] = useState<number | null>(1);
   const toggleDropdown = (index: number) => {
     setIsOpen(isOpen === index ? null : index);
     console.log(isOpen);
   };
-  
+
   return (
     <>
       <HeaderProduct />
@@ -121,11 +122,16 @@ export const UserPage = () => {
                 </div>
                 <img
                   className="user-header-avatar-img"
-                  src={userData.Avatar || "https://storage.googleapis.com/shopii-image/user_avatar/c4f96264-90f0-4dda-a6bb-ebe4b502a9a7_avatar_default.png"}
+                  src={
+                    userData.Avatar ||
+                    "https://storage.googleapis.com/shopii-image/user_avatar/c4f96264-90f0-4dda-a6bb-ebe4b502a9a7_avatar_default.png"
+                  }
                 />
               </div>
               <div className="user-header-name">
-                <div className="username-holder">{userData.Username || "N/A"}</div>
+                <div className="username-holder">
+                  {userData.Username || "N/A"}
+                </div>
                 <div>
                   <a
                     className="flex text-decoration-none text-[#888]"
@@ -172,9 +178,12 @@ export const UserPage = () => {
                 title="Tài khoản của tôi"
                 imageSrc="https://down-vn.img.susercontent.com/file/ba61750a46794d8847c3f463c5e71cc4"
                 links={[
-                  { text: "Hồ sơ", component: <Profile userId={userData.AccountId} /> },
+                  {
+                    text: "Hồ sơ",
+                    component: <Profile userId={userData.AccountId} />,
+                  },
                   { text: "Ngân hàng", component: <BanksAndCards /> },
-                  { text: "Địa chỉ", component: <Addresses /> },
+                  { text: "Địa chỉ", component: <Addressesupdate accountId={userData.AccountId} /> },
                   { text: "Đổi mật khẩu", component: <ChangePasswords /> },
                   {
                     text: "Cài đặt thông báo",
@@ -224,7 +233,9 @@ export const UserPage = () => {
                   },
                   {
                     text: "Quản lý Voucher",
-                    component: <VoucherManagement userId={userData.AccountId} />,
+                    component: (
+                      <VoucherManagement userId={userData.AccountId} />
+                    ),
                   },
                 ]}
                 setActiveComponent={setActiveComponent}

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import icon from "./completed-icon.png";
+
+import icon from "../../assets/completed-icon.png";
 
 type AddToCartNotificationProps = {
   open: boolean;

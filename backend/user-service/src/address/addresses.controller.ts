@@ -18,7 +18,7 @@ export class AddressController {
   }
    @Get()
     async getAllAddresses(): Promise<Address[]> {
-      
+      console.log("Get all addresses");
       return this.addressService.getAllAddresses();
     }
   @Get('account/:accountId')

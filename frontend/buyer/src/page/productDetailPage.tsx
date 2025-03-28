@@ -12,14 +12,28 @@ import {
 
 import { ProductDetail } from "../types/productDetail";
 import { HomeLayout } from "../layout/home";
-import { RatingStars } from "../helpers/utility/calculateRatingStars";
 import AddToCartNotification from "../components/features/addToCartNotification";
-import { formatPrice } from "../helpers/utility/formatPrice";
-import { PRODUCT_SERVICE_URL, ORDER_SERVICE_URL } from "../config/url";
 
-const CUSTOMER_ID_TEST = 2;
+import { RatingStars } from "../helpers/utility/calculateRatingStars";
+import { formatPrice } from "../helpers/utility/formatPrice";
+
+import { Account } from "../types/account";
+
+import { useCart } from "../context/cartContext";
+
+import { API_GATEWAY_URL } from "../config/url";
+
+import {
+  PRODUCT_SERVICE_LOCALHOST,
+  ORDER_SERVICE_LOCALHOST,
+} from "../config/url";
 
 export const ProductDetailPage = () => {
+  const res: Account = localStorage.getItem("userProfile")
+    ? JSON.parse(localStorage.getItem("userProfile")!)
+    : null;
+
+  const { updateCart } = useCart();
   const { id } = useParams<{ id: string }>();
   const [productDetail, setProductDetail] = useState<ProductDetail | null>(
     null
@@ -105,7 +119,8 @@ export const ProductDetailPage = () => {
     const fetchProductDetail = async () => {
       try {
         const response = await axios.get(
-          `${PRODUCT_SERVICE_URL}/product/classifications/${id}`
+          // `${PRODUCT_SERVICE_LOCALHOST}/product/classifications/${id}`
+          `${API_GATEWAY_URL}/api/product/detail/${id}`
         );
         setProductDetail(response.data);
         // console.log(response.data);
@@ -138,26 +153,31 @@ export const ProductDetailPage = () => {
 
     if (matchedDetail) {
       let data = {
-        customerId: CUSTOMER_ID_TEST,
+        customerId: res?.accountId,
         productTypeId: matchedDetail.type_id,
         quantity: quantity,
         productId: id,
       };
 
-      console.log("Raw data: ", data);
-
       try {
         const response = await axios.post(
-          `${ORDER_SERVICE_URL}/carts/add-to-cart/`,
+          // `${ORDER_SERVICE_LOCALHOST}/carts/add-to-cart/`,
+          `${API_GATEWAY_URL}/order/carts/add-to-cart/`,
           data
         );
         setOpenDialog(true);
-        console.log("Response data:", response.data);
       } catch (error) {
         console.error("Error add product to cart:", error);
       }
+      updateCart();
     }
   };
+
+  useEffect(() => {
+    if (quantity > Number(selectedDetail?.quantity)) {
+      setQuantity(Number(selectedDetail?.quantity));
+    }
+  }, [quantity, selectedDetail]);
 
   return (
     <>
@@ -200,7 +220,7 @@ export const ProductDetailPage = () => {
                                 ${
                                   currentIndex === 0
                                     ? "text-gray-400 cursor-not-allowed"
-                                    : "text-gray-600 hover:text-orange-500 cursor-pointer"
+                                    : "text-gray-600 hover:text-[#ee4d2d] cursor-pointer"
                                 }`}
                   disabled={currentIndex === 0}
                 >
@@ -256,7 +276,7 @@ export const ProductDetailPage = () => {
                                 ${
                                   currentIndex >= productThumbnails.length - 5
                                     ? "text-gray-400 cursor-not-allowed"
-                                    : "text-gray-600 hover:text-orange-500 cursor-pointer"
+                                    : "text-gray-600 hover:text-[#ee4d2d] cursor-pointer"
                                 }`}
                   disabled={currentIndex >= productThumbnails.length - 5}
                 >
@@ -301,9 +321,9 @@ export const ProductDetailPage = () => {
               <div className="flex flex-row justify-center items-center">
                 <button onClick={() => setLiked(!liked)}>
                   {liked ? (
-                    <FaHeart className="text-red-500 w-6 h-6" />
+                    <FaHeart className="text-[#ee4d2d] w-6 h-6" />
                   ) : (
-                    <FaRegHeart className="text-red-500 w-6 h-6" />
+                    <FaRegHeart className="text-[#ee4d2d] w-6 h-6" />
                   )}
                 </button>
                 <div className="text-sm ml-2">Đã thích (764)</div>
@@ -352,28 +372,30 @@ export const ProductDetailPage = () => {
               <div className="cursor-pointer text-gray-500 mr-5">Tố cáo</div>
             </div>
 
-            <div className="bg-gray-100 p-5 mt-5 flex flex-row">
-              <div className="flex flex-row gap-1 text-3xl items-center text-red-500">
+            <div className="bg-gray-100 p-5 mt-5 flex flex-row gap-2">
+              <div className="flex flex-row gap-1 text-3xl items-center text-[#ee4d2d]">
                 <div className="underline underline-offset-2 text-xl">đ</div>
                 <div className="">
                   {formatPrice(Number(productDetail?.details[0].price))}
                 </div>
               </div>
 
-              {/* <div className="flex flex-row gap-1 items-center text-gray-400 line-through ml-1">
+              <div className="flex flex-row gap-1 items-center text-gray-400 line-through ml-1">
                 <div className="underline underline-offset-2 text-xs">đ</div>
-                <div className="text-base">{productDetail.oldPrice}</div>
+                <div className="text-base">
+                  {formatPrice(Number(productDetail?.details[0].price))}
+                </div>
               </div>
 
-              <div className="flex flex-row items-center text-red-500 font-medium bg-red-100 px-2 ml-1 border rounded-sm">
-                <div className="text-xs">{productDetail.discount}</div>
-              </div> */}
+              <div className="flex flex-row items-center text-[#ee4d2d] font-medium bg-red-100 px-2">
+                <div className="text-xs">-30%</div>
+              </div>
             </div>
 
             <div className="mt-5">
               <div className="flex flex-row items-center gap-3">
                 <p className="text-gray-500">Combo Khuyến Mãi:</p>
-                <div className="p-1 border border-orange-500 text-red-500 text-xs">
+                <div className="p-1 border border-[#ee4d2d] text-[#ee4d2d] text-xs">
                   Mua 2 & giảm 1%
                 </div>
               </div>
@@ -408,7 +430,7 @@ export const ProductDetailPage = () => {
                         className={`p-2 border text-xs flex flex-row items-center gap-1 transition-all duration-300 
                                         ${
                                           selectedType1 === uniqueType
-                                            ? "border-orange-500 text-black"
+                                            ? "border-[#ee4d2d] text-black"
                                             : "border-gray-300 text-gray-500 hover:border-orange-400"
                                         }
                                         ${
@@ -454,7 +476,7 @@ export const ProductDetailPage = () => {
                         className={`border text-xs flex flex-row items-center gap-1 transition-all duration-300 
                                         ${
                                           selectedType2 === uniqueType
-                                            ? "border-orange-500 text-black"
+                                            ? "border-[#ee4d2d] text-black"
                                             : "border-gray-300 text-gray-500 hover:border-orange-400"
                                         }
                                         ${
@@ -475,43 +497,76 @@ export const ProductDetailPage = () => {
               </div>
             )}
 
-            <div className="mt-5 flex flex-row gap-2">
-              <div className="flex flex-row items-center gap-3">
+            <div className="mt-5 flex flex-row gap-2 justify-center items-center">
+              <div className="text-gray-500 w-1/6">Số Lượng</div>
+              <div className="flex flex-row items-center gap-3 w-5/6">
                 <div className="flex items-center">
                   <button
-                    className={`bg-gray-200 hover:bg-gray-200 transition px-4 py-2 w-10 h-10 flex justify-center items-center`}
+                    className={`bg-gray-100 border border-gray-400 hover:bg-gray-100 transition px-4 py-3 w-10 h-8 flex justify-center items-center`}
                     onClick={decrease}
                   >
-                    <div className="text-2xl">-</div>
+                    <div className="text-base pb-4">_</div>
                   </button>
 
-                  <div className="flex justify-center items-center px-4 py-2 w-10 h-10 text-xl">
+                  {/* <div className="flex justify-center items-center px-4 py-2 w-10 h-10 text-xl">
                     {quantity}
-                  </div>
+                  </div> */}
+
+                  <input
+                    type="number"
+                    value={quantity}
+                    onChange={(e) => {
+                      let inputValue = Number(e.target.value);
+                      if (inputValue == 0) {
+                        inputValue = 1;
+                        e.target.value = "1";
+                      }
+                      setQuantity(inputValue);
+                    }}
+                    className="text-center border border-gray-400 w-15 h-8 no-spinner focus:border-black"
+                  />
 
                   <button
-                    className={`bg-gray-200 hover:bg-gray-200 transition px-4 py-2 w-10 h-10 flex justify-center items-center`}
+                    className={`bg-gray-100 border border-gray-400 hover:bg-gray-100 transition px-4 py-3 w-10 h-8 flex justify-center items-center`}
                     onClick={increase}
                   >
-                    <div className="text-2xl">+</div>
+                    <div className="text-xl">+</div>
                   </button>
                 </div>
+                {selectedDetail && (
+                  <div className="flex flex-row items-center text-base">
+                    ({selectedDetail.quantity})
+                  </div>
+                )}
               </div>
-              {selectedDetail && (
-                <div className="flex flex-row items-center text-base">
-                  ({selectedDetail.quantity})
-                </div>
-              )}
             </div>
+
+            {quantity + 1 > Number(selectedDetail?.quantity) ? (
+              <>
+                <div className="mt-5 flex flex-row ustify-center items-center">
+                  <div className="text-gray-500 w-1/6"></div>
+                  <div className="w-5/6 text-[#ee4d2d] text-[0.9rem]">
+                    Số lượng bạn chọn đã đạt mức tối đa của sản phẩm này
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="mt-5 flex flex-row ustify-center items-center h-auto">
+                  <div className="text-gray-500 w-1/6"></div>
+                  <div className="w-5/6"></div>
+                </div>
+              </>
+            )}
 
             <div className="mt-5 flex flex-row gap-2">
               <div
                 onClick={() => handleAddToCart()}
-                className="border border-orange-500 p-3 text-orange-500 bg-orange-100 cursor-pointer hover:bg-orange-200"
+                className="border border-[#ee4d2d] p-3 text-[#ee4d2d] bg-orange-100 cursor-pointer hover:bg-orange-200"
               >
                 Thêm Vào Giỏ Hàng
               </div>
-              <div className="border border-orange-500 p-3 w-36 text-white bg-red-500 text-center cursor-pointer">
+              <div className="border border-[#ee4d2d] p-3 w-36 text-white bg-[#ee4d2d] text-center cursor-pointer">
                 Mua Ngay
               </div>
             </div>
@@ -532,14 +587,14 @@ export const ProductDetailPage = () => {
                   Online 13 phút trước
                 </div>
                 <div className="flex flex-row gap-2 mt-2">
-                  <div className="border border-orange-500 px-3 h-10 flex items-center justify-center text-orange-500 bg-orange-100 cursor-pointer hover:bg-orange-200 transition">
+                  <div className="border border-[#ee4d2d] px-3 h-10 flex items-center justify-center text-[#ee4d2d] bg-orange-100 cursor-pointer hover:bg-orange-200 transition">
                     Chat ngay
                   </div>
-                  <div className="border border-orange-500 px-3 h-10 flex items-center justify-center text-orange-500 bg-orange-100 cursor-pointer hover:bg-orange-200 transition">
+                  <div className="border border-[#ee4d2d] px-3 h-10 flex items-center justify-center text-[#ee4d2d] bg-orange-100 cursor-pointer hover:bg-orange-200 transition">
                     Xem shop
                   </div>
                   <div
-                    className="border border-orange-500 px-3 h-10 flex items-center justify-center text-white bg-red-500 cursor-pointer hover:bg-red-600 transition"
+                    className="border border-[#ee4d2d] px-3 h-10 flex items-center justify-center text-white bg-[#ee4d2d] cursor-pointer hover:bg-red-600 transition"
                     onClick={() => setStateVoucherShopDialog(true)}
                   >
                     Xem voucher
@@ -555,19 +610,19 @@ export const ProductDetailPage = () => {
             <div className="flex-1 p-3 text-center">
               <div className="flex flex-col">
                 <label className="text-gray-500">Đánh giá:</label>
-                <p className="text-orange-500">87.7k</p>
+                <p className="text-[#ee4d2d]">87.7k</p>
               </div>
             </div>
             <div className="flex-1 p-3 text-center">
               <div className="flex flex-col">
                 <label className="text-gray-500">Sản phẩm:</label>
-                <p className="text-orange-500">77</p>
+                <p className="text-[#ee4d2d]">77</p>
               </div>
             </div>
             <div className="flex-1 p-3 text-center">
               <div className="flex flex-col">
                 <label className="text-gray-500">Người theo dõi:</label>
-                <p className="text-orange-500">40.3k</p>
+                <p className="text-[#ee4d2d]">40.3k</p>
               </div>
             </div>
           </div>
@@ -636,7 +691,7 @@ export const ProductDetailPage = () => {
               <h2 className="text-lg font-semibold mb-4">Voucher của Shop</h2>
               <div className="flex flex-col justify-center items-center gap-3">
                 <div className="flex flex-row justify-center items-center gap-2">
-                  <p className="text-xs border w-auto flex items-center justify-center text-white bg-orange-500 px-2 py-1 rounded">
+                  <p className="text-xs border w-auto flex items-center justify-center text-white bg-[#ee4d2d] px-2 py-1 rounded">
                     50% Giảm
                   </p>
                   <p className="text-gray-600 text-sm">
@@ -647,7 +702,7 @@ export const ProductDetailPage = () => {
                 <div className="w-full border-t border-gray-300"></div>
 
                 <div className="flex flex-row justify-center items-center gap-2">
-                  <p className="text-xs border w-auto flex items-center justify-center text-white bg-orange-500 px-2 py-1 rounded">
+                  <p className="text-xs border w-auto flex items-center justify-center text-white bg-[#ee4d2d] px-2 py-1 rounded">
                     50% Giảm
                   </p>
                   <p className="text-gray-600 text-sm">
@@ -658,7 +713,7 @@ export const ProductDetailPage = () => {
 
               <div className="mt-4 flex justify-end">
                 <button
-                  className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+                  className="bg-[#ee4d2d] text-white px-4 py-2 rounded hover:bg-red-600 transition"
                   onClick={() => setStateVoucherShopDialog(false)}
                 >
                   Đóng

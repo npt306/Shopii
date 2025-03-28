@@ -14,6 +14,7 @@
     "@tailwindcss/vite": "^4.0.3",
     "axios": "^1.8.2",
     "bootstrap": "^5.3.3",
+    "classnames": "^2.5.1",
     "date-fns": "^4.1.0",
     "node": "^20.19.0",
     "react": "^18.3.1",
@@ -22,18 +23,15 @@
     "react-icons": "^5.4.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.1.5",
-<<<<<<< HEAD
-    "react-toastify": "^11.0.5",
-=======
     "react-select": "^5.10.1",
->>>>>>> 5d23b988 (Fix issues in AddAddressModal component)
+    "react-toastify": "^11.0.5",
     "redux-persist": "^6.0.0",
     "tailwindcss": "^4.0.3",
     "vite-svg-loader": "^5.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
-    "@types/node": "^22.13.10",
+    "@types/node": "^22.13.14",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",

@@ -17,7 +17,7 @@ export const userService = {
       // 'http://34.58.241.34:3003'
       // const response = await axios.post<LoginResponse>(EnvValue.backend_url + '/Users/login', { username, password });
       const response = await axios.post<LoginResponse>(
-        `http://localhost:3003/Users/login`,
+        `http://34.58.241.34:3003/Users/login`,
         { username, password }
       );
       return response.data;
