@@ -8,6 +8,7 @@ import { UsersModule } from './modules/users/user.module';
 
 import { APP_GUARD } from '@nestjs/core';
 import { PermissionsGuard } from './guard/permission.guard';
+import { AccountsModule } from './modules/accounts/accounts.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { PermissionsGuard } from './guard/permission.guard';
     ProductModule,
     VouchersModule,
     UsersModule,
+    AccountsModule
   ],
   controllers: [AppController],
   providers: [
