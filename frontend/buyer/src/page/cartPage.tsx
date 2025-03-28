@@ -55,7 +55,7 @@ export const CartPage = () => {
           // `${ORDER_SERVICE_LOCALHOST}/carts/${id}`
           `${API_GATEWAY_URL}/order/carts/${id}`
         );
-        // console.log(response.data);
+        console.log(response.data);
         setData(response.data);
       } catch (error) {
         console.error("Error fetching product detail:", error);
@@ -227,8 +227,6 @@ export const CartPage = () => {
     }
   }, [selectedShops, data]);
 
-  const testUserId = 2;
-
   const handleDeleteProduct = async (
     sellerId: number,
     productTypeId: number
@@ -254,7 +252,7 @@ export const CartPage = () => {
       const res = await axios.post(
         // `${ORDER_SERVICE_LOCALHOST}/carts/delete-from-cart`,
         `${API_GATEWAY_URL}/order/carts/delete-from-cart`,
-        { testUserId, productTypeId }
+        { id, productTypeId }
       );
     } catch (error) {
       console.error("Error delete product.", error);
@@ -282,7 +280,7 @@ export const CartPage = () => {
         const res = await axios.post(
           // `${ORDER_SERVICE_LOCALHOST}/carts/delete-from-cart`,
           `${API_GATEWAY_URL}/order/carts/delete-from-cart`,
-          { testUserId, productTypeId }
+          { id, productTypeId }
         );
         console.log(res);
       } catch (error) {
@@ -320,7 +318,7 @@ export const CartPage = () => {
         // `${ORDER_SERVICE_LOCALHOST}/carts/update-cart`,
         `${API_GATEWAY_URL}/order/carts/update-cart`,
         {
-          testUserId,
+          id,
           productTypeId,
           quantity,
         }
