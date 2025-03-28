@@ -6,19 +6,27 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-
+<<<<<<< HEAD
     "target": "ES2021",
-
+=======
+    "target": "ES2023",
+>>>>>>> 5d23b988 (Fix issues in AddAddressModal component)
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
-
+<<<<<<< HEAD
     "strictNullChecks": false,
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
+=======
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+>>>>>>> 5d23b988 (Fix issues in AddAddressModal component)
     "noFallthroughCasesInSwitch": false
   }
 }
