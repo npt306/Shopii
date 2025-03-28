@@ -5,13 +5,6 @@ import { AccountManagementService } from './accounts-management.service';
 export class AccountManagementController {
   constructor(private readonly accountManagementService: AccountManagementService) { }
 
-  /**
-   * GET /accounts/accounts
-   * Fetch users in batches with pagination.
-   * Query Params:
-   *  - page: The page number (optional, default is 1)
-   *  - limit: The number of records per page (optional, default is 10)
-   */
   @Get('accounts')
   async fetchUsersBatch(
     @Query('page') page: string,
@@ -22,11 +15,6 @@ export class AccountManagementController {
     return await this.accountManagementService.fetchUsersBatch(pageNum, limitNum);
   }
 
-  /**
-   * PUT /user-management/:accountId
-   * Update a user's information.
-   * Request Body: An object with the fields to update.
-   */
   @Put(':accountId')
   async updateUser(
     @Param('accountId') accountId: string,
