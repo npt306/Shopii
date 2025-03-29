@@ -131,7 +131,7 @@ export const AddAddressModal = ({
     console.log("Form Data:", formData); // Debugging: Check the form data
     try {
       const response = await fetch(
-        `http://localhost:3005/address/account/${accountId}`,
+        `http://34.58.241.34:3005/address/account/${accountId}`,
         {
           method: "POST",
           headers: {
