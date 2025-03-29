@@ -149,6 +149,17 @@ export class CartsService {
       cart.quantity = updateCartDto.quantity;
       cart.updatedAt = new Date();
       await this.cartRepository.save(cart);
+      relatedProduct.map(async (item) => {
+        let res = await this.cartRepository.findOne({
+          where: {
+            productTypeId: item.ProductTypeID,
+          },
+        });
+        if (res) {
+          res.updatedAt = new Date();
+          await this.cartRepository.save(res);
+        }
+      });
       return 'Update cart success';
     } else {
       return { message: 'Item not found in cart' };
