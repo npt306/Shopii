@@ -5,12 +5,12 @@ import './index.css'
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 
 import { AdminLoginPage } from './page/admin_login.tsx';
-import { AddVoucherPage } from './page/AddVoucher.tsx';
-import { VoucherListPage } from './page/VoucherListPage.tsx';
-import { VoucherDetailPage } from './page/VoucherDetailPage.tsx';
-import { EditVoucherPage } from './page/EditVoucher.tsx';
-import { AdminProductListPage } from './page/AdminProductListPage.tsx';
-import { AdminProductDetailPage } from './page/AdminProductDetailPage.tsx';
+import { AddVoucherPage } from './page/voucher-management/AddVoucher.tsx';
+import { VoucherListPage } from './page/voucher-management/VoucherListPage.tsx';
+import { VoucherDetailPage } from './page/voucher-management/VoucherDetailPage.tsx';
+import { EditVoucherPage } from './page/voucher-management/EditVoucher.tsx';
+import { AdminProductListPage } from './page/product-management/AdminProductListPage.tsx';
+import { AdminProductDetailPage } from './page/product-management/AdminProductDetailPage.tsx';
 import UserManagement from './page/user-management/main_page.tsx';
 import { CategoryManagementApp } from './page/AdminCategoryManage.tsx';
 

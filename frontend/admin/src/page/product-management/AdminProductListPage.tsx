@@ -12,7 +12,7 @@ import {
   Modal,
 } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import '../css/general.css';
+import '../../css/general.css';
 
 interface Product {
   id: number;

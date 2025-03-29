@@ -11,7 +11,7 @@ import {
   Modal,
 } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import '../css/general.css';
+import '../../css/general.css';
 
 interface Voucher {
   id: number;

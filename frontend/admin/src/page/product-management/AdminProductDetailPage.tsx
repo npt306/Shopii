@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Spinner, Table, Alert } from 'react-bootstrap';
 import { useParams, Link } from 'react-router-dom';
-import '../css/general.css';
+import '../../css/general.css';
 
 interface ProductDetail {
   type_id: number;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Form, Container, Row, Col, Card, Button, InputGroup } from "react-bootstrap";
-import "../css/general.css";
+import "../../css/general.css";
 
 export const AddVoucherPage = () => {
   useEffect(() => {
@@ -9,6 +9,11 @@ export const AddVoucherPage = () => {
     bootstrapLink.href = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css";
     document.head.appendChild(bootstrapLink);
     document.title = "Thêm Voucher";
+
+    // Cleanup function to remove the link when the component unmounts
+    return () => {
+        document.head.removeChild(bootstrapLink);
+    };
   }, []);
 
   const [voucherData, setVoucherData] = useState({
@@ -158,14 +163,15 @@ export const AddVoucherPage = () => {
                 </div>
               )}
               <Form onSubmit={handleSubmit}>
-                {/* ... (rest of your form, as before) ... */}
+                {/* Basic Info Section */}
                 <Row className="mb-4">
                   <Col md={12}>
                     <h5 className="text-secondary border-bottom pb-2 mb-3">Thông tin cơ bản</h5>
                   </Col>
 
                   <Col md={6}>
-                    <Form.Group className="mb-3">
+                    {/* FIX: Add controlId */}
+                    <Form.Group className="mb-3" controlId="formVoucherName">
                       <Form.Label className="fw-medium">Tên voucher<span className="text-danger">*</span></Form.Label>
                       <Form.Control
                         type="text"
@@ -179,7 +185,8 @@ export const AddVoucherPage = () => {
                   </Col>
 
                   <Col md={6}>
-                    <Form.Group className="mb-3">
+                     {/* FIX: Add controlId */}
+                    <Form.Group className="mb-3" controlId="formVoucherCode">
                       <Form.Label className="fw-medium">Mã voucher<span className="text-danger">*</span></Form.Label>
                       <Form.Control
                         type="text"
@@ -197,7 +204,8 @@ export const AddVoucherPage = () => {
                   </Col>
 
                   <Col md={12}>
-                    <Form.Group className="mb-3">
+                     {/* FIX: Add controlId */}
+                    <Form.Group className="mb-3" controlId="formVoucherDescription">
                       <Form.Label className="fw-medium">Mô tả</Form.Label>
                       <Form.Control
                         as="textarea"
@@ -211,7 +219,8 @@ export const AddVoucherPage = () => {
                   </Col>
 
                   <Col md={6}>
-                    <Form.Group className="mb-3">
+                     {/* FIX: Add controlId */}
+                    <Form.Group className="mb-3" controlId="formVoucherStartDate">
                       <Form.Label className="fw-medium">Ngày bắt đầu<span className="text-danger">*</span></Form.Label>
                       <Form.Control
                         type="datetime-local"
@@ -224,7 +233,8 @@ export const AddVoucherPage = () => {
                   </Col>
 
                   <Col md={6}>
-                    <Form.Group className="mb-3">
+                     {/* FIX: Add controlId */}
+                    <Form.Group className="mb-3" controlId="formVoucherEndDate">
                       <Form.Label className="fw-medium">Ngày kết thúc<span className="text-danger">*</span></Form.Label>
                       <Form.Control
                         type="datetime-local"
@@ -237,7 +247,8 @@ export const AddVoucherPage = () => {
                   </Col>
 
                   <Col md={6}>
-                    <Form.Group className="mb-3">
+                     {/* FIX: Add controlId */}
+                    <Form.Group className="mb-3" controlId="formVoucherPerCustomerLimit">
                       <Form.Label className="fw-medium">Giới hạn sử dụng mỗi khách hàng</Form.Label>
                       <Form.Control
                         type="number"
@@ -250,7 +261,8 @@ export const AddVoucherPage = () => {
                   </Col>
 
                   <Col md={6}>
-                    <Form.Group className="mb-3">
+                     {/* FIX: Add controlId */}
+                    <Form.Group className="mb-3" controlId="formVoucherTotalUsageLimit">
                       <Form.Label className="fw-medium">Tổng số lượt sử dụng tối đa</Form.Label>
                       <Form.Control
                         type="number"
@@ -263,13 +275,15 @@ export const AddVoucherPage = () => {
                   </Col>
                 </Row>
 
+                {/* Condition Section */}
                 <Row className="mb-4">
                   <Col md={12}>
                     <h5 className="text-secondary border-bottom pb-2 mb-3">Điều kiện áp dụng</h5>
                   </Col>
 
                   <Col md={12}>
-                    <Form.Group className="mb-3">
+                     {/* FIX: Add controlId */}
+                    <Form.Group className="mb-3" controlId="formConditionType">
                       <Form.Label className="fw-medium">Loại điều kiện</Form.Label>
                       <Form.Select
                         name="condition_type"
@@ -286,7 +300,8 @@ export const AddVoucherPage = () => {
 
                   {voucherData.condition_type === "min_order" && (
                     <Col md={6}>
-                      <Form.Group className="mb-3">
+                       {/* FIX: Add controlId */}
+                      <Form.Group className="mb-3" controlId="formMinOrderAmount">
                         <Form.Label className="fw-medium">Giá trị đơn hàng tối thiểu (VNĐ)</Form.Label>
                         <InputGroup>
                           <Form.Control
@@ -304,7 +319,8 @@ export const AddVoucherPage = () => {
 
                   {voucherData.condition_type === "min_products" && (
                     <Col md={6}>
-                      <Form.Group className="mb-3">
+                       {/* FIX: Add controlId */}
+                      <Form.Group className="mb-3" controlId="formMinProducts">
                         <Form.Label className="fw-medium">Số lượng sản phẩm tối thiểu</Form.Label>
                         <Form.Control
                           type="number"
@@ -329,13 +345,15 @@ export const AddVoucherPage = () => {
                   )}
                 </Row>
 
+                {/* Action Section */}
                 <Row className="mb-4">
                   <Col md={12}>
                     <h5 className="text-secondary border-bottom pb-2 mb-3">Hành động giảm giá</h5>
                   </Col>
 
                   <Col md={12}>
-                    <Form.Group className="mb-3">
+                     {/* FIX: Add controlId */}
+                    <Form.Group className="mb-3" controlId="formActionType">
                       <Form.Label className="fw-medium">Loại giảm giá</Form.Label>
                       <Form.Select
                         name="action_type"
@@ -353,7 +371,8 @@ export const AddVoucherPage = () => {
 
                   {voucherData.action_type === "fixed_amount" && (
                     <Col md={6}>
-                      <Form.Group className="mb-3">
+                       {/* FIX: Add controlId */}
+                      <Form.Group className="mb-3" controlId="formDiscountAmount">
                         <Form.Label className="fw-medium">Số tiền giảm (VNĐ)</Form.Label>
                         <InputGroup>
                           <Form.Control
@@ -371,7 +390,8 @@ export const AddVoucherPage = () => {
 
                   {(voucherData.action_type === "percentage" || voucherData.action_type === "product_percentage") && (
                     <Col md={6}>
-                      <Form.Group className="mb-3">
+                       {/* FIX: Add controlId */}
+                      <Form.Group className="mb-3" controlId="formDiscountPercentage">
                         <Form.Label className="fw-medium">Phần trăm giảm giá (%)</Form.Label>
                         <InputGroup>
                           <Form.Control
@@ -390,7 +410,8 @@ export const AddVoucherPage = () => {
 
                   {voucherData.action_type === "free_shipping" && (
                     <Col md={6}>
-                      <Form.Group className="mb-3">
+                       {/* FIX: Add controlId */}
+                      <Form.Group className="mb-3" controlId="formFreeShippingMax">
                         <Form.Label className="fw-medium">Mức hỗ trợ vận chuyển tối đa (VNĐ)</Form.Label>
                         <InputGroup>
                           <Form.Control
@@ -409,7 +430,8 @@ export const AddVoucherPage = () => {
                   {voucherData.action_type === "buy_x_get_y" && (
                     <>
                       <Col md={6}>
-                        <Form.Group className="mb-3">
+                         {/* FIX: Add controlId */}
+                        <Form.Group className="mb-3" controlId="formBuyXAmount">
                           <Form.Label className="fw-medium">Mua X sản phẩm</Form.Label>
                           <Form.Control
                             type="number"
@@ -421,7 +443,8 @@ export const AddVoucherPage = () => {
                         </Form.Group>
                       </Col>
                       <Col md={6}>
-                        <Form.Group className="mb-3">
+                         {/* FIX: Add controlId */}
+                        <Form.Group className="mb-3" controlId="formGetYAmount">
                           <Form.Label className="fw-medium">Tặng Y sản phẩm</Form.Label>
                           <Form.Control
                             type="number"
@@ -436,6 +459,7 @@ export const AddVoucherPage = () => {
                   )}
                 </Row>
 
+                {/* Action Buttons */}
                 <div className="d-flex justify-content-end gap-2 mt-4">
                   <Button variant="outline-secondary" type="button" onClick={handleCancel}>
                     Hủy
