@@ -1,19 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Container,
-  Row,
-  Col,
-  Card,
-  Button,
-  Table,
-  Spinner,
-  Alert,
-  Form,
-  Modal,
-  Pagination
-} from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import '../../css/general.css';
+import { ChevronRight, Search, X } from 'lucide-react'; // Added icons
 
 interface Product {
   id: number;
@@ -47,195 +34,161 @@ export const AdminProductListPage = () => {
   const [productToDelete, setProductToDelete] = useState<number | null>(null);
   const [blockReason, setBlockReason] = useState('');
   const [deleteReason, setDeleteReason] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false); // For modal buttons
 
+  // Fetch data effect
   useEffect(() => {
-    const bootstrapLink = document.createElement('link');
-    bootstrapLink.rel = 'stylesheet';
-    bootstrapLink.href =
-      'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css';
-    document.head.appendChild(bootstrapLink);
     document.title = 'Quản lý sản phẩm';
-
-     // Cleanup function
-     return () => {
-        if (document.head.contains(bootstrapLink)) {
-            document.head.removeChild(bootstrapLink);
-        }
-    };
-  }, []); // Empty dependency array ensures this runs only once on mount
-
-
-  // Separate useEffect for fetching data based on dependencies
-  useEffect(() => {
-      fetchProducts();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, limit, statusFilter]); // Trigger fetch when these change
 
+  const fetchProducts = async () => {
+    setLoading(true);
+    setError(null);
+    setIsProcessing(false); // Reset processing state on new fetch
+    try {
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('limit', limit.toString());
+      if (statusFilter) {
+        params.append('status', statusFilter);
+      }
+      if (searchQuery) {
+        params.append('search', searchQuery);
+      }
 
-    const fetchProducts = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            // Build the query string carefully
-            const params = new URLSearchParams();
-            params.append('page', page.toString());
-            params.append('limit', limit.toString());
-            if (statusFilter) {
-                params.append('status', statusFilter);
-            }
-            if (searchQuery) {
-                 // Append search query only if it's not empty AFTER submitting search
-                 // The actual search trigger is handleSearchSubmit
-                params.append('search', searchQuery);
-            }
+      const url = `/api/product/admin/products?${params.toString()}`;
+      const response = await fetch(url);
 
-            const url = `/api/product/admin/products?${params.toString()}`;
-            console.log("Fetching URL:", url); // Debugging log
-
-            const response = await fetch(url);
-            if (response.ok) {
-                const data: AdminProductListResponse = await response.json();
-                setProducts(data.products);
-                setTotal(data.total);
-                 // Adjust page if current page becomes invalid after filtering/deletion
-                 if (data.total > 0 && page > Math.ceil(data.total / limit)) {
-                    setPage(Math.ceil(data.total / limit));
-                 } else if (data.total === 0) {
-                     setPage(1); // Reset to page 1 if no results
-                 }
-            } else {
-                const errorData = await response.json();
-                setError(`Không thể tải danh sách sản phẩm: ${errorData.message || response.statusText}`);
-            }
-        } catch (err) {
-          setError(`Đã xảy ra lỗi khi tải danh sách sản phẩm: ${err instanceof Error ? err.message : String(err)}`);
-        } finally {
-            setLoading(false);
+      if (response.ok) {
+        const data: AdminProductListResponse = await response.json();
+        setProducts(data.products);
+        setTotal(data.total);
+        // Adjust page if current page becomes invalid
+        const calculatedTotalPages = Math.ceil(data.total / limit);
+        if (data.total > 0 && page > calculatedTotalPages) {
+          setPage(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
+        } else if (data.total === 0 && page !== 1) {
+          setPage(1); // Reset to page 1 if no results
         }
-    };
+      } else {
+        const errorData = await response.json().catch(() => ({})); // Catch JSON parse error
+        setError(`Không thể tải danh sách sản phẩm: ${errorData.message || response.statusText}`);
+      }
+    } catch (err) {
+      setError(`Đã xảy ra lỗi khi tải danh sách sản phẩm: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // --- Event Handlers ---
   const handlePageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-        setPage(newPage);
+    if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
+      setPage(newPage);
     }
   };
 
   const handleLimitChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setLimit(parseInt(event.target.value, 10));
-    setPage(1); // Reset to the first page when changing the limit
+    setPage(1); // Reset page when limit changes
   };
 
-  const handleStatusFilterChange = (
-    event: React.ChangeEvent<HTMLSelectElement>,
-  ) => {
+  const handleStatusFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setStatusFilter(event.target.value);
-    setPage(1);
+    setPage(1); // Reset page on filter change
     // Fetch is triggered by useEffect dependency change
   };
 
   const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // Only update the state, don't trigger fetch here
     setSearchQuery(event.target.value);
   };
 
-    const handleSearchSubmit = (event?: React.FormEvent) => {
-        if(event) event.preventDefault();
-        setPage(1); // Reset page on new search
-        fetchProducts(); // Manually trigger fetch after search submit
-    };
+  const handleSearchSubmit = (event?: React.FormEvent) => {
+    if (event) event.preventDefault();
+    setPage(1); // Reset page on new search
+    fetchProducts(); // Manually trigger fetch
+  };
 
   const handleApprove = async (id: number) => {
-    setError(null); // Clear previous errors
+    setError(null);
+    setIsProcessing(true);
     try {
-      const response = await fetch(`/api/product/admin/products/${id}/approve`, {
-        method: 'PATCH',
-      });
+      const response = await fetch(`/api/product/admin/products/${id}/approve`, { method: 'PATCH' });
       if (response.ok) {
-        // Refetch data to ensure consistency, or update local state optimistically
-        // Optimistic update:
-        setProducts(
-          products.map((p) => (p.id === id ? { ...p, status: 'Approved' } : p)),
-        );
-        // Or refetch: fetchProducts();
+        setProducts(products.map((p) => (p.id === id ? { ...p, status: 'Approved' } : p)));
       } else {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         setError(`Không thể duyệt sản phẩm: ${errorData.message || response.statusText}`);
       }
     } catch (err) {
       setError(`Đã xảy ra lỗi khi duyệt sản phẩm: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleBlockClick = (id: number) => {
     setProductToBlock(id);
+    setBlockReason(''); // Clear previous reason
+    setError(null); // Clear previous modal errors
     setShowBlockModal(true);
   };
 
   const confirmBlock = async () => {
-    if (!productToBlock) return;
+    if (!productToBlock || !blockReason) return; // Ensure reason is provided
     setError(null);
+    setIsProcessing(true);
     try {
-      const response = await fetch(
-        `/api/product/admin/products/${productToBlock}/block`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ reason: blockReason }),
-        },
-      );
+      const response = await fetch(`/api/product/admin/products/${productToBlock}/block`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: blockReason }),
+      });
       if (response.ok) {
-         // Optimistic update:
-        setProducts(
-          products.map((p) =>
-            p.id === productToBlock ? { ...p, status: 'Violated' } : p,
-          ),
-        );
-        // Or refetch: fetchProducts();
-        handleCloseBlockModal(); // Close modal on success
+        setProducts(products.map((p) => (p.id === productToBlock ? { ...p, status: 'Violated' } : p)));
+        handleCloseBlockModal();
       } else {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
+        // Show error inside the modal
         setError(`Không thể chặn sản phẩm: ${errorData.message || response.statusText}`);
-        // Keep modal open on error to show message or let user retry
       }
     } catch (err) {
       setError(`Đã xảy ra lỗi khi chặn sản phẩm: ${err instanceof Error ? err.message : String(err)}`);
-       // Keep modal open
+    } finally {
+      setIsProcessing(false); // Re-enable button even on error
     }
   };
 
   const handleDeleteClick = (id: number) => {
     setProductToDelete(id);
+    setDeleteReason('');
+    setError(null);
     setShowDeleteModal(true);
   };
 
   const confirmDelete = async () => {
     if (!productToDelete) return;
     setError(null);
+    setIsProcessing(true);
     try {
-      const response = await fetch(
-        `/api/product/admin/products/${productToDelete}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ reason: deleteReason }), // Ensure reason is sent if required by API
-        },
-      );
-      if (response.ok || response.status === 204) { // Handle 204 No Content
-        // Refetch data is safer after deletion to handle pagination correctly
-        fetchProducts();
-        handleCloseDeleteModal(); // Close modal on success
+      const response = await fetch(`/api/product/admin/products/${productToDelete}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: deleteReason }),
+      });
+      if (response.ok || response.status === 204) {
+        handleCloseDeleteModal();
+        fetchProducts(); // Refetch to update list and pagination
       } else {
-         const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         setError(`Không thể xóa sản phẩm: ${errorData.message || response.statusText}`);
-        // Keep modal open
       }
     } catch (err) {
       setError(`Đã xảy ra lỗi khi xóa sản phẩm: ${err instanceof Error ? err.message : String(err)}`);
-       // Keep modal open
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -243,345 +196,369 @@ export const AdminProductListPage = () => {
     setShowBlockModal(false);
     setProductToBlock(null);
     setBlockReason('');
-    // setError(null); // Optionally clear error when manually closing modal
+    // setError(null); // Clear error only when closing manually if desired
   };
 
   const handleCloseDeleteModal = () => {
     setShowDeleteModal(false);
     setProductToDelete(null);
     setDeleteReason('');
-    // setError(null); // Optionally clear error when manually closing modal
   };
 
+  // --- Pagination Logic ---
   const totalPages = Math.ceil(total / limit);
 
-  // --- Pagination Rendering Logic ---
   const renderPaginationItems = () => {
-      const items = [];
-      const maxPagesToShow = 5; // Adjust as needed
-      let startPage, endPage;
+    const items = [];
+    const maxPagesToShow = 5;
+    let startPage, endPage;
 
-      if (totalPages <= maxPagesToShow) {
-          startPage = 1;
-          endPage = totalPages;
+    if (totalPages <= 1) return null; // No pagination if only 1 page or less
+
+    if (totalPages <= maxPagesToShow) {
+      startPage = 1;
+      endPage = totalPages;
+    } else {
+      const maxPagesBeforeCurrent = Math.floor(maxPagesToShow / 2);
+      const maxPagesAfterCurrent = Math.ceil(maxPagesToShow / 2) - 1;
+      if (page <= maxPagesBeforeCurrent) {
+        startPage = 1;
+        endPage = maxPagesToShow;
+      } else if (page + maxPagesAfterCurrent >= totalPages) {
+        startPage = totalPages - maxPagesToShow + 1;
+        endPage = totalPages;
       } else {
-          const maxPagesBeforeCurrent = Math.floor(maxPagesToShow / 2);
-          const maxPagesAfterCurrent = Math.ceil(maxPagesToShow / 2) - 1;
-          if (page <= maxPagesBeforeCurrent) {
-              startPage = 1;
-              endPage = maxPagesToShow;
-          } else if (page + maxPagesAfterCurrent >= totalPages) {
-              startPage = totalPages - maxPagesToShow + 1;
-              endPage = totalPages;
-          } else {
-              startPage = page - maxPagesBeforeCurrent;
-              endPage = page + maxPagesAfterCurrent;
-          }
+        startPage = page - maxPagesBeforeCurrent;
+        endPage = page + maxPagesAfterCurrent;
       }
+    }
 
-      // Always add 'First' button
+    // First and Previous
+    items.push(
+      <button key="first" onClick={() => handlePageChange(1)} disabled={page === 1} className="px-3 py-1 border rounded-l-md bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">First</button>
+    );
+    items.push(
+      <button key="prev" onClick={() => handlePageChange(page - 1)} disabled={page === 1} className="px-3 py-1 border-t border-b bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Prev</button>
+    );
+
+    if (startPage > 1) {
+      items.push(<span key="start-ellipsis" className="px-3 py-1 border-t border-b border-l bg-white text-gray-500">...</span>);
+    }
+
+    for (let number = startPage; number <= endPage; number++) {
       items.push(
-          <Pagination.First key="first" onClick={() => handlePageChange(1)} disabled={page === 1} />
+        <button key={number} onClick={() => handlePageChange(number)} disabled={number === page} className={`px-3 py-1 border-t border-b border-l ${number === page ? 'bg-orange-600 text-white border-orange-600 z-10' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>
+          {number}
+        </button>
       );
+    }
 
-       // Always add 'Prev' button
-       items.push(
-           <Pagination.Prev key="prev" onClick={() => handlePageChange(page - 1)} disabled={page === 1} />
-       );
+    if (endPage < totalPages) {
+        // Ensure border-l is added to the ellipsis if it follows numbered pages
+      items.push(<span key="end-ellipsis" className={`px-3 py-1 border-t border-b ${endPage >= startPage ? 'border-l' : ''} bg-white text-gray-500`}>...</span>);
+    }
 
+    // Next and Last
+    items.push(
+      <button key="next" onClick={() => handlePageChange(page + 1)} disabled={page === totalPages} className="px-3 py-1 border-t border-b border-l bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+    );
+    items.push(
+        <button key="last" onClick={() => handlePageChange(totalPages)} disabled={page === totalPages} className="px-3 py-1 border rounded-r-md bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Last</button>
+    );
 
-      if (startPage > 1) {
-          items.push(<Pagination.Ellipsis key="start-ellipsis" disabled />);
-      }
-
-      for (let number = startPage; number <= endPage; number++) {
-          items.push(
-              <Pagination.Item key={number} active={number === page} onClick={() => handlePageChange(number)}>
-                  {number}
-              </Pagination.Item>
-          );
-      }
-
-      if (endPage < totalPages) {
-          items.push(<Pagination.Ellipsis key="end-ellipsis" disabled />);
-      }
-
-       // Always add 'Next' button
-       items.push(
-           <Pagination.Next key="next" onClick={() => handlePageChange(page + 1)} disabled={page === totalPages} />
-       );
-
-        // Always add 'Last' button
-        items.push(
-            <Pagination.Last key="last" onClick={() => handlePageChange(totalPages)} disabled={page === totalPages} />
-        );
-
-
-      return items;
+    return <div className="inline-flex rounded-md shadow-sm -space-x-px">{items}</div>;
   };
 
 
+  // --- Render ---
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+        <span className="ml-3 text-gray-600">Đang tải...</span>
+      </div>
+    );
+  }
+
+    // Display main error if fetch failed
+    if (error && products.length === 0) {
+        return (
+            <div className="p-4">
+                <div className="mb-4 text-sm text-gray-600 flex items-center">
+                    <Link to="/admin" className="hover:text-orange-600 transition-colors">Trang chủ</Link>
+                    <ChevronRight size={16} className="mx-1 text-gray-400" />
+                    <span className="font-medium text-gray-800">Quản lý sản phẩm</span>
+                </div>
+                <div className="p-4 bg-red-100 text-red-700 border border-red-400 rounded">
+                    {error}
+                </div>
+            </div>
+        );
+    }
+
   return (
-    <Container fluid className="shopee-page py-4">
-      <div className="breadcrumb-placeholder mb-3">
-        <h5 className="text-secondary">Trang chủ / Quản lý sản phẩm</h5>
+    <div className="container mx-auto px-4 py-6">
+      {/* Breadcrumbs */}
+      <div className="mb-4 text-sm text-gray-600 flex items-center">
+        <Link to="/admin" className="hover:text-orange-600 transition-colors">Trang chủ</Link>
+        <ChevronRight size={16} className="mx-1 text-gray-400" />
+        <span className="font-medium text-gray-800">Quản lý sản phẩm</span>
       </div>
 
-      <Row>
-        <Col xs={12}>
-          <Card className="border-0 shadow-sm">
-            <Card.Header className="bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-              <h4 className="mb-0 text-dark">Danh sách sản phẩm</h4>
-            </Card.Header>
-            <Card.Body>
-              <Row className="mb-3 gy-2"> {/* Added gy-2 for vertical gap on small screens */}
-                <Col md={4}>
-                  {/* FIX: Add controlId */}
-                  <Form.Group controlId="productStatusFilter">
-                    <Form.Label>Trạng thái</Form.Label>
-                    <Form.Select
-                      value={statusFilter}
-                      onChange={handleStatusFilterChange}
-                      aria-label="Lọc sản phẩm theo trạng thái"
-                    >
-                      <option value="">Tất cả</option>
-                      <option value="Pending">Chờ duyệt</option>
-                      <option value="Approved">Đã duyệt</option>
-                      <option value="Violated">Vi phạm</option>
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-                <Col md={8}>
-                  {/* FIX: Add controlId */}
-                  <Form onSubmit={handleSearchSubmit}>
-                    <Form.Group controlId="productSearchInput">
-                      <Form.Label>Tìm kiếm</Form.Label>
-                      <div className="d-flex">
-                        <Form.Control
-                          type="text"
-                          placeholder="Nhập tên sản phẩm"
-                          value={searchQuery}
-                          onChange={handleSearchInputChange}
-                          aria-label="Tìm kiếm sản phẩm theo tên"
-                        />
-                        <Button
-                          variant="primary"
-                          type="submit"
-                          className="ms-2 shopee-button"
+      <div className="bg-white shadow-md rounded-lg overflow-hidden">
+        <div className="px-6 py-4 border-b">
+          <h4 className="mb-0 text-xl font-semibold text-gray-800">Danh sách sản phẩm</h4>
+        </div>
+        <div className="p-6">
+          {/* Filters Row */}
+          <div className="flex flex-wrap gap-4 mb-6">
+            {/* Status Filter */}
+            <div className="flex-1 min-w-[200px]">
+              <label htmlFor="productStatusFilter" className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+              <select
+                id="productStatusFilter"
+                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                value={statusFilter}
+                onChange={handleStatusFilterChange}
+              >
+                <option value="">Tất cả</option>
+                <option value="Pending">Chờ duyệt</option>
+                <option value="Approved">Đã duyệt</option>
+                <option value="Violated">Vi phạm</option>
+              </select>
+            </div>
+            {/* Search Form */}
+            <div className="flex-1 min-w-[300px]">
+              <form onSubmit={handleSearchSubmit}>
+                <label htmlFor="productSearchInput" className="block text-sm font-medium text-gray-700 mb-1">Tìm kiếm</label>
+                <div className="flex">
+                  <input
+                    id="productSearchInput"
+                    type="text"
+                    placeholder="Nhập tên sản phẩm"
+                    className="flex-grow p-2 border border-gray-300 rounded-l-md shadow-sm focus:ring-orange-500 focus:border-orange-500 outline-none"
+                    value={searchQuery}
+                    onChange={handleSearchInputChange}
+                  />
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-orange-600 text-white rounded-r-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 inline-flex items-center"
+                  >
+                    <Search size={18} className="mr-1" /> Tìm
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          {/* Display error if fetch succeeded but actions failed */}
+          {error && <div className="p-3 mb-4 bg-red-100 border border-red-400 text-red-700 rounded">{error}</div>}
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên sản phẩm</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày tạo</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày cập nhật</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Giá thấp nhất</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Giá cao nhất</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {products.length > 0 ? (
+                  products.map((product) => (
+                    <tr key={product.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{product.id}</td>
+                      <td className="px-4 py-3 text-sm font-medium text-blue-600 hover:text-blue-800 max-w-xs truncate"> {/* Added max-w/truncate */}
+                        <Link to={`/admin/products/${product.id}`} title={product.name}>
+                          {product.name}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            product.status === 'Approved' ? 'bg-green-100 text-green-800'
+                            : product.status === 'Pending' ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                          }`}
                         >
-                          Tìm
-                        </Button>
-                      </div>
-                    </Form.Group>
-                  </Form>
-                </Col>
-              </Row>
-              {/* Display error above the table */}
-              {error && !loading && <Alert variant="danger">{error}</Alert>}
+                          {product.status === 'Approved' ? 'Đã duyệt'
+                            : product.status === 'Pending' ? 'Chờ duyệt'
+                            : 'Vi phạm'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{new Date(product.createdAt).toLocaleString()}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{new Date(product.updatedAt).toLocaleString()}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">{product.minPrice.toLocaleString()} ₫</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">{product.maxPrice.toLocaleString()} ₫</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-center text-sm font-medium space-x-1">
+                        {/* Action Buttons */}
+                        {['Pending', 'Violated'].includes(product.status) && (
+                          <button
+                            className="px-2 py-1 text-xs border border-green-500 text-green-600 rounded hover:bg-green-50 disabled:opacity-50"
+                            onClick={() => handleApprove(product.id)}
+                            title="Duyệt sản phẩm"
+                            disabled={isProcessing}
+                          >
+                            Duyệt
+                          </button>
+                        )}
+                        {['Pending','Approved'].includes(product.status) && (
+                          <button
+                            className="px-2 py-1 text-xs border border-yellow-500 text-yellow-600 rounded hover:bg-yellow-50 disabled:opacity-50"
+                            onClick={() => handleBlockClick(product.id)}
+                            title="Chặn sản phẩm"
+                            disabled={isProcessing}
+                          >
+                            Chặn
+                          </button>
+                        )}
+                        <button
+                          className="px-2 py-1 text-xs border border-red-500 text-red-600 rounded hover:bg-red-50 disabled:opacity-50"
+                          onClick={() => handleDeleteClick(product.id)}
+                          title="Xóa sản phẩm"
+                          disabled={isProcessing}
+                        >
+                          Xóa
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={8} className="px-4 py-4 text-center text-sm text-gray-500">Không tìm thấy sản phẩm nào.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
 
-              {loading ? (
-                 <div className="text-center py-5">
-                    <Spinner animation="border" variant="warning" role="status">
-                        <span className="visually-hidden">Đang tải...</span>
-                    </Spinner>
-                 </div>
-              ) : (
-                <>
-                  <Table responsive striped bordered hover className="align-middle">
-                    <thead>
-                      <tr>
-                        <th>#</th>
-                        <th>Tên sản phẩm</th>
-                        <th>Trạng thái</th>
-                        <th>Ngày tạo</th>
-                        <th>Ngày cập nhật</th>
-                        <th>Giá thấp nhất</th>
-                        <th>Giá cao nhất</th>
-                        <th>Hành động</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {products.length > 0 ? (
-                         products.map((product) => (
-                            <tr key={product.id}>
-                            <td>{product.id}</td>
-                            <td>
-                                <Link to={`/admin/products/${product.id}`}>
-                                    {product.name}
-                                </Link>
-                            </td>
-                            <td>
-                                <span
-                                className={`badge ${
-                                    product.status === 'Approved'
-                                    ? 'bg-success'
-                                    : product.status === 'Pending'
-                                    ? 'bg-warning text-dark' // Added text-dark for better contrast on yellow
-                                    : 'bg-danger'
-                                }`}
-                                >
-                                {product.status === 'Approved'
-                                    ? 'Đã duyệt'
-                                    : product.status === 'Pending'
-                                    ? 'Chờ duyệt'
-                                    : 'Vi phạm'}
-                                </span>
-                            </td>
-                            <td>{new Date(product.createdAt).toLocaleString()}</td>
-                            <td>{new Date(product.updatedAt).toLocaleString()}</td>
-                            <td>{product.minPrice.toLocaleString()} ₫</td>
-                            <td>{product.maxPrice.toLocaleString()} ₫</td>
-                            <td>
-                                {/* Conditional rendering of buttons */}
-                                {['Pending', 'Violated'].includes(product.status) && (
-                                <Button
-                                    variant="outline-success"
-                                    size="sm"
-                                    className="me-1 mb-1" // Added mb-1 for spacing on wrap
-                                    onClick={() => handleApprove(product.id)}
-                                    title="Duyệt sản phẩm" // Added title for accessibility
-                                >
-                                    Duyệt
-                                </Button>
-                                )}
-                                {['Pending','Approved'].includes(product.status) && (
-                                <Button
-                                    variant="outline-warning"
-                                    size="sm"
-                                    className="me-1 mb-1"
-                                    onClick={() => handleBlockClick(product.id)}
-                                    title="Chặn sản phẩm"
-                                >
-                                    Chặn
-                                </Button>
-                                )}
-                                <Button
-                                variant="outline-danger"
-                                size="sm"
-                                className="mb-1"
-                                onClick={() => handleDeleteClick(product.id)}
-                                title="Xóa sản phẩm"
-                                >
-                                Xóa
-                                </Button>
-                            </td>
-                            </tr>
-                         ))
-                      ) : (
-                         <tr>
-                             <td colSpan={8} className="text-center text-muted">Không tìm thấy sản phẩm nào.</td>
-                         </tr>
-                      )}
-                    </tbody>
-                  </Table>
-                   {/* Pagination Controls */}
-                    <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
-                        <div className='mb-2 mb-md-0'>
-                            {total > 0
-                            ? `Hiển thị ${
-                                (page - 1) * limit + 1 // Corrected start index
-                                } đến ${Math.min(
-                                page * limit,
-                                total,
-                                )} trong tổng số ${total} sản phẩm`
-                            : 'Không có sản phẩm'}
-                        </div>
-                        <div className="d-flex align-items-center">
-                            <Form.Label htmlFor="itemsPerPageSelect" className="me-2 mb-0 visually-hidden">Sản phẩm mỗi trang:</Form.Label>
-                            <Form.Select
-                                id="itemsPerPageSelect"
-                                value={limit}
-                                onChange={handleLimitChange}
-                                style={{ width: 'auto' }}
-                                className="me-3"
-                                aria-label="Số sản phẩm hiển thị mỗi trang"
-                            >
-                                <option value={10}>10 / trang</option>
-                                <option value={25}>25 / trang</option>
-                                <option value={50}>50 / trang</option>
-                                <option value={100}>100 / trang</option>
-                            </Form.Select>
-                            {totalPages > 1 && (
-                                <Pagination size="sm" className="mb-0">
-                                    {renderPaginationItems()}
-                                </Pagination>
-                            )}
-                        </div>
-                    </div>
-                </>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+          {/* Pagination Controls */}
+          <div className="flex flex-col md:flex-row justify-between items-center mt-4">
+            <div className='text-sm text-gray-600 mb-2 md:mb-0'>
+              {total > 0
+                ? `Hiển thị ${ (page - 1) * limit + 1 } đến ${Math.min( page * limit, total )} trong tổng số ${total} sản phẩm`
+                : 'Không có sản phẩm nào'
+              }
+            </div>
+            <div className="flex items-center space-x-2">
+                <label htmlFor="itemsPerPageSelect" className="text-sm text-gray-600">Hiển thị:</label>
+                <select
+                    id="itemsPerPageSelect"
+                    value={limit}
+                    onChange={handleLimitChange}
+                    className="p-1 border border-gray-300 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500"
+                    aria-label="Số sản phẩm hiển thị mỗi trang"
+                >
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                </select>
+                <span className="text-sm text-gray-600">/ trang</span>
+                <div className="ml-4">
+                    {renderPaginationItems()}
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      {/* Block Confirmation Modal */}
-      <Modal show={showBlockModal} onHide={handleCloseBlockModal} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Chặn sản phẩm</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-           {/* Display error inside the modal */}
-           {error && showBlockModal && <Alert variant="danger">{error}</Alert>}
-           {/* FIX: Add controlId */}
-          <Form.Group controlId="blockReasonTextarea">
-            <Form.Label>Lý do chặn:<span className="text-danger">*</span></Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={3}
-              value={blockReason}
-              onChange={(e) => setBlockReason(e.target.value)}
-              required // Make reason required if needed by API
-              aria-describedby="blockReasonHelp"
-            />
-             <Form.Text id="blockReasonHelp" muted>
-                Vui lòng nhập lý do chặn sản phẩm.
-            </Form.Text>
-          </Form.Group>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseBlockModal}>
-            Hủy
-          </Button>
-          <Button variant="warning" onClick={confirmBlock} disabled={!blockReason}> {/* Disable if reason is empty */}
-            Chặn
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      {/* Block Modal */}
+      {showBlockModal && (
+        <div className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-60 p-4">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+            <div className="flex justify-between items-center border-b pb-3 mb-4">
+               <h3 className="text-lg font-semibold text-gray-800">Chặn sản phẩm</h3>
+               <button onClick={handleCloseBlockModal} className="text-gray-400 hover:text-gray-600" disabled={isProcessing}>
+                    <X size={20} />
+               </button>
+            </div>
+            {/* Error display inside modal */}
+            {error && showBlockModal && <div className="p-3 mb-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">{error}</div>}
+            <div className="mb-4">
+                <label htmlFor="blockReasonTextarea" className="block text-sm font-medium text-gray-700 mb-1">Lý do chặn:<span className="text-red-500">*</span></label>
+                <textarea
+                  id="blockReasonTextarea"
+                  rows={3}
+                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                  value={blockReason}
+                  onChange={(e) => setBlockReason(e.target.value)}
+                  required
+                  aria-describedby="blockReasonHelp"
+                />
+                <p id="blockReasonHelp" className="mt-1 text-xs text-gray-500">Vui lòng nhập lý do chặn sản phẩm.</p>
+            </div>
+            <div className="flex justify-end gap-3 mt-5">
+               <button type="button" onClick={handleCloseBlockModal} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 text-sm font-medium" disabled={isProcessing}>Hủy</button>
+               <button
+                    type="button"
+                    onClick={confirmBlock}
+                    disabled={!blockReason || isProcessing}
+                    className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+               >
+                 {isProcessing ? (
+                   <>
+                     <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                     Đang xử lý...
+                   </>
+                 ) : 'Chặn'}
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* Delete Confirmation Modal */}
-      <Modal show={showDeleteModal} onHide={handleCloseDeleteModal} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Xác nhận xóa</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {/* Display error inside the modal */}
-           {error && showDeleteModal && <Alert variant="danger">{error}</Alert>}
-           {/* FIX: Add controlId */}
-          <Form.Group className="mb-3" controlId="deleteReasonTextarea">
-            <Form.Label>Lý do xóa (không bắt buộc):</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={3}
-              value={deleteReason}
-              onChange={(e) => setDeleteReason(e.target.value)}
-              aria-describedby="deleteReasonHelp"
-            />
-             <Form.Text id="deleteReasonHelp" muted>
-                Nhập lý do xóa (nếu có).
-            </Form.Text>
-          </Form.Group>
-          <p className="text-danger fw-bold">Bạn có chắc chắn muốn xóa sản phẩm này vĩnh viễn?</p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseDeleteModal}>
-            Hủy
-          </Button>
-          <Button variant="danger" onClick={confirmDelete}>
-            Xóa vĩnh viễn
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </Container>
+      {/* Delete Modal */}
+       {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-60 p-4">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+            <div className="flex justify-between items-center border-b pb-3 mb-4">
+               <h3 className="text-lg font-semibold text-gray-800">Xác nhận xóa</h3>
+               <button onClick={handleCloseDeleteModal} className="text-gray-400 hover:text-gray-600" disabled={isProcessing}>
+                  <X size={20} />
+               </button>
+            </div>
+             {/* Error display inside modal */}
+            {error && showDeleteModal && <div className="p-3 mb-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">{error}</div>}
+             <div className="mb-4">
+                <label htmlFor="deleteReasonTextarea" className="block text-sm font-medium text-gray-700 mb-1">Lý do xóa (không bắt buộc):</label>
+                <textarea
+                  id="deleteReasonTextarea"
+                  rows={3}
+                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                  value={deleteReason}
+                  onChange={(e) => setDeleteReason(e.target.value)}
+                  aria-describedby="deleteReasonHelp"
+                />
+                <p id="deleteReasonHelp" className="mt-1 text-xs text-gray-500">Nhập lý do xóa (nếu có).</p>
+             </div>
+             <p className="text-red-600 font-medium mb-5">Bạn có chắc chắn muốn xóa sản phẩm này vĩnh viễn?</p>
+             <div className="flex justify-end gap-3 mt-5">
+               <button type="button" onClick={handleCloseDeleteModal} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 text-sm font-medium" disabled={isProcessing}>Hủy</button>
+               <button
+                    type="button"
+                    onClick={confirmDelete}
+                    disabled={isProcessing}
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+                >
+                  {isProcessing ? (
+                   <>
+                     <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                     Đang xử lý...
+                   </>
+                 ) : 'Xóa vĩnh viễn'}
+               </button>
+             </div>
+          </div>
+        </div>
+       )}
+
+    </div>
   );
 };

@@ -1,17 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Container,
-  Row,
-  Col,
-  Card,
-  Button,
-  Table,
-  Spinner,
-  Alert,
-  Modal,
-} from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import '../../css/general.css';
+import { ChevronRight, Plus, Eye, Edit, Trash2, X } from 'lucide-react'; // Import icons
 
 interface Voucher {
   id: number;
@@ -36,59 +25,60 @@ export const VoucherListPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [voucherToDelete, setVoucherToDelete] = useState<number | null>(null);
-    const navigate = useNavigate();
-
+  const [isProcessing, setIsProcessing] = useState(false); // For modal delete
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const bootstrapLink = document.createElement('link');
-    bootstrapLink.rel = 'stylesheet';
-    bootstrapLink.href =
-      'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css';
-    document.head.appendChild(bootstrapLink);
     document.title = 'Quản lý Voucher';
-
-    const fetchVouchers = async () => {
-      try {
-        const response = await fetch('/api/vouchers'); // Use API Gateway route
-        if (response.ok) {
-          const data = await response.json();
-          setVouchers(data);
-        } else {
-          setError('Failed to fetch vouchers.');
-        }
-      } catch (err) {
-        setError('An error occurred while fetching vouchers.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchVouchers();
   }, []);
 
+  const fetchVouchers = async () => {
+    setLoading(true);
+    setError(null); // Reset error before fetch
+    setIsProcessing(false);
+    try {
+      const response = await fetch('/api/vouchers');
+      if (response.ok) {
+        const data = await response.json();
+        setVouchers(data);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setError(`Không thể tải danh sách voucher: ${errorData.message || response.statusText}`);
+      }
+    } catch (err) {
+      setError(`Đã xảy ra lỗi khi tải danh sách voucher: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteClick = (id: number) => {
+    setError(null); // Clear previous errors
     setVoucherToDelete(id);
     setShowDeleteModal(true);
   };
 
   const confirmDelete = async () => {
     if (voucherToDelete === null) return;
-
+    setError(null);
+    setIsProcessing(true);
     try {
-      const response = await fetch(`/api/vouchers/${voucherToDelete}`, {
-        method: 'DELETE',
-      });
-      if (response.ok) {
-        // Remove the deleted voucher from the state
+      const response = await fetch(`/api/vouchers/${voucherToDelete}`, { method: 'DELETE' });
+      if (response.ok || response.status === 204) {
         setVouchers(vouchers.filter((v) => v.id !== voucherToDelete));
-        setShowDeleteModal(false);
+        handleCloseModal(); // Close modal on success
       } else {
-        setError('Failed to delete voucher.');
-        setShowDeleteModal(false);
+        const errorData = await response.json().catch(() => ({}));
+        // Display error on the main page after closing modal might be better UX
+        setError(`Không thể xóa voucher: ${errorData.message || response.statusText}`);
+        handleCloseModal(); // Close modal even on error
       }
     } catch (err) {
-      setError('An error occurred while deleting the voucher.');
-      setShowDeleteModal(false);
+      setError(`Đã xảy ra lỗi khi xóa voucher: ${err instanceof Error ? err.message : String(err)}`);
+      handleCloseModal(); // Close modal on error
+    } finally {
+        setIsProcessing(false);
     }
   };
 
@@ -96,138 +86,173 @@ export const VoucherListPage = () => {
     setShowDeleteModal(false);
     setVoucherToDelete(null);
   };
-    const handleEditClick = (id: number) => {
-        navigate(`/admin/vouchers/edit/${id}`);
-    };
 
+  const handleEditClick = (id: number) => {
+    navigate(`/admin/vouchers/edit/${id}`);
+  };
 
+  // --- Render ---
   if (loading) {
     return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-        <Spinner animation="border" role="status" variant="warning">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
-      </Container>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+         <span className="ml-3 text-gray-600">Đang tải...</span>
+      </div>
     );
   }
 
-  if (error) {
+  // Show full page error if initial fetch failed
+  if (error && vouchers.length === 0) {
     return (
-      <Container>
-        <Alert variant="danger">{error}</Alert>
-      </Container>
+       <div className="container mx-auto px-4 py-6">
+            <div className="mb-4 text-sm text-gray-600 flex items-center">
+                <Link to="/admin" className="hover:text-orange-600 transition-colors">Trang chủ</Link>
+                <ChevronRight size={16} className="mx-1 text-gray-400" />
+                <span className="font-medium text-gray-800">Quản lý voucher</span>
+            </div>
+            <div className="p-4 bg-red-100 text-red-700 border border-red-400 rounded">
+                 {error}
+            </div>
+        </div>
     );
   }
+
 
   return (
-    <Container fluid className="shopee-page py-4">
-      <div className="breadcrumb-placeholder mb-3">
-        <h5 className="text-secondary">Trang chủ / Quản lý voucher</h5>
+    <div className="container mx-auto px-4 py-6">
+      {/* Breadcrumbs */}
+      <div className="mb-4 text-sm text-gray-600 flex items-center">
+          <Link to="/admin" className="hover:text-orange-600 transition-colors">Trang chủ</Link>
+          <ChevronRight size={16} className="mx-1 text-gray-400" />
+          <span className="font-medium text-gray-800">Quản lý voucher</span>
       </div>
 
-      <Row>
-        <Col xs={12}>
-          <Card className="border-0 shadow-sm">
-            <Card.Header className="bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-              <h4 className="mb-0 text-dark">Danh sách Voucher</h4>
-              <Link to="/admin/vouchers/add" className="btn btn-danger shopee-button">
-                Thêm Voucher
-              </Link>
-            </Card.Header>
-            <Card.Body>
-              <Table responsive striped bordered hover>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Tên Voucher</th>
-                    <th>Mã</th>
-                    <th>Ngày bắt đầu</th>
-                    <th>Ngày kết thúc</th>
-                    <th>Trạng thái</th>
-                    <th>Hành động</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {vouchers.map((voucher) => {
-                    const now = new Date();
-                    const startsAt = new Date(voucher.starts_at);
-                    const endsAt = new Date(voucher.ends_at);
-                    let status = 'Sắp diễn ra';
-                    if (now >= startsAt && now <= endsAt) {
-                      status = 'Đang diễn ra';
-                    } else if (now > endsAt) {
-                      status = 'Đã kết thúc';
-                    }
+      {/* Card */}
+      <div className="bg-white shadow-md rounded-lg overflow-hidden">
+        {/* Header */}
+        <div className="px-6 py-4 border-b flex justify-between items-center">
+          <h4 className="mb-0 text-xl font-semibold text-gray-800">Danh sách Voucher</h4>
+          <Link
+            to="/admin/vouchers/add"
+            className="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 text-sm font-medium"
+          >
+            <Plus size={18} className="mr-1"/> Thêm Voucher
+          </Link>
+        </div>
+        {/* Body */}
+        <div className="p-6">
+          {/* Display error if delete failed */}
+          {error && <div className="p-3 mb-4 bg-red-100 border border-red-400 text-red-700 rounded text-sm">{error}</div>}
 
-                    return (
-                      <tr key={voucher.id}>
-                        <td>{voucher.id}</td>
-                        <td>{voucher.name}</td>
-                        <td className="text-uppercase">{voucher.code}</td>
-                        <td>{new Date(voucher.starts_at).toLocaleString()}</td>
-                        <td>{new Date(voucher.ends_at).toLocaleString()}</td>
-                        <td>
-                            <span
-                                className={`badge ${
-                                status === 'Đang diễn ra'
-                                    ? 'bg-success'
-                                    : status === 'Sắp diễn ra'
-                                    ? 'bg-warning'
-                                    : 'bg-secondary'
-                                }`}
-                            >
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên Voucher</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày bắt đầu</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày kết thúc</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {vouchers.length === 0 ? (
+                     <tr>
+                         <td colSpan={7} className="px-4 py-4 text-center text-sm text-gray-500">Không có voucher nào.</td>
+                    </tr>
+                ) : (
+                    vouchers.map((voucher) => {
+                        const now = new Date();
+                        const startsAt = new Date(voucher.starts_at);
+                        const endsAt = new Date(voucher.ends_at);
+                        let status = 'Sắp diễn ra';
+                        let statusClass = 'bg-yellow-100 text-yellow-800'; // Upcoming
+                        if (now >= startsAt && now <= endsAt) {
+                        status = 'Đang diễn ra';
+                        statusClass = 'bg-green-100 text-green-800'; // Active
+                        } else if (now > endsAt) {
+                        status = 'Đã kết thúc';
+                        statusClass = 'bg-gray-100 text-gray-600'; // Expired
+                        }
+
+                        return (
+                        <tr key={voucher.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{voucher.id}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{voucher.name}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 uppercase">{voucher.code}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{startsAt.toLocaleString()}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{endsAt.toLocaleString()}</td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${statusClass}`}>
                                 {status}
                             </span>
-                        </td>
-
-                        <td>
-                          <Link
-                            to={`/admin/vouchers/${voucher.id}`}
-                            className="btn btn-sm btn-outline-info me-2"
-                          >
-                            Xem
-                          </Link>
-                          <Button
-                            variant="outline-secondary"
-                            size="sm"
-                            className="me-2"
-                            onClick={() => handleEditClick(voucher.id)}
-                          >
-                            Sửa
-                          </Button>
-                          <Button
-                            variant="outline-danger"
-                            size="sm"
-                            onClick={() => handleDeleteClick(voucher.id)}
-                          >
-                            Xóa
-                          </Button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </Table>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center text-sm font-medium space-x-1">
+                            <Link
+                                to={`/admin/vouchers/${voucher.id}`}
+                                className="inline-flex items-center px-2 py-1 text-xs border border-blue-500 text-blue-600 rounded hover:bg-blue-50"
+                                title="Xem chi tiết"
+                            >
+                                <Eye size={14} className="mr-1"/> Xem
+                            </Link>
+                            <button
+                                onClick={() => handleEditClick(voucher.id)}
+                                className="inline-flex items-center px-2 py-1 text-xs border border-gray-500 text-gray-600 rounded hover:bg-gray-100"
+                                title="Chỉnh sửa"
+                            >
+                                <Edit size={14} className="mr-1"/> Sửa
+                            </button>
+                            <button
+                                onClick={() => handleDeleteClick(voucher.id)}
+                                className="inline-flex items-center px-2 py-1 text-xs border border-red-500 text-red-600 rounded hover:bg-red-50"
+                                title="Xóa"
+                            >
+                                <Trash2 size={14} className="mr-1"/> Xóa
+                            </button>
+                            </td>
+                        </tr>
+                        );
+                    })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
       {/* Delete Confirmation Modal */}
-      <Modal show={showDeleteModal} onHide={handleCloseModal}>
-        <Modal.Header closeButton>
-          <Modal.Title>Xác nhận xóa</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>Bạn có chắc chắn muốn xóa voucher này?</Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseModal}>
-            Hủy
-          </Button>
-          <Button variant="danger" onClick={confirmDelete}>
-            Xóa
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </Container>
+       {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-60 p-4">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+             <div className="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">Xác nhận xóa</h3>
+                 <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600" disabled={isProcessing}>
+                    <X size={20} />
+                 </button>
+             </div>
+             <p className="mb-6 text-gray-600">Bạn có chắc chắn muốn xóa voucher này?</p>
+             <div className="flex justify-end gap-3 mt-5">
+               <button onClick={handleCloseModal} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 text-sm font-medium" disabled={isProcessing}>Hủy</button>
+               <button
+                    onClick={confirmDelete}
+                    disabled={isProcessing}
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium disabled:opacity-50 inline-flex items-center"
+                >
+                 {isProcessing ? (
+                   <>
+                     <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                     Đang xóa...
+                   </>
+                 ) : 'Xóa'}
+               </button>
+             </div>
+          </div>
+        </div>
+       )}
+
+    </div>
   );
 };
