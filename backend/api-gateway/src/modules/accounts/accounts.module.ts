@@ -6,7 +6,7 @@ import { HttpModule } from '@nestjs/axios';
 @Module({
   imports: [
     HttpModule.register({
-      baseURL: 'http://34.58.241.34:3008',
+      baseURL: process.env.ACCOUNTS_SERVICE_URL,
       // baseURL: 'http://localhost:3008',
     }),
   ],
