@@ -58,8 +58,8 @@ export const EditVoucherPage = () => {
     free_shipping_max: 0,
     buy_x_amount: 0,
     get_y_amount: 0,
-    created_at: '', 
-    updated_at: '', 
+    created_at: '',
+    updated_at: '',
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,21 +74,28 @@ export const EditVoucherPage = () => {
     document.title = 'Chỉnh sửa Voucher';
 
     const fetchVoucher = async () => {
+      setLoading(true);
+      setError(null); // Reset error on new fetch
       try {
         const response = await fetch(`/api/vouchers/${id}`);
         if (response.ok) {
           const data = await response.json();
 
+          // Format dates for datetime-local input
           data.starts_at = new Date(data.starts_at)
             .toISOString()
             .slice(0, 16);
           data.ends_at = new Date(data.ends_at).toISOString().slice(0, 16);
           setVoucherData(data);
-        } else {
-          setError('Failed to fetch voucher details.');
+        } else if (response.status === 404) {
+           setError('Không tìm thấy thông tin voucher.');
+        }
+         else {
+          const errorData = await response.json();
+          setError(errorData.message || 'Không thể tải thông tin voucher.');
         }
       } catch (err) {
-        setError('An error occurred while fetching voucher details.');
+        setError('Đã xảy ra lỗi khi tải thông tin voucher.');
       } finally {
         setLoading(false);
       }
@@ -140,6 +147,7 @@ export const EditVoucherPage = () => {
     setUpdateSuccess(false);
     setError(null);
 
+    // Prepare data for API (convert dates back to ISO string)
     const apiData = {
       name: voucherData.name,
       description: voucherData.description,
@@ -166,26 +174,26 @@ export const EditVoucherPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(apiData), 
+        body: JSON.stringify(apiData),
       });
 
       if (response.ok) {
         setUpdateSuccess(true);
-
-        navigate(`/admin/vouchers/${id}`);
+        // Optionally navigate away after a short delay or show success message longer
+        setTimeout(() => navigate(`/admin/vouchers/${id}`), 1500); // Navigate after 1.5s
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'An error occurred.');
+        setError(errorData.message || 'Đã xảy ra lỗi khi cập nhật.');
         console.error('Error updating voucher:', errorData);
       }
     } catch (error) {
-      setError('An unexpected error occurred.');
+      setError('Đã xảy ra lỗi không mong muốn.');
       console.error('Error updating voucher:', error);
     }
   };
 
   const handleCancel = () => {
-    navigate(-1); 
+    navigate(-1);
   };
 
   if (loading) {
@@ -201,27 +209,41 @@ export const EditVoucherPage = () => {
     );
   }
 
-  if (error && !loading) { 
+   // Handle error state after loading is complete
+   if (error && !loading) {
     return (
-      <Container>
-        <Alert variant="danger">{error}</Alert>
-         <Button variant="secondary" onClick={handleCancel}>
-            Quay lại
-         </Button>
-      </Container>
+        <Container fluid className="shopee-page py-4">
+             <div className="breadcrumb-placeholder mb-3">
+                <h5 className="text-secondary">
+                Trang chủ / Quản lý voucher / Chỉnh sửa voucher
+                </h5>
+             </div>
+             <Alert variant="danger">{error}</Alert>
+             <Button variant="secondary" onClick={handleCancel}>
+                 Quay lại
+             </Button>
+        </Container>
     );
-  }
+   }
 
+
+   // Handle case where voucher wasn't found (e.g., 404) but no other error occurred
    if (!voucherData.id && !loading && !error) {
-        return (
-            <Container>
-                <Alert variant="warning">Không tìm thấy thông tin voucher.</Alert>
-                 <Button variant="secondary" onClick={handleCancel}>
-                    Quay lại
-                 </Button>
-            </Container>
-        );
-    }
+     return (
+         <Container fluid className="shopee-page py-4">
+              <div className="breadcrumb-placeholder mb-3">
+                 <h5 className="text-secondary">
+                 Trang chủ / Quản lý voucher / Chỉnh sửa voucher
+                 </h5>
+              </div>
+              <Alert variant="warning">Không tìm thấy thông tin voucher.</Alert>
+              <Button variant="secondary" onClick={handleCancel}>
+                 Quay lại
+              </Button>
+         </Container>
+     );
+ }
+
 
   return (
     <Container fluid className="shopee-page py-4">
@@ -240,11 +262,11 @@ export const EditVoucherPage = () => {
             <Card.Body>
               {updateSuccess && (
                 <Alert variant="success">
-                  Voucher updated successfully!
+                  Voucher đã được cập nhật thành công!
                 </Alert>
               )}
-              {}
-              {error && !loading && (
+              {/* Display error message if update fails */}
+              {error && !updateSuccess && (
                  <Alert variant="danger">{error}</Alert>
                )}
               <Form onSubmit={handleSubmit}>
@@ -256,7 +278,6 @@ export const EditVoucherPage = () => {
                   </Col>
 
                   <Col md={6}>
-                    {}
                     <Form.Group className="mb-3" controlId="editVoucherName">
                       <Form.Label className="fw-medium">
                         Tên voucher<span className="text-danger">*</span>
@@ -273,7 +294,6 @@ export const EditVoucherPage = () => {
                   </Col>
 
                   <Col md={6}>
-                     {}
                     <Form.Group className="mb-3" controlId="editVoucherCode">
                       <Form.Label className="fw-medium">
                         Mã voucher<span className="text-danger">*</span>
@@ -294,13 +314,12 @@ export const EditVoucherPage = () => {
                   </Col>
 
                   <Col md={12}>
-                     {}
                     <Form.Group className="mb-3" controlId="editVoucherDescription">
                       <Form.Label className="fw-medium">Mô tả</Form.Label>
                       <Form.Control
                         as="textarea"
                         name="description"
-                        value={voucherData.description || ''} 
+                        value={voucherData.description || ''}
                         onChange={handleChange}
                         placeholder="Nhập mô tả cho voucher"
                         rows={3}
@@ -309,7 +328,6 @@ export const EditVoucherPage = () => {
                   </Col>
 
                   <Col md={6}>
-                     {}
                     <Form.Group className="mb-3" controlId="editVoucherStartDate">
                       <Form.Label className="fw-medium">
                         Ngày bắt đầu<span className="text-danger">*</span>
@@ -325,7 +343,6 @@ export const EditVoucherPage = () => {
                   </Col>
 
                   <Col md={6}>
-                     {}
                     <Form.Group className="mb-3" controlId="editVoucherEndDate">
                       <Form.Label className="fw-medium">
                         Ngày kết thúc<span className="text-danger">*</span>
@@ -341,7 +358,6 @@ export const EditVoucherPage = () => {
                   </Col>
 
                   <Col md={6}>
-                     {}
                     <Form.Group className="mb-3" controlId="editVoucherPerCustomerLimit">
                       <Form.Label className="fw-medium">
                         Giới hạn sử dụng mỗi khách hàng
@@ -357,7 +373,6 @@ export const EditVoucherPage = () => {
                   </Col>
 
                   <Col md={6}>
-                     {}
                     <Form.Group className="mb-3" controlId="editVoucherTotalUsageLimit">
                       <Form.Label className="fw-medium">
                         Tổng số lượt sử dụng tối đa
@@ -381,7 +396,6 @@ export const EditVoucherPage = () => {
                   </Col>
 
                   <Col md={12}>
-                     {}
                     <Form.Group className="mb-3" controlId="editConditionType">
                       <Form.Label className="fw-medium">
                         Loại điều kiện
@@ -407,7 +421,6 @@ export const EditVoucherPage = () => {
 
                   {voucherData.condition_type === 'min_order' && (
                     <Col md={6}>
-                       {}
                       <Form.Group className="mb-3" controlId="editMinOrderAmount">
                         <Form.Label className="fw-medium">
                           Giá trị đơn hàng tối thiểu (VNĐ)
@@ -428,7 +441,6 @@ export const EditVoucherPage = () => {
 
                   {voucherData.condition_type === 'min_products' && (
                     <Col md={6}>
-                       {}
                       <Form.Group className="mb-3" controlId="editMinProducts">
                         <Form.Label className="fw-medium">
                           Số lượng sản phẩm tối thiểu
@@ -447,12 +459,15 @@ export const EditVoucherPage = () => {
                   {voucherData.condition_type === 'specific_products' && (
                     <Col md={12} className="mb-3">
                       <div className="border rounded p-3 bg-light">
-                        <p className="mb-2">
-                          Chọn sản phẩm cụ thể (tính năng sẽ được cập nhật sau)
-                        </p>
-                        <Button variant="outline-secondary" size="sm">
-                          <i className="me-1">+</i> Thêm sản phẩm
-                        </Button>
+                        {/* Added controlId here for potential future testing */}
+                        <Form.Group controlId="editSpecificProductsPlaceholder">
+                            <p className="mb-2">
+                            Chọn sản phẩm cụ thể (tính năng sẽ được cập nhật sau)
+                            </p>
+                            <Button variant="outline-secondary" size="sm">
+                            <i className="me-1">+</i> Thêm sản phẩm
+                            </Button>
+                        </Form.Group>
                       </div>
                     </Col>
                   )}
@@ -466,7 +481,6 @@ export const EditVoucherPage = () => {
                   </Col>
 
                   <Col md={12}>
-                     {}
                     <Form.Group className="mb-3" controlId="editActionType">
                       <Form.Label className="fw-medium">Loại giảm giá</Form.Label>
                       <Form.Select
@@ -491,7 +505,6 @@ export const EditVoucherPage = () => {
 
                   {voucherData.action_type === 'fixed_amount' && (
                     <Col md={6}>
-                       {}
                       <Form.Group className="mb-3" controlId="editDiscountAmount">
                         <Form.Label className="fw-medium">
                           Số tiền giảm (VNĐ)
@@ -513,7 +526,6 @@ export const EditVoucherPage = () => {
                   {(voucherData.action_type === 'percentage' ||
                     voucherData.action_type === 'product_percentage') && (
                     <Col md={6}>
-                       {}
                       <Form.Group className="mb-3" controlId="editDiscountPercentage">
                         <Form.Label className="fw-medium">
                           Phần trăm giảm giá (%)
@@ -535,7 +547,6 @@ export const EditVoucherPage = () => {
 
                   {voucherData.action_type === 'free_shipping' && (
                     <Col md={6}>
-                       {}
                       <Form.Group className="mb-3" controlId="editFreeShippingMax">
                         <Form.Label className="fw-medium">
                           Mức hỗ trợ vận chuyển tối đa (VNĐ)
@@ -557,7 +568,6 @@ export const EditVoucherPage = () => {
                   {voucherData.action_type === 'buy_x_get_y' && (
                     <>
                       <Col md={6}>
-                         {}
                         <Form.Group className="mb-3" controlId="editBuyXAmount">
                           <Form.Label className="fw-medium">
                             Mua X sản phẩm
@@ -572,7 +582,6 @@ export const EditVoucherPage = () => {
                         </Form.Group>
                       </Col>
                       <Col md={6}>
-                         {}
                         <Form.Group className="mb-3" controlId="editGetYAmount">
                           <Form.Label className="fw-medium">
                             Tặng Y sản phẩm
