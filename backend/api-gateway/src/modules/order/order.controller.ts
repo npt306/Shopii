@@ -1,59 +1,27 @@
-import { Controller, Post, Get, Param } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { OrderService } from './order.service';
 
-@Controller('order')
+@Controller('/order')
 export class OrderController {
-  constructor(private readonly httpService: HttpService) {}
+  constructor(
+    private readonly orderService: OrderService,
+    private readonly httpService: HttpService,
+  ) {}
 
   @Post('/carts/add-to-cart')
-  async addToCart() {
-    try {
-      const response = await this.httpService.post(
-        `${process.env.ORDER_SERVICE_URL}/carts/add-to-cart`,
-      );
-      if (response) {
-        return response;
-      } else {
-        throw new Error('No response from the server');
-      }
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
+  async addToCart(@Body() addToCartDto: any): Promise<any> {
+    return this.orderService.addToCart(addToCartDto);
   }
 
   @Post('/carts/delete-from-cart')
-  async deleteFromCart() {
-    try {
-      const response = await this.httpService.post(
-        `${process.env.ORDER_SERVICE_URL}/carts/delete-from-cart`,
-      );
-      if (response) {
-        return response;
-      } else {
-        throw new Error('No response from the server');
-      }
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
+  async deleteFromCart(@Body() deleteFromCartDto: any): Promise<any> {
+    return this.orderService.deleteFromCart(deleteFromCartDto);
   }
 
   @Post('/carts/update-cart')
-  async updateCart() {
-    try {
-      const response = await this.httpService.post(
-        `${process.env.ORDER_SERVICE_URL}/carts/update-cart`,
-      );
-      if (response) {
-        return response;
-      } else {
-        throw new Error('No response from the server');
-      }
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
+  async updateCart(@Body() updateCartDto: any): Promise<any> {
+    return this.orderService.updateCart(updateCartDto);
   }
 
   @Get('/carts/delete-all-cart/:customerId')

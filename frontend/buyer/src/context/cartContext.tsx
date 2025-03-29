@@ -4,8 +4,11 @@ import axios from "axios";
 
 import { Account } from "../types/account";
 
-import { API_GATEWAY_URL } from "../config/url";
-import { ORDER_SERVICE_LOCALHOST } from "../config/url";
+import {
+  ORDER_SERVICE_LOCALHOST,
+  API_GATEWAY_LOCALHOST,
+  API_GATEWAY_URL,
+} from "../config/url";
 
 type CartContextType = {
   cartData: any[];
@@ -31,6 +34,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(true);
       const response = await axios.get<BasicCart>(
         // `${ORDER_SERVICE_LOCALHOST}/carts/basic/${res?.accountId}`
+        // `${API_GATEWAY_LOCALHOST}/order/carts/basic/${res?.accountId}`
         `${API_GATEWAY_URL}/order/carts/basic/${res?.accountId}`
       );
       setCartData(response.data.res);
