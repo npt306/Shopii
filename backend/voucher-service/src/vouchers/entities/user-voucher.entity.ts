@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Voucher } from './voucher.entity';
 
 @Entity('UserVouchers')
 export class UserVoucher {
@@ -7,6 +8,10 @@ export class UserVoucher {
 
   @Column()
   VoucherId: number;
+
+  @ManyToOne(() => Voucher)
+  @JoinColumn({ name: 'VoucherId' })
+  voucher: Voucher;
 
   @Column()
   OwnerId: number;
@@ -22,5 +27,4 @@ export class UserVoucher {
 
   @UpdateDateColumn({ name: 'UpdatedAt' }) 
   UpdatedAt: Date;
-
 }

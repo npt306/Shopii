@@ -1,30 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Spinner, Table, Alert } from 'react-bootstrap';
 import { useParams, Link } from 'react-router-dom';
-import '../../css/general.css';
+import { ChevronRight, ArrowLeft } from 'lucide-react'; 
 
 interface ProductDetail {
-  type_id: number;
-  type_1: string;
-  type_2: string;
-  image: string;
-  price: number;
-  quantity: number;
+    type_id: number;
+    type_1: string; 
+    type_2: string; 
+    image: string;  
+    price: number;  
+    quantity: number; 
+}
+
+interface Classification {
+    classTypeName: string; 
+    level: number;         
 }
 
 interface Product {
-  name: string;
-  description: string;
-  categories: string[];
-  images: string[];
-  soldQuantity: number;
-  rating: number;
-  coverImage: string;
-  video: string;
-  quantity: number;
-  reviews: number;
-  classifications: { classTypeName: string; level: number }[];
-  details: ProductDetail[];
+
+    id: number;
+    name: string;
+    description: string;
+    categories: string[]; 
+    images: string[];     
+    soldQuantity: number;
+    rating: number;
+    coverImage: string;   
+    video: string | null; 
+    quantity: number;     
+    reviews: number;      
+    classifications: Classification[]; 
+    details: ProductDetail[];           
+
 }
 
 export const AdminProductDetailPage = () => {
@@ -34,26 +41,26 @@ export const AdminProductDetailPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const bootstrapLink = document.createElement('link');
-    bootstrapLink.rel = 'stylesheet';
-    bootstrapLink.href =
-      'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css';
-    document.head.appendChild(bootstrapLink);
-    document.title = 'Chi tiết sản phẩm';
+    document.title = `Chi tiết sản phẩm #${id}`; 
 
     const fetchProduct = async () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/product/admin/products/${id}`);
+
+        const response = await fetch(`/api/product/admin/products/${id}`); 
+
         if (response.ok) {
           const data: Product = await response.json();
           setProduct(data);
+        } else if (response.status === 404) {
+            setError('Sản phẩm không tồn tại.');
         } else {
-          setError('Không thể tải thông tin sản phẩm.');
+          const errorData = await response.json().catch(() => ({}));
+          setError(`Không thể tải thông tin sản phẩm: ${errorData.message || response.statusText}`);
         }
       } catch (err) {
-        setError('Đã xảy ra lỗi khi tải thông tin sản phẩm.');
+        setError(`Đã xảy ra lỗi khi tải thông tin sản phẩm: ${err instanceof Error ? err.message : String(err)}`);
       } finally {
         setLoading(false);
       }
@@ -64,151 +71,206 @@ export const AdminProductDetailPage = () => {
 
   if (loading) {
     return (
-      <Container
-        className="d-flex justify-content-center align-items-center"
-        style={{ minHeight: '200px' }}
-      >
-        <Spinner animation="border" role="status" variant="warning">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
-      </Container>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+        <span className="ml-3 text-gray-600">Đang tải...</span>
+      </div>
     );
   }
 
-  if (error) {
+   if (error) {
     return (
-      <Container>
-        <Alert variant="danger">{error}</Alert>
-      </Container>
+        <div className="container mx-auto px-4 py-6">
+             <div className="mb-4 text-sm text-gray-600 flex items-center">
+                <Link to="/admin" className="hover:text-orange-600 transition-colors">Trang chủ</Link>
+                <ChevronRight size={16} className="mx-1 text-gray-400" />
+                <Link to="/admin/products" className="hover:text-orange-600 transition-colors">Quản lý sản phẩm</Link>
+                <ChevronRight size={16} className="mx-1 text-gray-400" />
+                <span className="font-medium text-gray-800">Lỗi</span>
+             </div>
+             <div className="p-4 bg-red-100 text-red-700 border border-red-400 rounded">
+                 {error}
+             </div>
+             <Link
+                to="/admin/products"
+                className="mt-4 inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm"
+              >
+                <ArrowLeft size={16} className="mr-1" /> Quay lại danh sách
+            </Link>
+        </div>
     );
-  }
+   }
 
-  if (!product) {
-    return (
-      <Container>
-        <Alert variant="info">Sản phẩm không tồn tại.</Alert>
-      </Container>
-    );
-  }
+   if (!product) {
+      return (
+          <div className="container mx-auto px-4 py-6">
+               <div className="p-4 bg-yellow-100 text-yellow-700 border border-yellow-400 rounded">
+                   Sản phẩm không tồn tại.
+               </div>
+                 <Link
+                    to="/admin/products"
+                    className="mt-4 inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm"
+                  >
+                    <ArrowLeft size={16} className="mr-1" /> Quay lại danh sách
+                </Link>
+          </div>
+      );
+   }
 
   return (
-    <Container fluid className="shopee-page py-4">
-      {' '}
-      {/* Reuse shopee-page class */}
-      <div className="breadcrumb-placeholder mb-3">
-        <h5 className="text-secondary">
-          Trang chủ / Quản lý sản phẩm / Chi tiết sản phẩm
-        </h5>
+    <div className="container mx-auto px-4 py-6">
+      {/* Breadcrumbs */}
+      <div className="mb-4 text-sm text-gray-600 flex items-center">
+        <Link to="/admin" className="hover:text-orange-600 transition-colors">Trang chủ</Link>
+        <ChevronRight size={16} className="mx-1 text-gray-400" />
+        <Link to="/admin/products" className="hover:text-orange-600 transition-colors">Quản lý sản phẩm</Link>
+        <ChevronRight size={16} className="mx-1 text-gray-400" />
+        <span className="font-medium text-gray-800">Chi tiết sản phẩm</span>
       </div>
-      <Row>
-        <Col xs={12}>
-          <Card className="border-0 shadow-sm">
-            <Card.Header className="bg-white border-bottom py-3">
-              <h4 className="mb-0 text-dark">Chi tiết sản phẩm</h4>
-            </Card.Header>
-            <Card.Body>
-              <Row>
-                <Col md={6}>
-                  <p>
-                    <strong>Tên sản phẩm:</strong> {product.name}
-                  </p>
-                  <p>
-                    <strong>Mô tả:</strong> {product.description}
-                  </p>
-                  <p>
-                    <strong>Danh mục:</strong>{' '}
-                    {product.categories ? product.categories.join(', ') : 'N/A'}
-                  </p>
-                  <p>
-                    <strong>Số lượng đã bán:</strong> {product.soldQuantity}
-                  </p>
-                  <p>
-                    <strong>Đánh giá:</strong> {product.rating}
-                  </p>
-                  <p>
-                    <strong>Số lượng đánh giá:</strong> {product.reviews}
-                  </p>
-                </Col>
-                <Col md={6}>
-                  <p>
-                    <strong>Ảnh bìa:</strong>{' '}
-                    <img
-                      src={product.coverImage}
-                      alt="Cover"
-                      style={{ maxWidth: '100px' }}
-                    />
-                  </p>
-                  <p>
-                    <strong>Video:</strong>{' '}
-                    {product.video ? (
-                      <a href={product.video} target="_blank" rel="noreferrer">
-                        Xem video
-                      </a>
-                    ) : (
-                      'N/A'
-                    )}
-                  </p>
-                  <p>
-                    <strong>Tổng số lượng:</strong> {product.quantity}
-                  </p>
-                  <p>
-                    <strong>Phân loại:</strong>
-                  </p>
-                  <ul>
-                    {product.classifications.map((c, index) => (
-                      <li key={index}>
-                        {c.classTypeName} (Cấp độ: {c.level})
-                      </li>
-                    ))}
-                  </ul>
-                </Col>
-              </Row>
-              <Row className="mt-3">
-                <Col>
-                  <h5>Chi tiết sản phẩm:</h5>
-                  <Table striped bordered hover>
-                    <thead>
-                      <tr>
-                        <th>#</th>
-                        <th>Loại 1</th>
-                        <th>Loại 2</th>
-                        <th>Hình ảnh</th>
-                        <th>Giá</th>
-                        <th>Số lượng</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {product.details.map((detail, index) => (
-                        <tr key={index}>
-                          <td>{index + 1}</td>
-                          <td>{detail.type_1}</td>
-                          <td>{detail.type_2}</td>
-                          <td>
+
+      {/* Main Content Card */}
+      <div className="bg-white shadow-md rounded-lg overflow-hidden">
+        <div className="px-6 py-4 border-b">
+          <h4 className="text-xl font-semibold text-gray-800">Chi tiết sản phẩm - #{product.id}</h4>
+        </div>
+        <div className="p-6 space-y-6">
+          {/* Basic Info Section - Removed fields not in detail API */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Cover Image */}
+            <div className="md:col-span-1">
+                <h5 className="font-medium text-gray-700 mb-2">Ảnh bìa</h5>
+                <img
+                    src={product.coverImage}
+                    alt={`Ảnh bìa ${product.name}`}
+                    className="w-full h-auto max-h-80 object-contain rounded border"
+                />
+            </div>
+
+            {/* Text Details */}
+            <div className="md:col-span-1 space-y-4 text-sm">
+                 <div>
+                  <h5 className="font-medium text-gray-500 mb-1">Tên sản phẩm</h5>
+                  <p className="text-gray-900 font-semibold text-base">{product.name}</p>
+                </div>
+                 <div>
+                  <h5 className="font-medium text-gray-500 mb-1">Danh mục</h5>
+                  <p className="text-gray-600">{product.categories?.join(', ') || 'N/A'}</p>
+                </div>
+                 <div>
+                  <h5 className="font-medium text-gray-500 mb-1">Đánh giá</h5>
+                  <p className="text-gray-600">{product.rating} ⭐ ({product.reviews} đánh giá)</p>
+                </div>
+                 <div>
+                  <h5 className="font-medium text-gray-500 mb-1">Đã bán / Tổng tồn kho</h5>
+                  <p className="text-gray-600">{product.soldQuantity} / {product.quantity}</p>
+                </div>
+                {/* Removed Status, Dates, Min/Max Price */}
+            </div>
+
+            <div className="md:col-span-2 pt-4 border-t">
+              <h5 className="font-medium text-gray-700 mb-1">Mô tả</h5>
+              <p className="text-gray-600 text-sm whitespace-pre-wrap">{product.description}</p>
+            </div>
+
+             {/* Other Images Section */}
+              {product.images && product.images.length > 0 && (
+                <div className="md:col-span-2 pt-4 border-t">
+                    <h5 className="font-medium text-gray-700 mb-2">Hình ảnh khác</h5>
+                    <div className="flex flex-wrap gap-2">
+                        {product.images.map((img, index) => (
                             <img
-                              src={detail.image}
-                              alt="Detail"
-                              style={{ maxWidth: '50px' }}
+                                key={index}
+                                src={img}
+                                alt={`Hình ảnh ${index + 1} của ${product.name}`}
+                                className="h-20 w-20 object-cover rounded border cursor-pointer hover:opacity-80"
+                                onClick={() => window.open(img, '_blank')} 
                             />
-                          </td>
-                          <td>{detail.price.toLocaleString()} ₫</td>
-                          <td>{detail.quantity}</td>
+                        ))}
+                    </div>
+                </div>
+              )}
+
+             {/* Video Section - Added */}
+              {product.video && (
+                <div className="md:col-span-2 pt-4 border-t">
+                    <h5 className="font-medium text-gray-700 mb-2">Video sản phẩm</h5>
+                    <div className="aspect-video w-full max-w-xl"> {/* Maintain aspect ratio */}
+                        <video
+                            controls
+                            src={product.video}
+                            className="w-full h-full rounded border bg-black" 
+                        >
+                            Trình duyệt của bạn không hỗ trợ thẻ video.
+                        </video>
+                    </div>
+                </div>
+              )}
+
+          </div>
+
+          {/* Classifications */}
+           {product.classifications && product.classifications.length > 0 && (
+            <div className="pt-4 border-t">
+                 <h5 className="font-medium text-lg text-gray-800 mb-3">Phân loại</h5>
+                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                     {product.classifications.map((c, index) => (
+                        <li key={index}>{c.classTypeName} (Cấp độ: {c.level})</li>
+                    ))}
+                 </ul>
+            </div>
+           )}
+
+          {/* Product Details Table */}
+           {product.details && product.details.length > 0 && (
+            <div className="pt-4 border-t">
+                 <h5 className="font-medium text-lg text-gray-800 mb-3">Chi tiết biến thể</h5>
+                 <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200 border">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#ID</th>
+                          {/* Dynamically add headers based on classifications */}
+                          {product.classifications?.find(c => c.level === 1) && <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{product.classifications.find(c => c.level === 1)?.classTypeName}</th>}
+                          {product.classifications?.find(c => c.level === 2) && <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{product.classifications.find(c => c.level === 2)?.classTypeName}</th>}
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ảnh</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Giá</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Số lượng</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </Col>
-              </Row>
-              <Row className="mt-4">
-                <Col>
-                  <Link to="/admin/products" className="btn btn-secondary">
-                    Quay lại
-                  </Link>
-                </Col>
-              </Row>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {product.details.map((detail) => (
+                          <tr key={detail.type_id}>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{detail.type_id}</td>
+                            {product.classifications?.find(c => c.level === 1) && <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{detail.type_1}</td>}
+                            {product.classifications?.find(c => c.level === 2) && <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{detail.type_2}</td>}
+                            <td className="px-4 py-2 whitespace-nowrap">
+                              {detail.image ? (
+                                 <img src={detail.image} alt={`${detail.type_1 || ''} ${detail.type_2 || ''}`} className="h-10 w-10 object-cover rounded" />
+                              ) : (
+                                <div className='h-10 w-10 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500'>No Img</div>
+                              )}
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">{detail.price.toLocaleString()} ₫</td>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">{detail.quantity}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                </div>
+              </div>
+            )}
+
+          {/* Back Button */}
+          <div className="mt-6 border-t pt-4">
+            <Link
+              to="/admin/products"
+              className="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm transition-colors"
+            >
+               <ArrowLeft size={16} className="mr-1" /> Quay lại danh sách
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };

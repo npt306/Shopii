@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, Plus, Eye, Edit, Trash2, X, Search } from 'lucide-react';
+import { ChevronRight, Plus, Eye, Edit, Trash2, X, Search } from 'lucide-react'; // Added Search
 
-// Interface Voucher remains the same
 interface Voucher {
   id: number;
   name: string;
@@ -20,7 +19,7 @@ interface Voucher {
   updated_at: string;
 }
 
-// Interface VoucherListResponse remains the same
+// New interface for the API response
 interface VoucherListResponse {
     data: Voucher[];
     total: number;
@@ -28,91 +27,82 @@ interface VoucherListResponse {
 
 
 export const VoucherListPage = () => {
-  // --- State variables remain the same ---
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [voucherToDelete, setVoucherToDelete] = useState<number | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false); // For modal delete
+
+  // --- New State for Pagination, Search, Filter ---
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState(''); // '', 'active', 'upcoming', 'expired'
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentSearch, setCurrentSearch] = useState('');
+  const [currentSearch, setCurrentSearch] = useState(''); // To trigger fetch on button click
+
 
   const navigate = useNavigate();
 
+  // --- Updated useEffect ---
   useEffect(() => {
     document.title = 'Quản lý Voucher';
     fetchVouchers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, limit, statusFilter, currentSearch]);
+  }, [page, limit, statusFilter, currentSearch]); // Add dependencies
 
-  // --- fetchVouchers function with improved safety ---
+  // --- Updated fetchVouchers ---
   const fetchVouchers = async () => {
     setLoading(true);
-    setError(null);
+    setError(null); // Reset error before fetch
     setIsProcessing(false);
     try {
+      // Build query parameters
       const params = new URLSearchParams();
       params.append('page', page.toString());
       params.append('limit', limit.toString());
       if (statusFilter) {
         params.append('status', statusFilter);
       }
-      if (currentSearch) {
+      if (currentSearch) { // Use currentSearch for the API call
         params.append('search', currentSearch);
       }
 
-      const url = `/api/vouchers?${params.toString()}`;
-      console.log("Fetching:", url);
+      const url = `/api/vouchers?${params.toString()}`; // Use the correct gateway endpoint
+      console.log("Fetching:", url); // Log the URL being fetched
 
       const response = await fetch(url);
 
       if (response.ok) {
-        const result: VoucherListResponse = await response.json();
-
-        // --- FIX: Ensure data and total are set safely ---
-        const fetchedData = result.data || []; // Default to empty array if data is missing/null/undefined
-        const fetchedTotal = result.total || 0;   // Default to 0 if total is missing/null/undefined
-
-        setVouchers(fetchedData);
-        setTotal(fetchedTotal);
-        // ----------------------------------------------------
-
-        // Adjust page if current page becomes invalid
-        const calculatedTotalPages = Math.ceil(fetchedTotal / limit);
-         if (fetchedTotal > 0 && page > calculatedTotalPages) {
-            // Fetch again for the last valid page if current page is out of bounds
-             setPage(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
-             // Note: This might cause a double fetch if the API call itself adjusts the page.
-             // Consider if the backend already handles invalid page numbers gracefully.
-             // If the backend returns data for page 1 when page > totalPages is requested,
-             // you might not need this client-side adjustment.
-         } else if (fetchedTotal === 0 && page !== 1) {
+        const result: VoucherListResponse = await response.json(); // Expect { data: [], total: number }
+        setVouchers(result.data);
+        setTotal(result.total);
+        // Adjust page if current page becomes invalid after filtering/searching
+        const calculatedTotalPages = Math.ceil(result.total / limit);
+         if (result.total > 0 && page > calculatedTotalPages) {
+            setPage(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
+         } else if (result.total === 0 && page !== 1) {
              setPage(1); // Reset to page 1 if no results
          }
 
       } else {
         const errorData = await response.json().catch(() => ({}));
         setError(`Không thể tải danh sách voucher: ${errorData.message || response.statusText}`);
-        setVouchers([]); // Ensure vouchers is an empty array on error
-        setTotal(0);     // Ensure total is 0 on error
+        setVouchers([]); // Clear vouchers on error
+        setTotal(0);     // Reset total on error
       }
     } catch (err) {
       setError(`Đã xảy ra lỗi khi tải danh sách voucher: ${err instanceof Error ? err.message : String(err)}`);
-       setVouchers([]); // Ensure vouchers is an empty array on catch
-       setTotal(0);     // Ensure total is 0 on catch
+       setVouchers([]); // Clear vouchers on error
+       setTotal(0);     // Reset total on error
     } finally {
       setLoading(false);
     }
   };
 
-  // --- Other handlers remain the same ---
   const handleDeleteClick = (id: number) => {
-    setError(null);
+    setError(null); // Clear previous errors
     setVoucherToDelete(id);
     setShowDeleteModal(true);
   };
@@ -124,17 +114,17 @@ export const VoucherListPage = () => {
     try {
       const response = await fetch(`/api/vouchers/${voucherToDelete}`, { method: 'DELETE' });
       if (response.ok || response.status === 204) {
-        // Instead of filtering, refetch to get the correct total and potentially new page data
-        fetchVouchers();
-        handleCloseModal();
+        // Refetch data to get the updated list and total count
+        fetchVouchers(); // This will use the current page, limit, filter, search states
+        handleCloseModal(); // Close modal on success
       } else {
         const errorData = await response.json().catch(() => ({}));
         setError(`Không thể xóa voucher: ${errorData.message || response.statusText}`);
-        handleCloseModal();
+        handleCloseModal(); // Close modal even on error
       }
     } catch (err) {
       setError(`Đã xảy ra lỗi khi xóa voucher: ${err instanceof Error ? err.message : String(err)}`);
-      handleCloseModal();
+      handleCloseModal(); // Close modal on error
     } finally {
         setIsProcessing(false);
     }
@@ -149,47 +139,42 @@ export const VoucherListPage = () => {
     navigate(`/admin/vouchers/edit/${id}`);
   };
 
+  // --- New Handlers for Pagination, Search, Filter ---
   const handlePageChange = (newPage: number) => {
-    const calculatedTotalPages = Math.ceil(total / limit);
-    if (newPage >= 1 && newPage <= calculatedTotalPages && newPage !== page) {
+    if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
       setPage(newPage);
-    } else if (newPage < 1 && page !== 1) {
-        setPage(1); // Go to first page if trying to go below 1
-    } else if (newPage > calculatedTotalPages && page !== calculatedTotalPages && calculatedTotalPages > 0) {
-        setPage(calculatedTotalPages); // Go to last page if trying to go beyond
     }
   };
 
   const handleLimitChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setLimit(parseInt(event.target.value, 10));
-    setPage(1);
+    setPage(1); // Reset page when limit changes
   };
 
   const handleStatusFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setStatusFilter(event.target.value);
-    setPage(1);
+    setPage(1); // Reset page on filter change
   };
 
   const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
+    setSearchQuery(event.target.value); // Update search input state immediately
   };
 
   const handleSearchSubmit = (event?: React.FormEvent) => {
     if (event) event.preventDefault();
-    setPage(1);
-    setCurrentSearch(searchQuery);
+    setPage(1); // Reset page on new search
+    setCurrentSearch(searchQuery); // Update currentSearch to trigger fetch in useEffect
   };
 
-  // --- Pagination Logic (totalPages calculation moved here) ---
+  // --- Pagination Logic ---
   const totalPages = Math.ceil(total / limit);
 
   const renderPaginationItems = () => {
-        // ... (Keep the existing pagination rendering logic) ...
         const items = [];
         const maxPagesToShow = 5;
         let startPage, endPage;
 
-        if (totalPages <= 1) return null;
+        if (totalPages <= 1) return null; // No pagination if only 1 page or less
 
         if (totalPages <= maxPagesToShow) {
           startPage = 1;
@@ -209,6 +194,7 @@ export const VoucherListPage = () => {
           }
         }
 
+        // First and Previous
         items.push(
           <button key="first" onClick={() => handlePageChange(1)} disabled={page === 1} className="px-3 py-1 border rounded-l-md bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">First</button>
         );
@@ -232,6 +218,7 @@ export const VoucherListPage = () => {
           items.push(<span key="end-ellipsis" className={`px-3 py-1 border-t border-b ${endPage >= startPage ? 'border-l' : ''} bg-white text-gray-500`}>...</span>);
         }
 
+        // Next and Last
         items.push(
           <button key="next" onClick={() => handlePageChange(page + 1)} disabled={page === totalPages} className="px-3 py-1 border-t border-b border-l bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
         );
@@ -243,7 +230,33 @@ export const VoucherListPage = () => {
   };
 
 
-  // --- Render Section (ensure checks for vouchers array) ---
+  // --- Render ---
+  if (loading && vouchers.length === 0) { // Show loading only on initial load
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+         <span className="ml-3 text-gray-600">Đang tải...</span>
+      </div>
+    );
+  }
+
+  // Show full page error if initial fetch failed
+  if (error && vouchers.length === 0) {
+    return (
+       <div className="container mx-auto px-4 py-6">
+            <div className="mb-4 text-sm text-gray-600 flex items-center">
+                <Link to="/admin" className="hover:text-orange-600 transition-colors">Trang chủ</Link>
+                <ChevronRight size={16} className="mx-1 text-gray-400" />
+                <span className="font-medium text-gray-800">Quản lý voucher</span>
+            </div>
+            <div className="p-4 bg-red-100 text-red-700 border border-red-400 rounded">
+                 {error}
+            </div>
+        </div>
+    );
+  }
+
+
   return (
     <div className="container mx-auto px-4 py-6">
       {/* Breadcrumbs */}
@@ -268,78 +281,76 @@ export const VoucherListPage = () => {
         {/* Body */}
         <div className="p-6">
             {/* Filters Row */}
-            <div className="flex flex-wrap gap-4 mb-6">
-              {/* Status Filter */}
-              <div className="flex-1 min-w-[180px]">
-                <label htmlFor="voucherStatusFilter" className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
-                <select
-                  id="voucherStatusFilter"
-                  className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
-                  value={statusFilter}
-                  onChange={handleStatusFilterChange}
-                >
-                  <option value="">Tất cả</option>
-                  <option value="active">Đang diễn ra</option>
-                  <option value="upcoming">Sắp diễn ra</option>
-                  <option value="expired">Đã kết thúc</option>
-                </select>
-              </div>
-              {/* Search Form */}
-              <div className="flex-1 min-w-[300px]">
-                <form onSubmit={handleSearchSubmit}>
-                  <label htmlFor="voucherSearchInput" className="block text-sm font-medium text-gray-700 mb-1">Tìm kiếm</label>
-                  <div className="flex">
-                    <input
-                      id="voucherSearchInput"
-                      type="text"
-                      placeholder="Nhập tên hoặc mã voucher"
-                      className="flex-grow p-2 border border-gray-300 rounded-l-md shadow-sm focus:ring-orange-500 focus:border-orange-500 outline-none"
-                      value={searchQuery}
-                      onChange={handleSearchInputChange}
-                    />
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-orange-600 text-white rounded-r-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 inline-flex items-center"
-                    >
-                      <Search size={18} className="mr-1" /> Tìm
-                    </button>
-                  </div>
-                </form>
-              </div>
+          <div className="flex flex-wrap gap-4 mb-6">
+             {/* Status Filter */}
+            <div className="flex-1 min-w-[180px]">
+              <label htmlFor="voucherStatusFilter" className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+              <select
+                id="voucherStatusFilter"
+                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                value={statusFilter}
+                onChange={handleStatusFilterChange}
+              >
+                <option value="">Tất cả</option>
+                <option value="active">Đang diễn ra</option>
+                <option value="upcoming">Sắp diễn ra</option>
+                <option value="expired">Đã kết thúc</option>
+              </select>
             </div>
+            {/* Search Form */}
+            <div className="flex-1 min-w-[300px]">
+              <form onSubmit={handleSearchSubmit}>
+                <label htmlFor="voucherSearchInput" className="block text-sm font-medium text-gray-700 mb-1">Tìm kiếm</label>
+                <div className="flex">
+                  <input
+                    id="voucherSearchInput"
+                    type="text"
+                    placeholder="Nhập tên hoặc mã voucher"
+                    className="flex-grow p-2 border border-gray-300 rounded-l-md shadow-sm focus:ring-orange-500 focus:border-orange-500 outline-none"
+                    value={searchQuery}
+                    onChange={handleSearchInputChange}
+                  />
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-orange-600 text-white rounded-r-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 inline-flex items-center"
+                  >
+                    <Search size={18} className="mr-1" /> Tìm
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
 
-          {/* Display error */}
+          {/* Display error if delete failed */}
           {error && <div className="p-3 mb-4 bg-red-100 border border-red-400 text-red-700 rounded text-sm">{error}</div>}
 
-          {/* Table Area */}
+          {/* Table Area with Loading Overlay */}
            <div className="relative">
-               {loading && ( // Show overlay during loading
+               {loading && ( // Simple overlay during refetch
                  <div className="absolute inset-0 bg-white bg-opacity-75 flex justify-center items-center z-10">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
                  </div>
                )}
-               <div className={`overflow-x-auto ${loading ? 'opacity-50' : ''}`}> {/* Optional: reduce opacity while loading */}
+               <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên Voucher</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày bắt đầu</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày kết thúc</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-                          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên Voucher</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày bắt đầu</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày kết thúc</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {/* --- FIX: Check if vouchers is an array before using .length or .map --- */}
-                        {Array.isArray(vouchers) && vouchers.length === 0 ? (
+                        {vouchers.length === 0 ? (
                             <tr>
                                 <td colSpan={7} className="px-4 py-4 text-center text-sm text-gray-500">Không có voucher nào khớp.</td>
                             </tr>
                         ) : (
-                            Array.isArray(vouchers) && vouchers.map((voucher) => { // Also check before map
-                                // ... (status calculation logic remains the same) ...
+                            vouchers.map((voucher) => {
                                 const now = new Date();
                                 const startsAt = new Date(voucher.starts_at);
                                 const endsAt = new Date(voucher.ends_at);
@@ -366,7 +377,6 @@ export const VoucherListPage = () => {
                                     </span>
                                     </td>
                                     <td className="px-4 py-3 whitespace-nowrap text-center text-sm font-medium space-x-1">
-                                    {/* Action buttons */}
                                     <Link
                                         to={`/admin/vouchers/${voucher.id}`}
                                         className="inline-flex items-center px-2 py-1 text-xs border border-blue-500 text-blue-600 rounded hover:bg-blue-50"
@@ -396,20 +406,18 @@ export const VoucherListPage = () => {
                     </tbody>
                     </table>
                 </div>
-            </div>
+            </div> {/* End Relative */}
 
 
           {/* Pagination Controls */}
            <div className="flex flex-col md:flex-row justify-between items-center mt-4">
                 <div className='text-sm text-gray-600 mb-2 md:mb-0'>
-                {/* --- FIX: Check if vouchers is an array before accessing length --- */}
-                {total > 0 && Array.isArray(vouchers)
+                {total > 0
                     ? `Hiển thị ${ (page - 1) * limit + 1 } đến ${Math.min( page * limit, total )} trong tổng số ${total} voucher`
                     : 'Không có voucher nào'
                 }
                 </div>
                 <div className="flex items-center space-x-2">
-                    {/* Items per page dropdown */}
                     <label htmlFor="itemsPerPageSelect" className="text-sm text-gray-600">Hiển thị:</label>
                     <select
                         id="itemsPerPageSelect"
@@ -424,7 +432,6 @@ export const VoucherListPage = () => {
                         <option value={100}>100</option>
                     </select>
                     <span className="text-sm text-gray-600">/ trang</span>
-                    {/* Pagination buttons */}
                     <div className="ml-4">
                         {renderPaginationItems()}
                     </div>
@@ -434,7 +441,7 @@ export const VoucherListPage = () => {
         </div>
       </div>
 
-      {/* Delete Confirmation Modal (remains the same) */}
+      {/* Delete Confirmation Modal */}
        {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-60 p-4">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">

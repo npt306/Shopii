@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
 import { useParams, Link } from 'react-router-dom';
-import '../../css/general.css';
+import { ChevronRight, ArrowLeft } from 'lucide-react'; // Import icons
 
 interface Voucher {
   id: number;
@@ -19,9 +18,9 @@ interface Voucher {
   action_type: string;
   discount_amount?: number;
   discount_percentage?: number;
-    free_shipping_max?: number;
-    buy_x_amount?: number;
-    get_y_amount?: number;
+  free_shipping_max?: number;
+  buy_x_amount?: number;
+  get_y_amount?: number;
   created_at: string;
   updated_at: string;
 }
@@ -33,187 +32,198 @@ export const VoucherDetailPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const bootstrapLink = document.createElement('link');
-    bootstrapLink.rel = 'stylesheet';
-    bootstrapLink.href =
-      'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css';
-    document.head.appendChild(bootstrapLink);
-      document.title = "Chi tiết Voucher";
-
-
-    const fetchVoucher = async () => {
-      try {
-        const response = await fetch(`/api/vouchers/${id}`); // Use API Gateway route
-        if (response.ok) {
-          const data = await response.json();
-          setVoucher(data);
-        } else {
-          setError('Failed to fetch voucher details.');
-        }
-      } catch (err) {
-        setError('An error occurred while fetching voucher details.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
+    document.title = "Chi tiết Voucher";
     fetchVoucher();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  const fetchVoucher = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/vouchers/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setVoucher(data);
+      } else if (response.status === 404) {
+        setError('Voucher không tồn tại.');
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setError(`Không thể tải chi tiết voucher: ${errorData.message || response.statusText}`);
+      }
+    } catch (err) {
+      setError(`Đã xảy ra lỗi khi tải chi tiết voucher: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-        <Spinner animation="border" role="status" variant="warning">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
-      </Container>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+        <span className="ml-3 text-gray-600">Đang tải...</span>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Container>
-        <Alert variant="danger">{error}</Alert>
-      </Container>
+      <div className="container mx-auto px-4 py-6">
+        <div className="mb-4 text-sm text-gray-600 flex items-center">
+           <Link to="/admin" className="hover:text-orange-600 transition-colors">Trang chủ</Link>
+           <ChevronRight size={16} className="mx-1 text-gray-400" />
+           <Link to="/admin/vouchers" className="hover:text-orange-600 transition-colors">Quản lý voucher</Link>
+           <ChevronRight size={16} className="mx-1 text-gray-400" />
+           <span className="font-medium text-gray-800">Lỗi</span>
+        </div>
+        <div className="p-4 bg-red-100 text-red-700 border border-red-400 rounded">
+          {error}
+        </div>
+        <Link
+            to="/admin/vouchers"
+            className="mt-4 inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm"
+          >
+            <ArrowLeft size={16} className="mr-1" /> Quay lại danh sách
+        </Link>
+      </div>
     );
   }
 
-  if (!voucher) {
-    return (
-      <Container>
-        <Alert variant="info">Voucher not found.</Alert>
-      </Container>
-    );
-  }
+   if (!voucher) {
+      return (
+          <div className="container mx-auto px-4 py-6">
+               <div className="p-4 bg-yellow-100 text-yellow-700 border border-yellow-400 rounded">
+                   Voucher không tồn tại.
+               </div>
+                <Link
+                    to="/admin/vouchers"
+                    className="mt-4 inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm"
+                >
+                    <ArrowLeft size={16} className="mr-1" /> Quay lại danh sách
+                </Link>
+          </div>
+      );
+   }
+
+
+  // Helper functions for display text
+  const getConditionText = (type: string) => {
+    switch (type) {
+      case 'min_order': return 'Giá trị đơn hàng tối thiểu';
+      case 'min_products': return 'Số lượng sản phẩm tối thiểu';
+      case 'specific_products': return 'Sản phẩm cụ thể';
+      default: return 'Không có';
+    }
+  };
+
+  const getActionText = (type: string) => {
+    switch (type) {
+      case 'fixed_amount': return 'Giảm giá cố định';
+      case 'percentage': return 'Giảm giá phần trăm';
+      case 'product_percentage': return 'Giảm giá sản phẩm theo phần trăm';
+      case 'free_shipping': return 'Miễn phí vận chuyển';
+      case 'buy_x_get_y': return 'Mua X tặng Y';
+      default: return 'Không xác định';
+    }
+  };
 
   return (
-    <Container fluid className="shopee-page py-4">
-      <div className="breadcrumb-placeholder mb-3">
-        <h5 className="text-secondary">
-          Trang chủ / Quản lý voucher / Chi tiết voucher
-        </h5>
+    <div className="container mx-auto px-4 py-6">
+      {/* Breadcrumbs */}
+      <div className="mb-4 text-sm text-gray-600 flex items-center">
+        <Link to="/admin" className="hover:text-orange-600 transition-colors">Trang chủ</Link>
+        <ChevronRight size={16} className="mx-1 text-gray-400" />
+        <Link to="/admin/vouchers" className="hover:text-orange-600 transition-colors">Quản lý voucher</Link>
+        <ChevronRight size={16} className="mx-1 text-gray-400" />
+        <span className="font-medium text-gray-800">Chi tiết voucher</span>
       </div>
 
-      <Row>
-        <Col xs={12}>
-          <Card className="border-0 shadow-sm">
-            <Card.Header className="bg-white border-bottom py-3">
-              <h4 className="mb-0 text-dark">Chi tiết Voucher</h4>
-            </Card.Header>
-            <Card.Body>
-              <Row>
-                <Col md={6}>
-                  <p>
-                    <strong>Tên Voucher:</strong> {voucher.name}
-                  </p>
-                  <p>
-                    <strong>Mã Voucher:</strong>{' '}
-                    <span className="text-uppercase">{voucher.code}</span>
-                  </p>
-                  <p>
-                    <strong>Mô tả:</strong> {voucher.description || 'N/A'}
-                  </p>
-                  <p>
-                    <strong>Ngày bắt đầu:</strong>{' '}
-                    {new Date(voucher.starts_at).toLocaleString()}
-                  </p>
-                  <p>
-                    <strong>Ngày kết thúc:</strong>{' '}
-                    {new Date(voucher.ends_at).toLocaleString()}
-                  </p>
-                </Col>
-                <Col md={6}>
-                  <p>
-                    <strong>Giới hạn sử dụng/khách:</strong>{' '}
-                    {voucher.per_customer_limit}
-                  </p>
-                  <p>
-                    <strong>Tổng lượt sử dụng tối đa:</strong>{' '}
-                    {voucher.total_usage_limit}
-                  </p>
-                  <p>
-                    <strong>Loại điều kiện:</strong>{' '}
-                    {voucher.condition_type === 'none'
-                      ? 'Không có'
-                      : voucher.condition_type === 'min_order'
-                      ? 'Giá trị đơn hàng tối thiểu'
-                      : voucher.condition_type === 'min_products'
-                      ? 'Số lượng sản phẩm tối thiểu'
-                      : 'Sản phẩm cụ thể'}
-                  </p>
-                  {voucher.condition_type === 'min_order' && (
-                    <p>
-                      <strong>Giá trị đơn hàng tối thiểu:</strong>{' '}
-                      {voucher.min_order_amount?.toLocaleString()} ₫
-                    </p>
-                  )}
-                  {voucher.condition_type === 'min_products' && (
-                    <p>
-                      <strong>Số lượng sản phẩm tối thiểu:</strong>{' '}
-                      {voucher.min_products}
-                    </p>
-                  )}
-                   {voucher.condition_type === 'specific_products' && (
-                        <p><strong>Sản phẩm cụ thể: </strong>
-                            {voucher.product_ids && voucher.product_ids.length > 0 ? voucher.product_ids.join(', ') : "N/A"}
-                        </p>
-                    )}
+      {/* Main Content Card */}
+      <div className="bg-white shadow-md rounded-lg overflow-hidden">
+        <div className="px-6 py-4 border-b">
+           <h4 className="text-xl font-semibold text-gray-800">Chi tiết Voucher - #{voucher.id}</h4>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+            {/* Column 1 */}
+            <div>
+              <h5 className="font-medium text-gray-500 mb-1">Tên Voucher</h5>
+              <p className="text-gray-900">{voucher.name}</p>
+            </div>
+            <div>
+              <h5 className="font-medium text-gray-500 mb-1">Mã Voucher</h5>
+              <p className="text-gray-900 uppercase font-mono">{voucher.code}</p>
+            </div>
+            <div className="md:col-span-2">
+              <h5 className="font-medium text-gray-500 mb-1">Mô tả</h5>
+              <p className="text-gray-700 whitespace-pre-wrap">{voucher.description || 'N/A'}</p>
+            </div>
+            <div>
+              <h5 className="font-medium text-gray-500 mb-1">Ngày bắt đầu</h5>
+              <p className="text-gray-700">{new Date(voucher.starts_at).toLocaleString()}</p>
+            </div>
+            <div>
+              <h5 className="font-medium text-gray-500 mb-1">Ngày kết thúc</h5>
+              <p className="text-gray-700">{new Date(voucher.ends_at).toLocaleString()}</p>
+            </div>
 
-                  <p>
-                    <strong>Loại giảm giá:</strong>{' '}
-                    {voucher.action_type === 'fixed_amount'
-                      ? 'Giảm giá cố định'
-                      : voucher.action_type === 'percentage'
-                      ? 'Giảm giá phần trăm'
-                      : voucher.action_type === 'product_percentage'
-                      ? 'Giảm giá sản phẩm theo phần trăm'
-                      : voucher.action_type === 'free_shipping'
-                      ? 'Miễn phí vận chuyển'
-                      : 'Mua X tặng Y'}
-                  </p>
-                  {voucher.action_type === 'fixed_amount' && (
-                    <p>
-                      <strong>Số tiền giảm:</strong>{' '}
-                      {voucher.discount_amount?.toLocaleString()} ₫
+            {/* Column 2 */}
+             <div>
+              <h5 className="font-medium text-gray-500 mb-1">Giới hạn sử dụng/khách</h5>
+              <p className="text-gray-900">{voucher.per_customer_limit}</p>
+            </div>
+             <div>
+              <h5 className="font-medium text-gray-500 mb-1">Tổng lượt sử dụng tối đa</h5>
+              <p className="text-gray-900">{voucher.total_usage_limit}</p>
+            </div>
+            <div className="md:col-span-2 border-t pt-4 mt-2">
+                <h5 className="font-medium text-gray-500 mb-1">Điều kiện áp dụng</h5>
+                <p className="text-gray-900">{getConditionText(voucher.condition_type)}</p>
+                {voucher.condition_type === 'min_order' && (
+                    <p className="text-gray-700 mt-1 pl-4">Giá trị tối thiểu: {voucher.min_order_amount?.toLocaleString()} ₫</p>
+                )}
+                {voucher.condition_type === 'min_products' && (
+                    <p className="text-gray-700 mt-1 pl-4">Số lượng tối thiểu: {voucher.min_products}</p>
+                )}
+                {voucher.condition_type === 'specific_products' && (
+                    <p className="text-gray-700 mt-1 pl-4">
+                        ID Sản phẩm: {voucher.product_ids && voucher.product_ids.length > 0 ? voucher.product_ids.join(', ') : "N/A"}
                     </p>
-                  )}
-                  {(voucher.action_type === 'percentage' ||
-                    voucher.action_type === 'product_percentage') && (
-                    <p>
-                      <strong>Phần trăm giảm giá:</strong>{' '}
-                      {voucher.discount_percentage}%
-                    </p>
-                  )}
-                    {voucher.action_type === "free_shipping" && (
-                        <p>
-                        <strong>Mức hỗ trợ vận chuyển tối đa:</strong>{' '}
-                        {voucher.free_shipping_max?.toLocaleString()} ₫
-                        </p>
-                    )}
+                 )}
+            </div>
+             <div className="md:col-span-2 border-t pt-4 mt-2">
+                <h5 className="font-medium text-gray-500 mb-1">Hành động giảm giá</h5>
+                <p className="text-gray-900">{getActionText(voucher.action_type)}</p>
+                 {voucher.action_type === 'fixed_amount' && (
+                    <p className="text-gray-700 mt-1 pl-4">Số tiền giảm: {voucher.discount_amount?.toLocaleString()} ₫</p>
+                 )}
+                 {(voucher.action_type === 'percentage' || voucher.action_type === 'product_percentage') && (
+                    <p className="text-gray-700 mt-1 pl-4">Phần trăm giảm: {voucher.discount_percentage}%</p>
+                 )}
+                 {voucher.action_type === "free_shipping" && (
+                    <p className="text-gray-700 mt-1 pl-4">Hỗ trợ tối đa: {voucher.free_shipping_max?.toLocaleString()} ₫</p>
+                 )}
+                 {voucher.action_type === "buy_x_get_y" && (
+                    <>
+                        <p className="text-gray-700 mt-1 pl-4">Mua X sản phẩm: {voucher.buy_x_amount}</p>
+                        <p className="text-gray-700 mt-1 pl-4">Tặng Y sản phẩm: {voucher.get_y_amount}</p>
+                    </>
+                 )}
+            </div>
+          </div>
 
-                    {voucher.action_type === "buy_x_get_y" && (
-                        <>
-                        <p>
-                            <strong>Mua X sản phẩm: </strong> {voucher.buy_x_amount}
-                        </p>
-                        <p>
-                            <strong>Tặng Y sản phẩm: </strong> {voucher.get_y_amount}
-                        </p>
-                        </>
-                    )}
-                </Col>
-              </Row>
-              <Row className="mt-4">
-                <Col>
-                  <Link to="/admin/vouchers" className="btn btn-secondary">
-                    Quay lại
-                  </Link>
-                </Col>
-              </Row>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
+          {/* Back Button */}
+          <div className="mt-6 border-t pt-4">
+            <Link
+              to="/admin/vouchers"
+              className="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm transition-colors"
+            >
+               <ArrowLeft size={16} className="mr-1" /> Quay lại danh sách
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };

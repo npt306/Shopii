@@ -20,9 +20,15 @@ export class VouchersController {
     return this.vouchersService.createVoucher(createVoucherDto);
   }
 
-  @Get()
-  async getAllVouchers(): Promise<any> {
-    return this.vouchersService.getAllVouchers();
+  @Get() 
+  async getAllVouchersPaginated(
+    @Query('page') page?: string, 
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+  ): Promise<any> {
+
+    return this.vouchersService.getAllVouchersPaginated(page, limit, search, status);
   }
 
   @Get(':id')
