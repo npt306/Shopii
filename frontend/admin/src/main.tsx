@@ -34,7 +34,7 @@ const router = createBrowserRouter(
 
         {
           index: true, 
-          element: <Navigate to="vouchers" replace />,
+          element: <Navigate to="products" replace />,
         },
 
         {
