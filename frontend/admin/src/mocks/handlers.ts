@@ -1,20 +1,19 @@
 import { http, HttpResponse } from 'msw';
 
-// Base URLs for different services
 const VOUCHER_API_BASE = '/api/vouchers';
 const PRODUCT_API_BASE = '/api/product/admin/products';
-const CATEGORY_API_BASE = 'http://34.58.241.34:3001/categories'; // Use full URL if external
+const CATEGORY_API_BASE = 'http://34.58.241.34:3001/categories'; 
 const ACCOUNT_API_BASE = '/api/accounts';
-const LOGIN_API_BASE = 'http://34.58.241.34:3003/Users/login-admin'; // Use full URL if external
+const LOGIN_API_BASE = 'http://34.58.241.34:3003/Users/login-admin'; 
 
-// --- Mock Data ---
-const mockVouchers = [
-  {
+let mockVouchers = [
+
+   {
     id: 1,
     name: 'Test Voucher 1',
     code: 'TEST1',
     starts_at: new Date().toISOString(),
-    ends_at: new Date(Date.now() + 86400000 * 7).toISOString(), // + 7 days
+    ends_at: new Date(Date.now() + 86400000 * 7).toISOString(), 
     per_customer_limit: 1,
     total_usage_limit: 100,
     condition_type: 'min_order',
@@ -28,8 +27,8 @@ const mockVouchers = [
     id: 2,
     name: 'Expired Voucher',
     code: 'EXPIRED',
-    starts_at: new Date(Date.now() - 86400000 * 14).toISOString(), // - 14 days
-    ends_at: new Date(Date.now() - 86400000 * 7).toISOString(),   // - 7 days
+    starts_at: new Date(Date.now() - 86400000 * 14).toISOString(), 
+    ends_at: new Date(Date.now() - 86400000 * 7).toISOString(),   
     per_customer_limit: 1,
     total_usage_limit: 50,
     condition_type: 'none',
@@ -40,8 +39,7 @@ const mockVouchers = [
   },
 ];
 
-const mockProducts = {
-  products: [
+let mockApiProducts = [ 
     {
       id: 101,
       name: 'Product A',
@@ -60,11 +58,7 @@ const mockProducts = {
       minPrice: 150000,
       maxPrice: 160000,
     },
-  ],
-  total: 2,
-  page: 1,
-  limit: 10,
-};
+];
 
 const mockProductDetail = {
     id: 101,
@@ -79,8 +73,8 @@ const mockProductDetail = {
     quantity: 500,
     reviews: 25,
     classifications: [
-      { classTypeName: 'Color', level: 1 },
-      { classTypeName: 'Size', level: 1 }
+      { classTypeName: 'Color', level: 1 }, 
+      { classTypeName: 'Size', level: 2 }   
     ],
     details: [
       { type_id: 1, type_1: 'Red', type_2: 'M', image: 'red_m.jpg', price: 55000, quantity: 200 },
@@ -93,9 +87,9 @@ const mockProductDetail = {
      maxPrice: 60000,
   };
 
-
 const mockCategories = [
-    { CategoryID: 1, CategoryName: 'Electronics', ParentID: null, isActive: true, children: [
+
+     { CategoryID: 1, CategoryName: 'Electronics', ParentID: null, isActive: true, children: [
         { CategoryID: 3, CategoryName: 'Mobile Phones', ParentID: 1, isActive: true },
         { CategoryID: 4, CategoryName: 'Laptops', ParentID: 1, isActive: false }
     ]},
@@ -103,6 +97,7 @@ const mockCategories = [
 ];
 
 const mockUsers = {
+
     seller: [
         { AccountId: 1, Username: 'seller1', Email: 'seller1@test.com', Status: 'active', roles: ['seller'], DoB: '1990-01-01', PhoneNumber: '123456789', Sex: true, CreatedAt: new Date().toISOString(), UpdatedAt: new Date().toISOString() },
         { AccountId: 2, Username: 'seller2_inactive', Email: 'seller2@test.com', Status: 'inactive', roles: ['seller'], DoB: '1992-05-10', PhoneNumber: '987654321', Sex: false, CreatedAt: new Date().toISOString(), UpdatedAt: new Date().toISOString() },
@@ -116,6 +111,7 @@ const mockUsers = {
 };
 
 const mockUserDetail = {
+
   AccountId: 1,
   Email: 'seller1@test.com',
   Username: 'seller1',
@@ -149,16 +145,14 @@ const mockUserDetail = {
     AccountId: 1,
     IsDefault: true,
   },
-  roles: ['seller'], // Added roles for completeness if needed in detail view logic
+  roles: ['seller'],
 };
 
-
-// --- Handlers ---
 export const handlers = [
-  // === Login ===
-  http.post(LOGIN_API_BASE, async ({ request }) => {
+
+   http.post(LOGIN_API_BASE, async ({ request }) => {
     const body = await request.json();
-    // Basic validation for mock
+
     if (body.username === 'admin@test.com' && body.password === 'password' && body.otpCode === '123456') {
       return HttpResponse.json({ message: 'Login successful', token: 'fake-token' }, { status: 200 });
     } else if (body.username === 'admin@test.com' && body.password === 'password' && body.otpCode !== '123456'){
@@ -169,9 +163,35 @@ export const handlers = [
     }
   }),
 
-  // === Vouchers ===
-  http.get(VOUCHER_API_BASE, () => {
-    return HttpResponse.json(mockVouchers);
+   http.get(VOUCHER_API_BASE, ({ request }) => {
+    const url = new URL(request.url);
+    const status = url.searchParams.get('status');
+    const search = url.searchParams.get('search');
+    let page = parseInt(url.searchParams.get('page') || '1', 10);
+    let limit = parseInt(url.searchParams.get('limit') || '10', 10);
+
+    let filteredVouchers = [...mockVouchers];
+
+    const now = new Date();
+    if (status === 'active') {
+        filteredVouchers = filteredVouchers.filter(v => new Date(v.starts_at) <= now && new Date(v.ends_at) >= now);
+    } else if (status === 'upcoming') {
+        filteredVouchers = filteredVouchers.filter(v => new Date(v.starts_at) > now);
+    } else if (status === 'expired') {
+        filteredVouchers = filteredVouchers.filter(v => new Date(v.ends_at) < now);
+    }
+
+    if (search) {
+        filteredVouchers = filteredVouchers.filter(v =>
+            v.name.toLowerCase().includes(search.toLowerCase()) ||
+            v.code.toLowerCase().includes(search.toLowerCase())
+        );
+    }
+
+    const total = filteredVouchers.length;
+    const paginatedVouchers = filteredVouchers.slice((page - 1) * limit, page * limit);
+
+    return HttpResponse.json({ data: paginatedVouchers, total });
   }),
 
   http.get(`${VOUCHER_API_BASE}/:id`, ({ params }) => {
@@ -184,10 +204,10 @@ export const handlers = [
 
   http.post(VOUCHER_API_BASE, async ({ request }) => {
     const newVoucher = await request.json();
-    // Basic validation for mock
+
     if (newVoucher.name && newVoucher.code && newVoucher.starts_at && newVoucher.ends_at) {
-      const createdVoucher = { ...newVoucher, id: Date.now() }; // Assign a mock ID
-      mockVouchers.push(createdVoucher); // Add to mock list (won't persist between tests)
+      const createdVoucher = { ...newVoucher, id: Date.now(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() }; 
+      mockVouchers.push(createdVoucher); 
       return HttpResponse.json(createdVoucher, { status: 201 });
     }
     return HttpResponse.json({ message: 'Missing required fields' }, { status: 400 });
@@ -197,9 +217,8 @@ export const handlers = [
     const index = mockVouchers.findIndex(v => v.id === Number(params.id));
     if (index !== -1) {
       const updatedData = await request.json();
-      // In a real scenario, you'd merge carefully, here we just simulate success
-       mockVouchers[index] = { ...mockVouchers[index], ...updatedData };
-       return HttpResponse.json(mockVouchers[index]); // Return updated voucher
+       mockVouchers[index] = { ...mockVouchers[index], ...updatedData, updated_at: new Date().toISOString() }; 
+       return HttpResponse.json(mockVouchers[index]); 
     }
     return new HttpResponse(null, { status: 404 });
   }),
@@ -207,19 +226,20 @@ export const handlers = [
   http.delete(`${VOUCHER_API_BASE}/:id`, ({ params }) => {
     const index = mockVouchers.findIndex(v => v.id === Number(params.id));
     if (index !== -1) {
-      // Simulate deletion (doesn't actually modify the array for other tests)
+      mockVouchers.splice(index, 1); 
       return new HttpResponse(null, { status: 204 });
     }
     return new HttpResponse(null, { status: 404 });
   }),
 
-  // === Products ===
    http.get(PRODUCT_API_BASE, ({ request }) => {
     const url = new URL(request.url);
     const status = url.searchParams.get('status');
     const search = url.searchParams.get('search');
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const limit = parseInt(url.searchParams.get('limit') || '10', 10);
 
-    let filteredProducts = [...mockProducts.products];
+    let filteredProducts = [...mockApiProducts]; 
 
     if (status) {
         filteredProducts = filteredProducts.filter(p => p.status === status);
@@ -228,60 +248,70 @@ export const handlers = [
         filteredProducts = filteredProducts.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
     }
 
-    // Simple pagination mock - doesn't fully implement page/limit logic here
+    const total = filteredProducts.length;
+    const paginatedProducts = filteredProducts.slice((page - 1) * limit, page * limit);
+
+    console.log(`[MSW] GET ${PRODUCT_API_BASE} (page: ${page}, limit: ${limit}, status: ${status}, search: ${search}) -> Returning ${paginatedProducts.length} of ${total}`);
+
     return HttpResponse.json({
-        products: filteredProducts,
-        total: filteredProducts.length, // Adjust total based on filter for mock
-        page: 1, // Keep page/limit simple for mock
-        limit: 10
+        products: paginatedProducts,
+        total: total,
+        page: page,
+        limit: limit
     });
   }),
 
   http.get(`${PRODUCT_API_BASE}/:id`, ({ params }) => {
-    if (Number(params.id) === mockProductDetail.id) {
+
+    const product = mockApiProducts.find(p => p.id === Number(params.id));
+    if (product && product.id === mockProductDetail.id) { 
         return HttpResponse.json(mockProductDetail);
+    } else if (product) {
+
+         return HttpResponse.json(product);
     }
     return new HttpResponse(null, { status: 404 });
   }),
 
   http.patch(`${PRODUCT_API_BASE}/:id/approve`, ({ params }) => {
-     const product = mockProducts.products.find(p => p.id === Number(params.id));
+     const product = mockApiProducts.find(p => p.id === Number(params.id));
      if (product) {
-        // Simulate approval
-        return HttpResponse.json({ ...product, status: 'Approved' });
+        product.status = 'Approved'; 
+        return HttpResponse.json({ ...product });
      }
      return new HttpResponse(null, { status: 404 });
   }),
 
   http.patch(`${PRODUCT_API_BASE}/:id/block`, async ({ params, request }) => {
-    const product = mockProducts.products.find(p => p.id === Number(params.id));
+    const product = mockApiProducts.find(p => p.id === Number(params.id));
     if (product) {
         const body = await request.json();
-        console.log("Mock Block Reason:", body.reason); // Log reason if needed
-        // Simulate blocking
-        return HttpResponse.json({ ...product, status: 'Violated' });
+        console.log("[MSW] Mock Block Reason:", body.reason); 
+        product.status = 'Violated'; 
+        return HttpResponse.json({ ...product });
     }
      return new HttpResponse(null, { status: 404 });
   }),
 
   http.delete(`${PRODUCT_API_BASE}/:id`, async ({ params, request }) => {
-     const index = mockProducts.products.findIndex(p => p.id === Number(params.id));
+     const index = mockApiProducts.findIndex(p => p.id === Number(params.id));
      if (index !== -1) {
-        const body = await request.json();
-        console.log("Mock Delete Reason:", body.reason); // Log reason if needed
-        // Simulate deletion
-        return new HttpResponse(null, { status: 204 });
+        const body = await request.json().catch(() => ({})); 
+        console.log("[MSW] Mock Delete Reason:", body.reason);
+        mockApiProducts.splice(index, 1); 
+        console.log(`[MSW] DELETE ${PRODUCT_API_BASE}/${params.id} -> Success. Remaining products: ${mockApiProducts.length}`);
+        return new HttpResponse(null, { status: 204 }); 
      }
-     return new HttpResponse(null, { status: 404 });
+     console.log(`[MSW] DELETE ${PRODUCT_API_BASE}/${params.id} -> Not Found.`);
+     return new HttpResponse(null, { status: 404 }); 
   }),
 
-  // === Categories === (Using full URL)
-  http.get(CATEGORY_API_BASE, () => {
+   http.get(CATEGORY_API_BASE, () => {
       return HttpResponse.json(mockCategories);
   }),
 
    http.get(`${CATEGORY_API_BASE}/:id`, ({ params }) => {
-     // Need a function to find category recursively if needed, or flatten first
+
      const findCat = (cats: any[], id: number): any | null => {
         for (const cat of cats) {
             if (cat.CategoryID === id) return cat;
@@ -303,7 +333,7 @@ export const handlers = [
      const newCategory = await request.json();
      if (newCategory.CategoryName) {
          const created = { ...newCategory, CategoryID: Date.now(), isActive: true };
-         // Add to mock list (simple, doesn't handle parent/child correctly here)
+
          return HttpResponse.json(created, { status: 201 });
      }
      return HttpResponse.json({ message: 'Missing CategoryName' }, { status: 400 });
@@ -312,8 +342,7 @@ export const handlers = [
    http.put(`${CATEGORY_API_BASE}/:id`, async ({ params, request }) => {
      const categoryId = Number(params.id);
      const updatedData = await request.json();
-     // Simulate update - finding and updating in a nested structure is complex for a mock
-     // Just return success if name exists
+
      if (updatedData.CategoryName) {
         return HttpResponse.json({ CategoryID: categoryId, ...updatedData });
      }
@@ -323,22 +352,21 @@ export const handlers = [
     http.patch(`${CATEGORY_API_BASE}/:id/toggle`, async ({ params, request }) => {
         const categoryId = Number(params.id);
         const body = await request.json();
-        // Simulate toggle success
+
         return HttpResponse.json({ CategoryID: categoryId, isActive: body.isActive });
     }),
 
    http.delete(`${CATEGORY_API_BASE}/:id`, ({ params }) => {
-      // Simulate delete success
+
       return new HttpResponse(null, { status: 204 });
    }),
 
-  // === Accounts ===
-   http.get(`${ACCOUNT_API_BASE}/role/:role`, ({ params }) => {
+  http.get(`${ACCOUNT_API_BASE}/role/:role`, ({ params }) => {
      const role = params.role as keyof typeof mockUsers;
      if (mockUsers[role]) {
        return HttpResponse.json(mockUsers[role]);
      }
-     return HttpResponse.json([]); // Return empty array if role not found
+     return HttpResponse.json([]); 
    }),
 
    http.get(`${ACCOUNT_API_BASE}/:id/details`, ({ params }) => {
@@ -351,13 +379,13 @@ export const handlers = [
     http.patch(`${ACCOUNT_API_BASE}/:id/status`, async ({ params, request }) => {
         const accountId = Number(params.id);
         const { status } = await request.json();
-        // Simulate success
+
         return HttpResponse.json({ AccountId: accountId, Status: status });
     }),
 
     http.delete(`${ACCOUNT_API_BASE}/:id`, ({ params }) => {
         const accountId = Number(params.id);
-        // Simulate delete success
+
         return new HttpResponse(null, { status: 204 });
     }),
 

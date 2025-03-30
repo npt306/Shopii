@@ -10,9 +10,8 @@ import { UpdateVoucherDto } from './dto/update-voucher.dto';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { VoucherActionType } from '../common/enums/voucher-action-type.enum';
 import { VoucherConditionType } from '../common/enums/voucher-condition-type.enum';
-import { QueryVoucherDto, VoucherStatusQuery } from './dto/query-voucher.dto'; // Ensure correct path
+import { QueryVoucherDto, VoucherStatusQuery } from './dto/query-voucher.dto';
 
-// Updated Mock Repository Type to include findAndCount
 export type MockRepository<T extends ObjectLiteral> = {
   findOne: jest.Mock<Promise<T | null>, [any]>;
   findOneBy: jest.Mock<Promise<T | null>, [any]>;
@@ -21,8 +20,8 @@ export type MockRepository<T extends ObjectLiteral> = {
   save: jest.Mock<Promise<T>, [any]>;
   merge: jest.Mock<T, [T, any]>;
   delete: jest.Mock<Promise<{ affected?: number | null }>, [any]>;
-  findAndCount: jest.Mock<Promise<[T[], number]>, [FindManyOptions<T>?]>; // Add findAndCount
-  count: jest.Mock<Promise<number>, [any?]>; // Add count if used elsewhere
+  findAndCount: jest.Mock<Promise<[T[], number]>, [FindManyOptions<T>?]>;
+  count: jest.Mock<Promise<number>, [any?]>;
 };
 
 const createMockRepository = <T extends ObjectLiteral>(): MockRepository<T> => ({
@@ -269,7 +268,6 @@ describe('VouchersService', () => {
 
     it('should successfully update a voucher', async () => {
       const originalVoucher = { ...mockVoucherActive };
-      // FIX 1: Use type assertion here as the DTO doesn't contain problematic date strings in this test
       const expectedSavedVoucher = { ...originalVoucher, ...updateDto, updated_at: new Date() } as Voucher;
 
       repository.findOneBy.mockResolvedValue(originalVoucher);
@@ -288,7 +286,6 @@ describe('VouchersService', () => {
     it('should successfully update a voucher with a new unique code (and uppercase it)', async () => {
         const updateCodeDto: UpdateVoucherDto = { code: 'newcode' };
         const originalVoucher = { ...mockVoucherActive };
-        // FIX 1: Use type assertion
         const expectedSavedVoucher = { ...originalVoucher, code: 'NEWCODE', updated_at: new Date() } as Voucher;
 
         repository.findOneBy.mockResolvedValue(originalVoucher);
@@ -361,23 +358,17 @@ describe('VouchersService', () => {
             UsingTimeLeft: 1, CreatedAt: new Date(), UpdatedAt: new Date(), voucher: claimedVoucher
         };
         userVoucherRepository.find.mockResolvedValue([mockUserVoucherEntry]);
-        repository.find.mockResolvedValue([mockVoucherUpcoming]); // Service should return only upcoming
-    
+        repository.find.mockResolvedValue([mockVoucherUpcoming]);
         const result = await service.getActiveVouchers(userId);
     
         expect(userVoucherRepository.find).toHaveBeenCalledWith({ where: { OwnerId: userId } });
     
-        // --- FIX 3: Update expectation to match service implementation ---
         expect(repository.find).toHaveBeenCalledWith({
             where: {
-                id: Not(In([claimedVoucher.id])), // Exclude claimed
-                // Remove starts_at check as it's not in the service method
-                ends_at: MoreThan(expect.any(Date)), // Keep ends_at check
+                id: Not(In([claimedVoucher.id])),
+                ends_at: MoreThan(expect.any(Date)),
             },
-            // Remove order clause if it's not in the service method
-            // order: { starts_at: 'ASC' },
         });
-        // --- End FIX 3 ---
         expect(result).toEqual([mockVoucherUpcoming]);    
         });
     });
