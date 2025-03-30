@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import FormData from 'form-data';
-
+import * as FormData from 'form-data';
+import { MemoryStorageFile } from '@blazity/nest-file-fastify';
 @Injectable()
 export class UsersService {
   constructor(private readonly httpService: HttpService) {}
@@ -14,21 +14,21 @@ export class UsersService {
     return response.data;
   }
 
-  async updateAvatar(id: number, file: Express.Multer.File): Promise<any> {
+  async updateAvatar(id: number, file: MemoryStorageFile): Promise<any> {
     const formData = new FormData();
-    formData.append('file', file.buffer, {
-      filename: file.originalname,
-      contentType: file.mimetype,
+    formData.append('file', file[0].buffer, {
+      contentType: file[0].mimetype,
     });
-
     const response = await firstValueFrom(
-      this.httpService.post(`/users/update-avatar/${id}`, formData, {
+      this.httpService.post(`/users/update-avatar/${id}`, {
         headers: {
           ...formData.getHeaders(),
         },
+        data: formData,
       }),
     );
     return response.data;
+    // return true;
   }
 
   async getUserProfile(id: number): Promise<any> {

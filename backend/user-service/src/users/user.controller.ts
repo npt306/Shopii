@@ -7,6 +7,7 @@ import {
   Get,
   UseInterceptors,
   UploadedFile,
+  Req
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UserService } from './user.service';
@@ -26,8 +27,11 @@ export class UserController {
   async updateAvatar(
     @Param('id', ParseIntPipe) id: number,
     @UploadedFile() file: Express.Multer.File,
+    @Body() body: any,
   ): Promise<any> {
-    return this.usersService.updateAvatar(id, file);
+    const imageStream = body.data._streams[1];
+    const fileBuffer = Buffer.from(imageStream.data);
+    return this.usersService.updateAvatar(id, fileBuffer);
   }
 
   @Get(':id')

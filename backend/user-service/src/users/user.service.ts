@@ -72,9 +72,9 @@ export class UserService {
     return this.userRepository.save(user); // ✅ Save changes
   }
 
-  async updateAvatar(id: number, file: Express.Multer.File): Promise<any> {
+  async updateAvatar(id: number, file: Buffer): Promise<any> {
     const blob = this.bucket.file(
-      `user_avatar/${uuidv4()}_${file.originalname}`,
+      `user_avatar/${uuidv4()}_${id}_avt`,
     );
     const blobStream = blob.createWriteStream({ resumable: false });
 
@@ -94,9 +94,8 @@ export class UserService {
         .on('error', (err) => {
           reject(new Error(`Unable to upload image: ${err.message}`));
         })
-        .end(file.buffer);
+        .end(file);
     });
-
     return avt_url;
   }
 

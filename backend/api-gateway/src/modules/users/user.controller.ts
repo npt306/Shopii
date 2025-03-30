@@ -6,9 +6,12 @@ import {
   ParseIntPipe,
   Get,
   UseInterceptors,
-  UploadedFile,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  MemoryStorageFile,
+  UploadedFiles,
+} from '@blazity/nest-file-fastify';
 import { UsersService } from './user.service';
 
 @Controller('api/users')
@@ -21,12 +24,14 @@ export class UsersController {
   }
 
   @Post('update-avatar/:id')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'file', maxCount: 1 }]))
   async updateAvatar(
     @Param('id', ParseIntPipe) id: number,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles()
+    files: { file?: MemoryStorageFile },
   ): Promise<any> {
-    return this.usersService.updateAvatar(id, file);
+    if (files.file) return this.usersService.updateAvatar(id, files.file);
+    return true;
   }
 
   @Get(':id')

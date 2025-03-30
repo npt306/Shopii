@@ -6,6 +6,7 @@ import {
 } from '@nestjs/platform-fastify';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import multiPart from '@fastify/multipart';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -16,6 +17,12 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors();
 
+  await app.register(multiPart, {
+    limits: {
+      fileSize: 50 * 1024 * 1024, // 50 MB
+    },
+  });
+  
   const config = new DocumentBuilder()
     .setTitle('API Gateway')
     .setDescription('API Gateway for the Shopii microservices')
