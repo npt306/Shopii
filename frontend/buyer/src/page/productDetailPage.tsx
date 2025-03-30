@@ -119,9 +119,9 @@ export const ProductDetailPage = () => {
     const fetchProductDetail = async () => {
       try {
         const response = await axios.get(
-          // `${PRODUCT_SERVICE_LOCALHOST}/product/classifications/${id}`
+          `${PRODUCT_SERVICE_LOCALHOST}/product/classifications/${id}`
           // `${API_GATEWAY_LOCALHOST}/api/product/detail/${id}`
-          `${API_GATEWAY_URL}/api/product/detail/${id}`
+          // `${API_GATEWAY_URL}/api/product/detail/${id}`
         );
         setProductDetail(response.data);
         // console.log(response.data);
@@ -509,10 +509,6 @@ export const ProductDetailPage = () => {
                     <div className="text-base pb-4">_</div>
                   </button>
 
-                  {/* <div className="flex justify-center items-center px-4 py-2 w-10 h-10 text-xl">
-                    {quantity}
-                  </div> */}
-
                   <input
                     type="number"
                     value={quantity}
@@ -636,7 +632,22 @@ export const ProductDetailPage = () => {
           <div className="flex flex-col gap-2 mt-5 ml-1">
             <div className="flex flex-row items-center">
               <p className="font-medium w-28">Danh mục</p>
-              <p className="text-gray-600">Nội thất văn phòng</p>
+              <p className="text-gray-600">
+                {(productDetail?.categories ?? []).map((item, index, array) => (
+                  <span
+                    onClick={() => {
+                      console.log(item);
+                    }}
+                    className="text-blue-700 cursor-pointer"
+                    key={index}
+                  >
+                    {item}
+                    {index < array.length - 1 && (
+                      <span className="mx-1 text-black"> &gt; </span>
+                    )}
+                  </span>
+                ))}
+              </p>
             </div>
             <div className="flex flex-row items-center">
               <p className="font-medium w-28">Kho</p>
@@ -652,37 +663,9 @@ export const ProductDetailPage = () => {
             MÔ TẢ SẢN PHẨM
           </div>
 
-          <div className="h-[100vh] w-full bg-red-200">
-            <p>
-              🔰🔰🔰 LAM DIGITAL XIN KÍNH CHÀO QUÍ KHÁCH🔰🔰🔰 LAM Digital là
-              nhà nhập khẩu và phân phối chuyên nghiệp các sản phẩm phụ kiện,
-              cáp sạc, đầu chuyển, thiết bị âm thanh, ánh sáng... Chúng tôi mong
-              muốn cung cấp sản phẩm chất lượng tốt, với dịch vụ hậu mãi online
-              '\n' uy tín và đi kèm giá cả phải chăng. Các sản phẩm của shop
-              được dán nhãn bảo hành uy tín và mặc định bảo hành 1 đổi 1 đối với
-              lỗi của nhà sản xuất trong vòng ít nhất 3 tháng.
-              _______________________________ ✅ CHI TIẾT SẢN PHẨM Cáp chuyển
-              USB Type C sang USB 3.0 và HDMI được sử dụng để kết nối các thiết
-              bị có hỗ trợ cổng kết nối USB Type C sang các thiết bị trình chiếu
-              như màn hình máy chiếu hoặc Tivi có hỗ trợ cổng kết nối HDMI. Cáp
-              chuyển đổi USB type C có độ phân giải lên đến 4K và tương thích
-              tốt với các thiết bị của Apple. Tên sản phẩm : HUB Chuyển Mở Rộng
-              Type-C Sang HDMI, USB 3.0 và Type-C Màu sắc : Đen + Nhôm Phay
-              Nguyên Khối Chất liệu : Hợp Kim Nhôm Đầu Vào : USB Type-C Đầu Ra :
-              - HDMI 4K @ 30 Hz - USB 3.0 high speed 5Gbps/ - USB Type C - PD
-              100W Tương Thích: Quý Khách Kiểm Tra Thiết Bị Có Cỗng Type C Hỗ
-              Trợ Thunderbolt Hoặc DisplayPort. - Các thiết bị Windows có tương
-              thích tốt. - Các thiết bị MacOS (Macbook, iPad, iPhone 15 v.v...)
-              có tương thích tốt. - Các thiết bị Samsung có hỗ trợ Samsung Dex.
-              - Các thiết bị Android khác nên kiểm tra với nhà sản xuất. Kích
-              thước sản phẩm : 12 x 59 x 54 mm Nguồn pin cấp : Tương thích với
-              sạc nhanh 100 Watt. Tặng kèm: Đèn Ngủ USB Siêu Sáng 1W. Bảo Hành:
-              Bao hành 6 tháng 1 gửi đổi 1 do lỗi nhà sản xuất (không áp dụng
-              với sản phẩm cáp sạc). Tem nhãn sẽ được dán trên sản phẩm trước
-              khi gửi hàng. Công ty TNHH LAM Digital hoạt động với phương châm
-              Uy Tín – Minh Bạch - Chất Lượng. Chúng tôi cố gắng từng ngày để
-              đạt được sự tín nhiệm của quý khách hàng. Rất mong được sự ủng hộ
-              của quý khách!
+          <div className="p-2 h-auto w-full">
+            <p style={{ whiteSpace: "pre-line" }}>
+              {productDetail?.description}
             </p>
           </div>
         </div>
