@@ -21,11 +21,11 @@ import { Account } from "../types/account";
 
 import { useCart } from "../context/cartContext";
 
-import { API_GATEWAY_URL } from "../config/url";
-
 import {
   PRODUCT_SERVICE_LOCALHOST,
   ORDER_SERVICE_LOCALHOST,
+  API_GATEWAY_LOCALHOST,
+  API_GATEWAY_URL,
 } from "../config/url";
 
 export const ProductDetailPage = () => {
@@ -120,6 +120,7 @@ export const ProductDetailPage = () => {
       try {
         const response = await axios.get(
           // `${PRODUCT_SERVICE_LOCALHOST}/product/classifications/${id}`
+          // `${API_GATEWAY_LOCALHOST}/api/product/detail/${id}`
           `${API_GATEWAY_URL}/api/product/detail/${id}`
         );
         setProductDetail(response.data);
@@ -161,8 +162,8 @@ export const ProductDetailPage = () => {
 
       try {
         const response = await axios.post(
-          // `${ORDER_SERVICE_LOCALHOST}/carts/add-to-cart/`,
-          `${API_GATEWAY_URL}/order/carts/add-to-cart/`,
+          // `${ORDER_SERVICE_LOCALHOST}/carts/add-to-cart`,
+          `${API_GATEWAY_URL}/order/carts/add-to-cart`,
           data
         );
         setOpenDialog(true);
