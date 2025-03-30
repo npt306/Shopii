@@ -2,17 +2,16 @@ import { Controller, Get, Post, Put, Delete, Patch, Body, Param } from '@nestjs/
 import { CategoryService } from './category.service';
 import { Categories } from './entities/category.entity';
 
-
 interface CategoryWithChildren extends Categories {
     children?: CategoryWithChildren[];
 }
 
-@Controller('categories')
+@Controller('api/categories') // Changed to match frontend API_BASE_URL
 export class CategoryController {
     constructor(private readonly categoryService: CategoryService) { }
 
-    @Get()
-    async getAllCategories(): Promise<CategoryWithChildren[]> {
+    @Get('tree') // Added 'tree' to match frontend getCategoryTree() URL
+    async getCategoryTree(): Promise<CategoryWithChildren[]> {
         return this.categoryService.getCategoryTree();
     }
 
@@ -31,7 +30,7 @@ export class CategoryController {
         return this.categoryService.createCategory(categoryData);
     }
 
-    @Put(':id')
+    @Patch(':id') // Changed from Put to Patch to match frontend
     async updateCategory(
         @Param('id') id: number,
         @Body() categoryData: Partial<Categories>
@@ -44,6 +43,7 @@ export class CategoryController {
         return this.categoryService.deleteCategory(id);
     }
 
+    // This endpoint can either be changed or we need to update the frontend
     @Patch(':id/toggle')
     async toggleCategoryStatus(
         @Param('id') id: number,

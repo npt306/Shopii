@@ -12,7 +12,8 @@ import { EditVoucherPage } from './page/EditVoucher.tsx';
 import { AdminProductListPage } from './page/AdminProductListPage.tsx';
 import { AdminProductDetailPage } from './page/AdminProductDetailPage.tsx';
 import UserManagement from './page/user-management/main_page.tsx';
-import { CategoryManagementApp } from './page/AdminCategoryManage.tsx';
+import CategoryManagement from './page/category-management/category.tsx';
+
 
 const router = createBrowserRouter(
   [
@@ -53,8 +54,8 @@ const router = createBrowserRouter(
       element: <UserManagement />,
     },
     {
-      path: "/admin/categories/*",
-      element: <CategoryManagementApp />,
+      path: "/admin/categories",
+      element: <CategoryManagement />,
     },
 
   ],
