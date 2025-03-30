@@ -471,7 +471,10 @@ export const AdminProductListPage = () => {
 
       {/* Block Modal */}
       {showBlockModal && (
-        <div className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-60 p-4">
+        <div className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-60 p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="blockModalHeading">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
             <div className="flex justify-between items-center border-b pb-3 mb-4">
                <h3 className="text-lg font-semibold text-gray-800">Chặn sản phẩm</h3>
@@ -516,7 +519,10 @@ export const AdminProductListPage = () => {
 
       {/* Delete Modal */}
        {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-60 p-4">
+        <div className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-60 p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="deleteModalHeading">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
             <div className="flex justify-between items-center border-b pb-3 mb-4">
                <h3 className="text-lg font-semibold text-gray-800">Xác nhận xóa</h3>
