@@ -51,4 +51,7 @@ jobs:
             docker rm frontend-admin || true
             docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/frontend-admin:latest || true
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/frontend-admin:latest
-            docker run -d --name frontend-admin -p 8002:8000 ${{ secrets.DOCKERHUB_USERNAME }}/frontend-admin:latest
+            docker run -d --name frontend-admin -p 8002:8000 \
+            -e "VITE_API_GATEWAY_URL=http://34.58.241.34:3000" \
+            -e "VITE_AUTH_SERVICE_URL=http://34.58.241.34:3003" \
+            ${{ secrets.DOCKERHUB_USERNAME }}/frontend-admin:latest
