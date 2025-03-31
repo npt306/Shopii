@@ -5,12 +5,9 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CartsModule } from './carts/carts.module';
-import { OrdersModule } from './orders/orders.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
-import { Order } from './orders/entities/order.entity';
-import { OrderItem } from './orders/entities/order-item.entity';
 import { Cart } from './carts/entities/cart.entity';
 
 @Module({
@@ -26,13 +23,12 @@ import { Cart } from './carts/entities/cart.entity';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
-        entities: [Cart, Order, OrderItem],
+        entities: [Cart],
         synchronize: false,
         logging: process.env.NODE_ENV !== 'production',
       }),
     }),
     CartsModule,
-    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

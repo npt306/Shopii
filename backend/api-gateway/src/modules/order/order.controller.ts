@@ -55,23 +55,4 @@ export class OrderController {
      this.logger.log(`Gateway: Received getBasicCart request for customer ${id}`);
     return this.orderService.getBasicCart(id);
   }
-
-  // Order Endpoints
-  @Post()
-  async createOrder(@Body() payload: CreateOrderPayload) {
-    this.logger.log(`Gateway: Received createOrder request for customer ${payload.customerId}`);
-    return this.orderService.createOrder(payload);
-  }
-
-  @Get(':id')
-  async getOrderById(@Param('id', ParseIntPipe) id: number) {
-    this.logger.log(`Gateway: Received getOrderById request for order ${id}`);
-    return this.orderService.getOrderById(id);
-  }
-
-  @Get('customer/:customerId')
-  async getOrdersByCustomerId(@Param('customerId', ParseIntPipe) customerId: number) {
-     this.logger.log(`Gateway: Received getOrdersByCustomerId request for customer ${customerId}`);
-    return this.orderService.getOrdersByCustomerId(customerId);
-  }
 }
