@@ -11,9 +11,19 @@ export class VouchersService {
     return response.data;
   }
 
-  async getAllVouchers(): Promise<any> {
-    const response = await firstValueFrom(this.httpService.get('/vouchers'));
-    return response.data;
+  async getAllVouchersPaginated(page?: string, limit?: string, search?: string, status?: string): Promise<any> {
+
+    const params = new URLSearchParams();
+    if (page) params.append('page', page);
+    if (limit) params.append('limit', limit);
+    if (search) params.append('search', search);
+    if (status) params.append('status', status);
+
+    const queryString = params.toString();
+    const url = queryString ? `/vouchers?${queryString}` : '/vouchers'; 
+
+    const response = await firstValueFrom(this.httpService.get(url));
+    return response.data; 
   }
 
   async getVoucherById(id: number): Promise<any> {
@@ -27,10 +37,16 @@ export class VouchersService {
   }
 
   async deleteVoucher(id: number): Promise<any> {
-    const response = await firstValueFrom(this.httpService.delete(`/vouchers/${id}`));
-    return response.data;
-  }
 
+    try {
+        const response = await firstValueFrom(this.httpService.delete(`/vouchers/${id}`));
+        return response.data; 
+    } catch (error: any) {
+
+        console.error("Error deleting voucher via gateway:", error.response?.data || error.message);
+        throw error;
+    }
+  }
 
   async getActiveVouchers(userId: number): Promise<any> {
     const response = await firstValueFrom(

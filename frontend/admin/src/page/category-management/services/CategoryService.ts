@@ -100,4 +100,14 @@ export const CategoryService = {
 
         return response.json();
     },
+
+    async getCategoryByName(name: string): Promise<Category> {
+        const response = await fetch(`${API_BASE_URL}/categories/name/${name}`);
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch category with name ${name}`);
+        }
+
+        return response.json();
+    },
 };

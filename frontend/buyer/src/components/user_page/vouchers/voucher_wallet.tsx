@@ -104,7 +104,7 @@ export const VoucherWallet: React.FC<VoucherWalletProps> = ({ userId }) => {
         {/* VOUCHER LIST */}
         <div className="mt-4 relative z-0">
           <div className=" grid grid-cols-2 gap-4">
-            {vouchers.map((voucher) => (
+            {vouchers.length > 0 && vouchers.map((voucher) => (
               <VoucherItem key={voucher.id} voucher={voucher} userId={userId} />
             ))}
           </div>

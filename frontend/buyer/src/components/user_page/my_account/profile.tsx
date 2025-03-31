@@ -51,9 +51,6 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, files } = e.target;
-    setChangeForm(true);
-    // console.log(e.target);
-
     if (files && files.length > 0) {
       const _file = files[0];
       setAvtFile(_file);
@@ -65,6 +62,8 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
       setChangeAvatar(true);
       return;
     }
+    setChangeForm(true);
+
     setFormData((prev) => ({
       ...prev,
       [name]:
@@ -79,25 +78,27 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
   const checkValidForm = () => {
     console.log(formData);
     const { Username, Email, PhoneNumber, DoB } = formData;
-  
+
     const usernamePattern = new RegExp("^[A-Za-z][A-Za-z0-9_.]{2,}$");
     if (!Username.match(usernamePattern)) {
-      toast.error("Tên đăng nhập phải bắt đầu bằng chữ cái và có ít nhất 3 ký tự.");
+      toast.error(
+        "Tên đăng nhập phải bắt đầu bằng chữ cái và có ít nhất 3 ký tự."
+      );
       return false;
     }
-  
+
     const emailPattern = new RegExp("^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$");
     if (!Email.match(emailPattern)) {
       toast.error("Email không hợp lệ.");
       return false;
     }
-  
+
     const phonePattern = new RegExp("^(?:0|\\+84)?\\d{9,12}$");
     if (!PhoneNumber.match(phonePattern) && PhoneNumber !== "N/A") {
       toast.error("Số điện thoại không hợp lệ");
       return false;
     }
-  
+
     // Validate Date of Birth (Must be at least 18 years old)
     // if (DoB) {
     //   const birthDate = new Date(DoB);
@@ -111,18 +112,21 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
     //     return false;
     //   }
     // }
-  
+
     return true;
   };
-  const handleSubmit = async () => { 
+  const handleSubmit = async () => {
     if (checkValidForm()) {
       try {
         // Send profile update request
-        const response = await axios.post(
-          `${EnvValue.api_gateway_url}/api/users/update-profile`,
-          formData
-        );
-  
+        if(changeForm) {
+          const response = await axios.post(
+            `${EnvValue.api_gateway_url}/api/users/update-profile`,
+            formData
+          );
+          if(response) setChangeForm(false);
+        }
+
         // if (response && response.data) {
         //   // Update localStorage with the new user data
         //   const updatedUserProfile = {
@@ -136,22 +140,23 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
         //     sex: formData.Sex,
         //     updatedAt: new Date().toISOString(),
         //   };
-  
+
         //   localStorage.setItem("userProfile", JSON.stringify(updatedUserProfile));
-  
-          if (changeAvatar && avtFile) {
-            const avatarFormData = new FormData();
-            avatarFormData.append("file", avtFile);
-            const avatarResponse = await axios.post(
-              `${EnvValue.api_gateway_url}/api/users/update-avatar/${userId}`,
-              avatarFormData,
-              { headers: { "Content-Type": "multipart/form-data" } }
-            );
-            if (avatarResponse) setChangeAvatar(false);
-          }
-  
-          setChangeForm(false);
-          toast.success("Cập nhật hồ sơ thành công");
+
+        if (changeAvatar && avtFile) {
+          const avatarFormData = new FormData();
+          avatarFormData.append("file", avtFile);
+          console.log(avatarFormData);
+          const avatarResponse = await axios.post(
+            `${EnvValue.api_gateway_url}/api/users/update-avatar/${userId}`,
+            avatarFormData,
+            { headers: { "Content-Type": "multipart/form-data" } }
+          );
+          if (avatarResponse) setChangeAvatar(false);
+        }
+
+        setChangeForm(false);
+        toast.success("Cập nhật hồ sơ thành công");
         // }
       } catch (error) {
         console.error("Error updating user:", error);
@@ -159,7 +164,6 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
       }
     }
   };
-  
 
   return (
     <div className="user-container" role="main">
@@ -275,9 +279,10 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
                     <button
                       type="button"
                       className={`btn btn-solid-primary inline-flex ${
-                        changeForm ? "" : "!bg-gray-400 !cursor-not-allowed"
+                        (changeForm || changeAvatar) ? "" : "!bg-gray-400 !cursor-not-allowed"
                       }`}
                       onClick={() => handleSubmit()}
+                      disabled={!(changeForm || changeAvatar)}
                     >
                       Lưu
                     </button>
@@ -293,7 +298,8 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
                       className="avatar border border-gray-200"
                       style={{
                         backgroundImage: `url(${
-                          formData.Avatar || "https://storage.googleapis.com/shopii-image/user_avatar/c4f96264-90f0-4dda-a6bb-ebe4b502a9a7_avatar_default.png"
+                          formData.Avatar ||
+                          "https://storage.googleapis.com/shopii-image/user_avatar/c4f96264-90f0-4dda-a6bb-ebe4b502a9a7_avatar_default.png"
                         })`,
                       }}
                     />

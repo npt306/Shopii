@@ -13,28 +13,41 @@ interface CategoryDialogProps {
     category: Category | null;
     onClose: () => void;
     onSave: (categoryData: Partial<Category>) => void;
+    error: string | null;
 }
 
 export const CategoryDialog = ({
     mode,
     category,
     onClose,
-    onSave
+    onSave,
+    error
 }: CategoryDialogProps) => {
     const [categoryName, setCategoryName] = useState('');
     const [isActive, setIsActive] = useState(true);
-    const [includeInMenu, setIncludeInMenu] = useState(true);
+    const [localError, setLocalError] = useState<string | null>(null);
 
     useEffect(() => {
         if (mode === 'edit' && category) {
             setCategoryName(category.CategoryName);
             setIsActive(category.isActive);
-            setIncludeInMenu(true); // Assuming default is true
         }
-    }, [mode, category]);
+        if (error) {
+            setLocalError(error);
+        }
+    }, [mode, category, error]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Example validation for duplicate category name
+        if (categoryName.trim() === '') {
+            setLocalError('Category name cannot be empty.');
+            return;
+        }
+
+        // Reset error if validation passes
+        setLocalError(null);
 
         const categoryData: Partial<Category> = {
             CategoryName: categoryName,
@@ -49,7 +62,7 @@ export const CategoryDialog = ({
             case 'new':
                 return 'Add New Category';
             case 'edit':
-                return `Edit - Category - ${category?.CategoryID}`;
+                return `Edit - Category`;
             case 'newChild':
                 return `Add Child Category to ${category?.CategoryName}`;
             default:
@@ -58,7 +71,7 @@ export const CategoryDialog = ({
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div className="fixed inset-0 backdrop-brightness-90 backdrop-blur-[2px] flex justify-center items-center z-50">
             <div className="bg-white rounded-lg shadow-lg w-full max-w-lg">
                 <div className="flex justify-between items-center p-4 border-b">
                     <h2 className="text-lg font-medium">{getTitle()}</h2>
@@ -83,6 +96,7 @@ export const CategoryDialog = ({
                                     required
                                 />
                             </div>
+                            {localError && <p className="text-red-500 mt-2">{localError}</p>}
                         </div>
 
                         <div className="mb-6">
@@ -94,16 +108,6 @@ export const CategoryDialog = ({
                                     onClick={() => setIsActive(!isActive)}
                                 >
                                     <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${isActive ? 'translate-x-6' : ''}`}></div>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                <label className="text-gray-600">Include In Menu</label>
-                                <div
-                                    className={`w-12 h-6 rounded-full p-1 cursor-pointer ${includeInMenu ? 'bg-teal-500' : 'bg-gray-300'}`}
-                                    onClick={() => setIncludeInMenu(!includeInMenu)}
-                                >
-                                    <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${includeInMenu ? 'translate-x-6' : ''}`}></div>
                                 </div>
                             </div>
                         </div>

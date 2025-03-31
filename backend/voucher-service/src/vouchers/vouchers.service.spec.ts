@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository, ObjectLiteral } from 'typeorm';
+import { Repository, ObjectLiteral, FindManyOptions, ILike, LessThanOrEqual, MoreThanOrEqual, MoreThan, LessThan, Not, In } from 'typeorm';
 import { VouchersService } from './vouchers.service';
 import { Voucher } from './entities/voucher.entity';
 import { VoucherHistory } from './entities/voucher-history.entity';
@@ -10,6 +10,7 @@ import { UpdateVoucherDto } from './dto/update-voucher.dto';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { VoucherActionType } from '../common/enums/voucher-action-type.enum';
 import { VoucherConditionType } from '../common/enums/voucher-condition-type.enum';
+import { QueryVoucherDto, VoucherStatusQuery } from './dto/query-voucher.dto';
 
 export type MockRepository<T extends ObjectLiteral> = {
   findOne: jest.Mock<Promise<T | null>, [any]>;
@@ -19,6 +20,8 @@ export type MockRepository<T extends ObjectLiteral> = {
   save: jest.Mock<Promise<T>, [any]>;
   merge: jest.Mock<T, [T, any]>;
   delete: jest.Mock<Promise<{ affected?: number | null }>, [any]>;
+  findAndCount: jest.Mock<Promise<[T[], number]>, [FindManyOptions<T>?]>;
+  count: jest.Mock<Promise<number>, [any?]>;
 };
 
 const createMockRepository = <T extends ObjectLiteral>(): MockRepository<T> => ({
@@ -29,7 +32,52 @@ const createMockRepository = <T extends ObjectLiteral>(): MockRepository<T> => (
   save: jest.fn(),
   merge: jest.fn(),
   delete: jest.fn(),
+  findAndCount: jest.fn(),
+  count: jest.fn(),
 });
+
+// Helper to get current date without time for comparisons
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+const tomorrow = new Date(today);
+tomorrow.setDate(today.getDate() + 1);
+const yesterday = new Date(today);
+yesterday.setDate(today.getDate() - 1);
+const nextWeek = new Date(today);
+nextWeek.setDate(today.getDate() + 7);
+const lastWeek = new Date(today);
+lastWeek.setDate(today.getDate() - 7);
+
+// --- Mock Data ---
+const mockVoucherActive: Voucher = {
+    id: 1, name: 'Active Voucher', code: 'ACTIVE10',
+    starts_at: lastWeek, ends_at: nextWeek,
+    per_customer_limit: 1, total_usage_limit: 100,
+    condition_type: VoucherConditionType.NONE, action_type: VoucherActionType.FIXED_AMOUNT, discount_amount: 10,
+    created_at: new Date(), updated_at: new Date(),
+    description: undefined, min_order_amount: undefined, min_products: undefined, product_ids: undefined,
+    discount_percentage: undefined, free_shipping_max: undefined, buy_x_amount: undefined, get_y_amount: undefined,
+};
+const mockVoucherUpcoming: Voucher = {
+    id: 2, name: 'Upcoming Sale', code: 'UPCOMING',
+    starts_at: tomorrow, ends_at: nextWeek,
+    per_customer_limit: 1, total_usage_limit: 50,
+    condition_type: VoucherConditionType.NONE, action_type: VoucherActionType.PERCENTAGE, discount_percentage: 15,
+    created_at: new Date(), updated_at: new Date(),
+    description: undefined, min_order_amount: undefined, min_products: undefined, product_ids: undefined,
+    discount_amount: undefined, free_shipping_max: undefined, buy_x_amount: undefined, get_y_amount: undefined,
+};
+const mockVoucherExpired: Voucher = {
+    id: 3, name: 'Expired Deal', code: 'EXPIRED',
+    starts_at: lastWeek, ends_at: yesterday,
+    per_customer_limit: 1, total_usage_limit: 200,
+    condition_type: VoucherConditionType.MIN_ORDER, min_order_amount: 50000, action_type: VoucherActionType.FIXED_AMOUNT, discount_amount: 5,
+    created_at: new Date(), updated_at: new Date(),
+    description: undefined, min_products: undefined, product_ids: undefined,
+    discount_percentage: undefined, free_shipping_max: undefined, buy_x_amount: undefined, get_y_amount: undefined,
+};
+const allMockVouchers = [mockVoucherActive, mockVoucherUpcoming, mockVoucherExpired];
+
 
 describe('VouchersService', () => {
   let service: VouchersService;
@@ -37,53 +85,20 @@ describe('VouchersService', () => {
   let voucherHistoryRepository: MockRepository<VoucherHistory>;
   let userVoucherRepository: MockRepository<UserVoucher>;
 
-  const mockVoucher: Voucher = {
-    id: 1,
-    name: 'Test Voucher',
-    code: 'TEST10',
-    starts_at: new Date('2024-01-01T00:00:00Z'),
-    ends_at: new Date('2024-12-31T23:59:59Z'),
-    per_customer_limit: 1,
-    total_usage_limit: 100,
-    condition_type: VoucherConditionType.NONE,
-    action_type: VoucherActionType.FIXED_AMOUNT,
-    discount_amount: 10,
-    created_at: new Date(),
-    updated_at: new Date(),
-    description: undefined,
-    min_order_amount: undefined,
-    min_products: undefined,
-    product_ids: undefined,
-    discount_percentage: undefined,
-    free_shipping_max: undefined,
-    buy_x_amount: undefined,
-    get_y_amount: undefined,
-  };
-
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         VouchersService,
-        {
-          provide: getRepositoryToken(Voucher),
-          useValue: createMockRepository<Voucher>(),
-        },
-        {
-          provide: getRepositoryToken(VoucherHistory),
-          useValue: createMockRepository<VoucherHistory>(),
-        },
-         {
-          provide: getRepositoryToken(UserVoucher),
-          useValue: createMockRepository<UserVoucher>(),
-        },
-
+        { provide: getRepositoryToken(Voucher), useValue: createMockRepository<Voucher>() },
+        { provide: getRepositoryToken(VoucherHistory), useValue: createMockRepository<VoucherHistory>() },
+        { provide: getRepositoryToken(UserVoucher), useValue: createMockRepository<UserVoucher>() },
       ],
     }).compile();
 
     service = module.get<VouchersService>(VouchersService);
-    repository = module.get<MockRepository<Voucher>>(getRepositoryToken(Voucher));
-    voucherHistoryRepository = module.get<MockRepository<VoucherHistory>>(getRepositoryToken(VoucherHistory));
-    userVoucherRepository = module.get<MockRepository<UserVoucher>>(getRepositoryToken(UserVoucher));
+    repository = module.get(getRepositoryToken(Voucher));
+    voucherHistoryRepository = module.get(getRepositoryToken(VoucherHistory));
+    userVoucherRepository = module.get(getRepositoryToken(UserVoucher));
   });
 
   it('should be defined', () => {
@@ -93,112 +108,171 @@ describe('VouchersService', () => {
   // --- Test create() ---
   describe('create', () => {
     const createDto: CreateVoucherDto = {
-      name: 'New Voucher',
-      code: 'NEW15',
-      starts_at: '2025-01-01T00:00:00Z',
-      ends_at: '2025-12-31T23:59:59Z',
-      action_type: VoucherActionType.PERCENTAGE,
-      discount_percentage: 15,
+      name: 'New Voucher', code: 'NEW15', starts_at: tomorrow.toISOString(), ends_at: nextWeek.toISOString(),
+      action_type: VoucherActionType.PERCENTAGE, discount_percentage: 15,
     };
-     // Define a more complete mock result for save, matching Voucher structure
-     const savedVoucherMock = {
-        ...mockVoucher, // Base properties
-        ...createDto,   // Overwrite with DTO properties
-        id: 2,          // Assign a new ID
-        starts_at: new Date(createDto.starts_at), // Convert date strings
-        ends_at: new Date(createDto.ends_at),
-        created_at: new Date(), // Simulate DB timestamps
-        updated_at: new Date(),
-      };
+    const savedVoucherMock = { ...createDto, id: 4, code: 'NEW15', starts_at: tomorrow, ends_at: nextWeek, created_at: new Date(), updated_at: new Date() } as Voucher;
 
-    it('should successfully create a voucher', async () => {
+    it('should successfully create a voucher (and uppercase code)', async () => {
       repository.findOne.mockResolvedValue(null);
-      repository.create.mockReturnValue(createDto as unknown as Voucher);
+      repository.create.mockImplementation((dto) => ({ ...dto } as Voucher)); // Simulate create
       repository.save.mockResolvedValue(savedVoucherMock);
 
       const result = await service.create(createDto);
 
-      expect(repository.findOne).toHaveBeenCalledWith({ where: { code: createDto.code } });
-      expect(repository.create).toHaveBeenCalledWith(createDto);
-      expect(repository.save).toHaveBeenCalledWith(createDto as unknown as Voucher);
+      expect(repository.findOne).toHaveBeenCalledWith({ where: { code: 'NEW15' } });
+      expect(repository.create).toHaveBeenCalledWith(expect.objectContaining({ ...createDto, code: 'NEW15' }));
+      expect(repository.save).toHaveBeenCalled();
       expect(result).toEqual(savedVoucherMock);
     });
 
     it('should throw BadRequestException if voucher code already exists', async () => {
-      repository.findOne.mockResolvedValue(mockVoucher);
+        const existingVoucher = { ...mockVoucherActive, code: 'NEW15' };
+        repository.findOne.mockResolvedValue(existingVoucher);
 
-      await expect(service.create(createDto)).rejects.toThrow(BadRequestException);
-      expect(repository.findOne).toHaveBeenCalledWith({ where: { code: createDto.code } });
-      expect(repository.create).not.toHaveBeenCalled();
-      expect(repository.save).not.toHaveBeenCalled();
+        await expect(service.create(createDto)).rejects.toThrow(BadRequestException);
+        expect(repository.findOne).toHaveBeenCalledWith({ where: { code: 'NEW15' } });
+        expect(repository.create).not.toHaveBeenCalled();
+        expect(repository.save).not.toHaveBeenCalled();
     });
   });
 
   // --- Test findAll() ---
   describe('findAll', () => {
-    it('should return an array of vouchers', async () => {
-      const vouchers = [mockVoucher, { ...mockVoucher, id: 2, code: 'TEST20' }];
-      repository.find.mockResolvedValue(vouchers);
+     beforeEach(() => {
+        repository.findAndCount.mockResolvedValue([allMockVouchers, allMockVouchers.length]);
+     });
 
-      const result = await service.findAll();
+    it('should return paginated vouchers with default options', async () => {
+      const queryDto = new QueryVoucherDto();
+      const expectedOptions: FindManyOptions<Voucher> = {
+        skip: 0, take: 10, order: { created_at: 'DESC' }, where: {},
+      };
 
-      expect(repository.find).toHaveBeenCalled();
-      expect(result).toEqual(vouchers);
+      const result = await service.findAll(queryDto);
+
+      expect(repository.findAndCount).toHaveBeenCalledWith(expectedOptions);
+      expect(result.data).toEqual(allMockVouchers);
+      expect(result.total).toEqual(allMockVouchers.length);
     });
 
-    it('should return an empty array if no vouchers exist', async () => {
-      repository.find.mockResolvedValue([]);
+    it('should return correct page and limit', async () => {
+      const queryDto: QueryVoucherDto = { page: 2, limit: 1 };
+       repository.findAndCount.mockResolvedValue([[mockVoucherUpcoming], allMockVouchers.length]);
+       const expectedOptions: FindManyOptions<Voucher> = {
+        skip: 1, take: 1, order: { created_at: 'DESC' }, where: {},
+      };
 
-      const result = await service.findAll();
+      const result = await service.findAll(queryDto);
 
-      expect(repository.find).toHaveBeenCalled();
-      expect(result).toEqual([]);
+      expect(repository.findAndCount).toHaveBeenCalledWith(expectedOptions);
+      expect(result.data).toEqual([mockVoucherUpcoming]);
+      expect(result.total).toEqual(allMockVouchers.length);
+    });
+
+    it('should search by name or code (case-insensitive)', async () => {
+        const searchTerm = 'active';
+        const queryDto: QueryVoucherDto = { search: searchTerm };
+        repository.findAndCount.mockResolvedValue([[mockVoucherActive], 1]);
+        const expectedOptions: FindManyOptions<Voucher> = {
+            skip: 0, take: 10, order: { created_at: 'DESC' },
+            where: [ { name: ILike(`%${searchTerm}%`) }, { code: ILike(`%${searchTerm}%`) } ],
+        };
+
+        const result = await service.findAll(queryDto);
+
+        expect(repository.findAndCount).toHaveBeenCalledWith(expectedOptions);
+        expect(result.data).toEqual([mockVoucherActive]);
+        expect(result.total).toEqual(1);
+    });
+
+    it('should filter by status: active', async () => {
+        const queryDto: QueryVoucherDto = { status: VoucherStatusQuery.ACTIVE };
+        repository.findAndCount.mockResolvedValue([[mockVoucherActive], 1]);
+        const expectedOptions: FindManyOptions<Voucher> = {
+            skip: 0, take: 10, order: { created_at: 'DESC' },
+            where: { starts_at: LessThanOrEqual(expect.any(Date)), ends_at: MoreThanOrEqual(expect.any(Date)) },
+        };
+
+        const result = await service.findAll(queryDto);
+        expect(repository.findAndCount).toHaveBeenCalledWith(expectedOptions);
+        expect(result.data).toEqual([mockVoucherActive]);
+        expect(result.total).toEqual(1);
+    });
+
+    it('should filter by status: upcoming', async () => {
+        const queryDto: QueryVoucherDto = { status: VoucherStatusQuery.UPCOMING };
+        repository.findAndCount.mockResolvedValue([[mockVoucherUpcoming], 1]);
+         const expectedOptions: FindManyOptions<Voucher> = {
+            skip: 0, take: 10, order: { created_at: 'DESC' },
+            where: { starts_at: MoreThan(expect.any(Date)) },
+        };
+        const result = await service.findAll(queryDto);
+        expect(repository.findAndCount).toHaveBeenCalledWith(expectedOptions);
+        expect(result.data).toEqual([mockVoucherUpcoming]);
+        expect(result.total).toEqual(1);
+    });
+
+    it('should filter by status: expired', async () => {
+        const queryDto: QueryVoucherDto = { status: VoucherStatusQuery.EXPIRED };
+        repository.findAndCount.mockResolvedValue([[mockVoucherExpired], 1]);
+         const expectedOptions: FindManyOptions<Voucher> = {
+            skip: 0, take: 10, order: { created_at: 'DESC' },
+            where: { ends_at: LessThan(expect.any(Date)) },
+        };
+        const result = await service.findAll(queryDto);
+        expect(repository.findAndCount).toHaveBeenCalledWith(expectedOptions);
+        expect(result.data).toEqual([mockVoucherExpired]);
+        expect(result.total).toEqual(1);
+    });
+
+     it('should combine search and status filters', async () => {
+        const searchTerm = 'sale';
+        const queryDto: QueryVoucherDto = { search: searchTerm, status: VoucherStatusQuery.UPCOMING };
+        repository.findAndCount.mockResolvedValue([[mockVoucherUpcoming], 1]);
+         const expectedOptions: FindManyOptions<Voucher> = {
+            skip: 0, take: 10, order: { created_at: 'DESC' },
+            where: [
+                { name: ILike(`%${searchTerm}%`), starts_at: MoreThan(expect.any(Date)) },
+                { code: ILike(`%${searchTerm}%`), starts_at: MoreThan(expect.any(Date)) },
+            ],
+        };
+
+        const result = await service.findAll(queryDto);
+        expect(repository.findAndCount).toHaveBeenCalledWith(expectedOptions);
+        expect(result.data).toEqual([mockVoucherUpcoming]);
+        expect(result.total).toEqual(1);
     });
   });
 
   // --- Test findOne() ---
   describe('findOne', () => {
-    const voucherId = 1;
-
     it('should return a single voucher if found', async () => {
-      repository.findOneBy.mockResolvedValue(mockVoucher);
-
-      const result = await service.findOne(voucherId);
-
-      expect(repository.findOneBy).toHaveBeenCalledWith({ id: voucherId });
-      expect(result).toEqual(mockVoucher);
+      repository.findOneBy.mockResolvedValue(mockVoucherActive);
+      const result = await service.findOne(mockVoucherActive.id);
+      expect(repository.findOneBy).toHaveBeenCalledWith({ id: mockVoucherActive.id });
+      expect(result).toEqual(mockVoucherActive);
     });
 
     it('should throw NotFoundException if voucher is not found', async () => {
       repository.findOneBy.mockResolvedValue(null);
-
-      await expect(service.findOne(voucherId)).rejects.toThrow(NotFoundException);
-      expect(repository.findOneBy).toHaveBeenCalledWith({ id: voucherId });
+      await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
+      expect(repository.findOneBy).toHaveBeenCalledWith({ id: 999 });
     });
   });
 
   // --- Test update() ---
-  describe('update', () => {
+   describe('update', () => {
     const voucherId = 1;
     const updateDto: UpdateVoucherDto = { description: 'Updated description' };
 
     it('should successfully update a voucher', async () => {
-      const originalVoucher = { ...mockVoucher }; // Clone to avoid mutation issues
-
-      const expectedSavedVoucher: Voucher = {
-          ...originalVoucher, // Start with original state
-          ...updateDto,       // Apply updates from DTO
-          starts_at: updateDto.starts_at ? new Date(updateDto.starts_at) : originalVoucher.starts_at,
-          ends_at: updateDto.ends_at ? new Date(updateDto.ends_at) : originalVoucher.ends_at,
-          updated_at: new Date() // Simulate updated timestamp by DB
-      };
+      const originalVoucher = { ...mockVoucherActive };
+      const expectedSavedVoucher = { ...originalVoucher, ...updateDto, updated_at: new Date() } as Voucher;
 
       repository.findOneBy.mockResolvedValue(originalVoucher);
       repository.findOne.mockResolvedValue(null);
-      repository.merge.mockImplementation((entity, dto) => {
-        Object.assign(entity, dto);
-        return entity as Voucher;
-      });
+      repository.merge.mockImplementation((entity, dto) => Object.assign(entity, dto));
       repository.save.mockResolvedValue(expectedSavedVoucher);
 
       const result = await service.update(voucherId, updateDto);
@@ -209,78 +283,94 @@ describe('VouchersService', () => {
       expect(result).toEqual(expectedSavedVoucher);
     });
 
-    it('should successfully update a voucher with a new unique code', async () => {
-        const updateCodeDto: UpdateVoucherDto = { code: 'NEWCODE' };
-        const originalVoucher = { ...mockVoucher };
-
-        const expectedSavedVoucherWithCode: Voucher = {
-            ...originalVoucher,
-            ...updateCodeDto,
-            starts_at: updateCodeDto.starts_at ? new Date(updateCodeDto.starts_at) : originalVoucher.starts_at,
-            ends_at: updateCodeDto.ends_at ? new Date(updateCodeDto.ends_at) : originalVoucher.ends_at,
-            updated_at: new Date()
-        };
+    it('should successfully update a voucher with a new unique code (and uppercase it)', async () => {
+        const updateCodeDto: UpdateVoucherDto = { code: 'newcode' };
+        const originalVoucher = { ...mockVoucherActive };
+        const expectedSavedVoucher = { ...originalVoucher, code: 'NEWCODE', updated_at: new Date() } as Voucher;
 
         repository.findOneBy.mockResolvedValue(originalVoucher);
         repository.findOne.mockResolvedValue(null);
-        repository.merge.mockImplementation((entity, dto) => {
-             Object.assign(entity, dto);
-             return entity as Voucher;
-        });
-        repository.save.mockResolvedValue(expectedSavedVoucherWithCode);
+        repository.merge.mockImplementation((entity, dto) => Object.assign(entity, dto));
+        repository.save.mockResolvedValue(expectedSavedVoucher);
 
         const result = await service.update(voucherId, updateCodeDto);
 
         expect(repository.findOneBy).toHaveBeenCalledWith({ id: voucherId });
-        expect(repository.findOne).toHaveBeenCalledWith({ where: { code: updateCodeDto.code } });
-        expect(repository.merge).toHaveBeenCalledWith(originalVoucher, updateCodeDto);
-        expect(repository.save).toHaveBeenCalledWith(originalVoucher);
-        expect(result).toEqual(expectedSavedVoucherWithCode);
-      });
+        expect(repository.findOne).toHaveBeenCalledWith({
+            where: { code: 'NEWCODE', id: Not(voucherId) }
+        });
+        expect(repository.merge).toHaveBeenCalledWith(originalVoucher, expect.objectContaining({ code: 'NEWCODE' }));
+        expect(repository.save).toHaveBeenCalledWith(expect.objectContaining({ code: 'NEWCODE' }));
+        expect(result).toEqual(expectedSavedVoucher);
+        });
+    
 
 
     it('should throw NotFoundException if voucher to update is not found', async () => {
       repository.findOneBy.mockResolvedValue(null);
-
       await expect(service.update(voucherId, updateDto)).rejects.toThrow(NotFoundException);
       expect(repository.findOneBy).toHaveBeenCalledWith({ id: voucherId });
-      expect(repository.merge).not.toHaveBeenCalled();
-      expect(repository.save).not.toHaveBeenCalled();
     });
 
     it('should throw BadRequestException if updated code already exists for another voucher', async () => {
-      const updateCodeDto: UpdateVoucherDto = { code: 'EXISTINGCODE' };
-      const existingVoucherWithCode = { ...mockVoucher, id: 2, code: 'EXISTINGCODE' };
-      const originalVoucher = { ...mockVoucher };
+        const updateCodeDto: UpdateVoucherDto = { code: 'EXISTING' };
+        const existingVoucherWithCode = { ...mockVoucherUpcoming, code: 'EXISTING' }; // ID 2
+        const originalVoucher = { ...mockVoucherActive }; // ID 1
 
-      repository.findOneBy.mockResolvedValue(originalVoucher);
-      repository.findOne.mockResolvedValue(existingVoucherWithCode);
+        repository.findOneBy.mockResolvedValue(originalVoucher);
+        repository.findOne.mockResolvedValue(existingVoucherWithCode);
 
-      await expect(service.update(voucherId, updateCodeDto)).rejects.toThrow(BadRequestException);
+        await expect(service.update(voucherId, updateCodeDto)).rejects.toThrow(BadRequestException);
 
-      expect(repository.findOneBy).toHaveBeenCalledWith({ id: voucherId });
-      expect(repository.findOne).toHaveBeenCalledWith({ where: { code: updateCodeDto.code } });
-      expect(repository.merge).not.toHaveBeenCalled();
-      expect(repository.save).not.toHaveBeenCalled();
+        expect(repository.findOneBy).toHaveBeenCalledWith({ id: voucherId });
+        expect(repository.findOne).toHaveBeenCalledWith({
+            where: { code: 'EXISTING', id: Not(voucherId) }
+        });
+        expect(repository.merge).not.toHaveBeenCalled();
+        expect(repository.save).not.toHaveBeenCalled();
     });
   });
 
   // --- Test remove() ---
   describe('remove', () => {
-    const voucherId = 1;
+     const voucherId = 1;
 
     it('should successfully remove a voucher', async () => {
       repository.delete.mockResolvedValue({ affected: 1 });
-
       await expect(service.remove(voucherId)).resolves.toBeUndefined();
       expect(repository.delete).toHaveBeenCalledWith(voucherId);
     });
 
     it('should throw NotFoundException if voucher to remove is not found', async () => {
       repository.delete.mockResolvedValue({ affected: 0 });
-
       await expect(service.remove(voucherId)).rejects.toThrow(NotFoundException);
       expect(repository.delete).toHaveBeenCalledWith(voucherId);
     });
   });
+
+   // --- Test getActiveVouchers ---
+    describe('getActiveVouchers', () => {
+      it('should only return active/upcoming vouchers not claimed by the user', async () => {
+        const userId = 123;
+        const claimedVoucher = mockVoucherActive;
+        const mockUserVoucherEntry: UserVoucher = {
+            id: 10, VoucherId: claimedVoucher.id, OwnerId: userId, ExpDate: nextWeek,
+            UsingTimeLeft: 1, CreatedAt: new Date(), UpdatedAt: new Date(), voucher: claimedVoucher
+        };
+        userVoucherRepository.find.mockResolvedValue([mockUserVoucherEntry]);
+        repository.find.mockResolvedValue([mockVoucherUpcoming]);
+        const result = await service.getActiveVouchers(userId);
+    
+        expect(userVoucherRepository.find).toHaveBeenCalledWith({ where: { OwnerId: userId } });
+    
+        expect(repository.find).toHaveBeenCalledWith({
+            where: {
+                id: Not(In([claimedVoucher.id])),
+                ends_at: MoreThan(expect.any(Date)),
+            },
+        });
+        expect(result).toEqual([mockVoucherUpcoming]);    
+        });
+    });
+
 });

@@ -16,7 +16,11 @@ import { Cart } from "../types/cart";
 import { useCart } from "../context/cartContext";
 import { formatPrice } from "../helpers/utility/formatPrice";
 
-import { ORDER_SERVICE_LOCALHOST, API_GATEWAY_URL } from "../config/url";
+import {
+  ORDER_SERVICE_LOCALHOST,
+  API_GATEWAY_URL,
+  API_GATEWAY_LOCALHOST,
+} from "../config/url";
 
 const products = [
   {
@@ -53,6 +57,7 @@ export const CartPage = () => {
         setLoading(true);
         const response = await axios.get(
           // `${ORDER_SERVICE_LOCALHOST}/carts/${id}`
+          // `${API_GATEWAY_LOCALHOST}/order/carts/${id}`
           `${API_GATEWAY_URL}/order/carts/${id}`
         );
         console.log(response.data);
@@ -251,6 +256,7 @@ export const CartPage = () => {
     try {
       const res = await axios.post(
         // `${ORDER_SERVICE_LOCALHOST}/carts/delete-from-cart`,
+        // `${API_GATEWAY_LOCALHOST}/order/carts/delete-from-cart`,
         `${API_GATEWAY_URL}/order/carts/delete-from-cart`,
         { id, productTypeId }
       );
@@ -279,6 +285,7 @@ export const CartPage = () => {
       try {
         const res = await axios.post(
           // `${ORDER_SERVICE_LOCALHOST}/carts/delete-from-cart`,
+          // `${API_GATEWAY_LOCALHOST}/order/carts/delete-from-cart`,
           `${API_GATEWAY_URL}/order/carts/delete-from-cart`,
           { id, productTypeId }
         );
@@ -316,6 +323,7 @@ export const CartPage = () => {
     try {
       const res = await axios.post(
         // `${ORDER_SERVICE_LOCALHOST}/carts/update-cart`,
+        // `${API_GATEWAY_LOCALHOST}/order/carts/update-cart`,
         `${API_GATEWAY_URL}/order/carts/update-cart`,
         {
           id,
