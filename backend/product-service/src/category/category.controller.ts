@@ -20,6 +20,11 @@ export class CategoryController {
         return this.categoryService.getCategoryNames();
     }
 
+    @Get('name/:name')
+    async getCategoryByName(@Param('name') name: string): Promise<Categories> {
+        return this.categoryService.getCategoryByName(name);
+    }
+
     @Get(':id')
     async getCategoryById(@Param('id') id: number): Promise<Categories> {
         return this.categoryService.getCategoryById(id);

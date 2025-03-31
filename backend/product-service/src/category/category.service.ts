@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not } from 'typeorm';
 import { Categories } from './entities/category.entity';
@@ -54,6 +54,18 @@ export class CategoryService {
         return category;
     }
 
+    async getCategoryByName(name: string): Promise<Categories> {
+        const category = await this.categoriesRepository.findOne({
+            where: { CategoryName: name }
+        });
+
+        if (!category) {
+            throw new NotFoundException(`Category with name ${name} not found`);
+        }
+
+        return category;
+    }
+
     async createCategory(categoryData: Partial<Categories>): Promise<Categories> {
         // Check if a category with the same name already exists
         const existingCategory = await this.categoriesRepository.findOne({
@@ -69,7 +81,13 @@ export class CategoryService {
     }
 
     async updateCategory(id: number, categoryData: Partial<Categories>): Promise<Categories> {
-        const category = await this.getCategoryById(id);
+        if (id === undefined || id === null || isNaN(Number(id))) {
+            throw new BadRequestException('Invalid category ID');
+        }
+
+        // Convert to number explicitly
+        const idCaa = Number(id);
+        const category = await this.getCategoryById(idCaa);
 
         // Kiểm tra nếu có thay đổi CategoryName
         if (categoryData.CategoryName) {
@@ -92,15 +110,19 @@ export class CategoryService {
     async deleteCategory(id: number): Promise<void> {
         const category = await this.getCategoryById(id);
 
-        // Check if the category has any children before deleting
-        const childCategories = await this.categoriesRepository.find({
-            where: { ParentID: id }
-        });
+        // Recursively delete all child categories
+        const deleteChildren = async (parentId: number) => {
+            const childCategories = await this.categoriesRepository.find({
+                where: { ParentID: parentId }
+            });
 
-        if (childCategories.length > 0) {
-            throw new ConflictException('Cannot delete a category with child categories');
-        }
+            for (const childCategory of childCategories) {
+                await deleteChildren(childCategory.CategoryID);
+                await this.categoriesRepository.remove(childCategory);
+            }
+        };
 
+        await deleteChildren(id);
         await this.categoriesRepository.remove(category);
     }
 
