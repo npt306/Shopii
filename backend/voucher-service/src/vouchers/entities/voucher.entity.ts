@@ -35,7 +35,7 @@ import {
     total_usage_limit: number;
   
     @Column({ type: 'int' }) // Should be initialized based on total_usage_limit
-    total_uses_left: number;
+    total_uses_left?: number;
 
     @Column({
       type: 'enum',
