@@ -54,4 +54,7 @@ jobs:
             docker run -d --name frontend-buyer -p 8000:8000 \
             -e "VITE_API_GATEWAY_URL=http://34.58.241.34:3000" \
             -e "VITE_AUTH_SERVICE_URL=http://34.58.241.34:3003" \
+            -e "VITE_SELLER_URL=http://34.58.241.34:8001" \
+            -e "VITE_PRODUCT_SERVICE_URL=http://34.58.241.34:3001" \
+            -e "VITE_ACCOUNT_SERVICE_URL=http://34.58.241.34:3005" \
             ${{ secrets.DOCKERHUB_USERNAME }}/frontend-buyer:latest
