@@ -119,9 +119,9 @@ export const ProductDetailPage = () => {
     const fetchProductDetail = async () => {
       try {
         const response = await axios.get(
-          //` ${PRODUCT_SERVICE_LOCALHOST}/product/classifications/${id}`
+          // `${PRODUCT_SERVICE_LOCALHOST}/product/classifications/${id}`
           // `${API_GATEWAY_LOCALHOST}/api/product/detail/${id}`
-           `${API_GATEWAY_URL}/api/product/detail/${id}`
+          `${API_GATEWAY_URL}/api/product/detail/${id}`
         );
         setProductDetail(response.data);
         // console.log(response.data);

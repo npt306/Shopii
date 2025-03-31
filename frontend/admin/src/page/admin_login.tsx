@@ -214,7 +214,7 @@ export const AdminLoginPage = () => {
                     aria-hidden="true"
                     style={{ width: '20px', height: '20px', display: 'inline-block', verticalAlign: 'middle' }}
                   />
-                    Xác thực bằng OTP
+                  Xác thực bằng OTP
                 </button>
               </div>
             )}
