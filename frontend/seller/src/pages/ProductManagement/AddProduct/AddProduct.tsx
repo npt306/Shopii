@@ -813,7 +813,7 @@ const AddProduct = () => {
             formData.append("file", file);
 
             try {
-                const response = await axios.post(`http://34.58.241.34:3001/product/uploadIMG`, formData, {
+                const response = await axios.post(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/uploadIMG`, formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                 });
                 return response.data.url; // Trả về URL từ server
@@ -838,7 +838,7 @@ const AddProduct = () => {
 
         // Gọi API xóa ảnh trên server nếu cần
         try {
-            await axios.delete(`http://34.58.241.34:3001/product/deleteIMG`, { data: { url: removedUrl } });
+            await axios.delete(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/deleteIMG`, { data: { url: removedUrl } });
         } catch (error) {
             console.error("Lỗi khi xóa ảnh trên server:", error);
         }
@@ -856,7 +856,7 @@ const AddProduct = () => {
             formData.append("file", file);
 
             try {
-                const response = await axios.post(`http://34.58.241.34:3001/product/uploadIMG`, formData, {
+                const response = await axios.post(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/uploadIMG`, formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                 });
                 return response.data.url; // Trả về URL từ server
@@ -881,7 +881,7 @@ const AddProduct = () => {
 
         // Gọi API xóa ảnh trên server nếu cần
         try {
-            await axios.delete(`http://34.58.241.34:3001/product/deleteIMG`, { data: { url: removedUrl } });
+            await axios.delete(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/deleteIMG`, { data: { url: removedUrl } });
         } catch (error) {
             console.error("Lỗi khi xóa ảnh trên server:", error);
         }
@@ -919,7 +919,7 @@ const AddProduct = () => {
                 const formData = new FormData();
                 formData.append("file", file);
 
-                axios.post(`http://34.58.241.34:3001/product/uploadVideo`, formData, {
+                axios.post(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/uploadVideo`, formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                 })
                     .then(response => {
@@ -935,7 +935,7 @@ const AddProduct = () => {
     const handleRemoveVideo = async () => {
         if (uploadedVideoUrl) {
             try {
-                await axios.delete(`http://34.58.241.34:3001/product/deleteVideo`, { data: { url: uploadedVideoUrl } });
+                await axios.delete(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/deleteVideo`, { data: { url: uploadedVideoUrl } });
                 setUploadedVideoUrl(null);
                 setSelectedVideo(null);
             } catch (error) {
@@ -1019,7 +1019,7 @@ const AddProduct = () => {
         };
 
         try {
-            const response = await axios.post(`http://34.58.241.34:3001/product`, sampleProduct);
+            const response = await axios.post(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product`, sampleProduct);
             console.log('Product added:', response.data);
             toast.success("Thêm sản phẩm thành công!", {
                 onClose: () => {
@@ -1035,8 +1035,7 @@ const AddProduct = () => {
     const fetchCategories = async () => {
         try {
             // Replace this with your actual API call
-            const response = await axios.get(`http://34.58.241.34:3001/categories`);
-            console.log(import.meta.env.VITE_API_URL);
+            const response = await axios.get(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/categories`);
             const data = response.data;
             setSelectedCategory(data);
         } catch (error) {
@@ -1671,7 +1670,7 @@ const AddProduct = () => {
                                                                     if (currentUrl && currentUrl !== "") {
                                                                         try {
                                                                             await axios.delete(
-                                                                                `http://34.58.241.34:3001/product/deleteIMG`,
+                                                                                `${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/deleteIMG`,
                                                                                 { data: { url: currentUrl } }
                                                                             );
                                                                         } catch (error) {
@@ -1682,7 +1681,7 @@ const AddProduct = () => {
 
                                                                     // Upload the image to the server
                                                                     const response = await axios.post(
-                                                                        `http://34.58.241.34:3001/product/uploadIMG`,
+                                                                        `${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/uploadIMG`,
                                                                         formData,
                                                                         {
                                                                             headers: { "Content-Type": "multipart/form-data" },
@@ -1768,7 +1767,7 @@ const AddProduct = () => {
                                                                                                     if (groupImage) {
                                                                                                         try {
                                                                                                             await axios.delete(
-                                                                                                                `http://34.58.241.34:3001/product/deleteIMG`,
+                                                                                                                `${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/deleteIMG`,
                                                                                                                 { data: { url: groupImage } }
                                                                                                             );
 

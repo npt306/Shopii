@@ -84,7 +84,7 @@ const All: React.FC<AllProps> = ({ products: initialProducts }) => {
 
   const handleSave = async (productName: string | null, productId: number, detailId: number, updatedData: Partial<ProductDetail>) => {
     try {
-      const response = await fetch(`http://34.58.241.34:3001/product/detail/${detailId}`, {
+      const response = await fetch(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/detail/${detailId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +122,7 @@ const All: React.FC<AllProps> = ({ products: initialProducts }) => {
 
   const handleDelete = async (productId: number, typeId: number) => {
     try {
-      const response = await fetch(`http://34.58.241.34:3001/product/${productId}/detail/${typeId}`, {
+      const response = await fetch(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/${productId}/detail/${typeId}`, {
         method: 'DELETE',
       });
 
