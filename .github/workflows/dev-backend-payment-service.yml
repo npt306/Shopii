@@ -67,5 +67,4 @@ jobs:
             -e VNP_FRONTEND_BASE_URL=http://34.58.241.34:8000 \
             -e PAYOUT_CRON_SCHEDULE='0 0 1,15 * *' \
             -e ORDER_SERVICE_URL=http://34.58.241.34:3004 \
-
             ${{ secrets.DOCKERHUB_USERNAME }}/backend-payment-service:latest
