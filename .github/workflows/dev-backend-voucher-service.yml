@@ -1,4 +1,4 @@
-name: Build and Deploy backend voucher service
+name: Test, Build, and Deploy backend voucher service
 
 on:
   push:
@@ -6,26 +6,39 @@ on:
     #   - '.github/**'
     paths:
       - 'backend/voucher-service/**'
+      - '.github/workflows/dev-backend-voucher-service.yml'
     branches:
       - main
   workflow_dispatch:
 
 jobs:
-  build:
+  # --- Test Job ---
+  test:
+    name: Run Unit Tests & Coverage
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
+      - name: Run unit tests and coverage
+        run: |
+          echo "Running tests for voucher-service..."
+          docker run --rm \
+            -v ${{ github.workspace }}/backend/voucher-service:/usr/src/app \
+            node:20 /bin/sh -c "cd /usr/src/app && npm install --legacy-peer-deps && npm run test:cov"
+          echo "Tests completed successfully."
+
+  # --- Build Job ---
+  build:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: test
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-
-      - name: Run unit tests and coverage
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}/backend/voucher-service:/usr/src/app \
-            node:20 /bin/sh -c "cd /usr/src/app && npm install --legacy-peer-deps && npm run test:cov"
 
       - name: Login to Dockerhub
         uses: docker/login-action@v3
@@ -40,11 +53,14 @@ jobs:
           file: ./backend/voucher-service/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/backend-voucher-service:latest
-    
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
+  # --- Deploy Job ---
+  deploy:
+    name: Deploy to VM
+    runs-on: ubuntu-latest
+    needs: build
     steps:
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.2.1
@@ -53,10 +69,13 @@ jobs:
           username: ${{ secrets.GCE_USERNAME }}
           key: ${{ secrets.GCE_SSH_KEY }}
           script: |
-            docker stop backend-voucher-service || true
-            docker rm backend-voucher-service || true
-            docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/backend-voucher-service:latest || true
+            echo "Starting deployment for backend-voucher-service..."
+            docker stop backend-voucher-service || echo "Container not running."
+            docker rm backend-voucher-service || echo "Container not found."
+            docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/backend-voucher-service:latest || echo "Image not found locally."
+            echo "Pulling latest image..."
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/backend-voucher-service:latest
+            echo "Running new container..."
             docker run -d --name backend-voucher-service -p 3002:3002 \
             -e DB_HOST=${{ secrets.DB_HOST }} \
             -e DB_PORT=${{ secrets.DB_PORT }} \
@@ -65,3 +84,4 @@ jobs:
             -e DB_NAME=${{ secrets.DB_NAME }} \
             -e PORT=3002 \
             ${{ secrets.DOCKERHUB_USERNAME }}/backend-voucher-service:latest
+            echo "Deployment finished."
