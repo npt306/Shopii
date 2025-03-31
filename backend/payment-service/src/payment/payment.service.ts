@@ -8,6 +8,7 @@ import * as moment from 'moment-timezone';
 import * as qs from 'qs';
 import * as crypto from 'crypto';
 import { firstValueFrom } from 'rxjs';
+import { AxiosError } from 'axios';
 
 import { PaymentTransaction, PaymentStatus, PaymentPayoutStatus } from './entities/payment-transaction.entity';
 import { SellerBankAccount } from './entities/seller-bank-account.entity';
@@ -27,6 +28,7 @@ export class PaymentService {
   private readonly vnp_IpnUrl: string;
   private readonly payoutCronSchedule: string;
   private readonly payoutSimulationUrl?: string;
+  private readonly orderServiceUrl?: string;
 
   constructor(
     @InjectRepository(PaymentTransaction)
@@ -36,7 +38,6 @@ export class PaymentService {
     private configService: ConfigService,
     private readonly httpService: HttpService,
   ) {
-    // Get config values, throw error if missing required ones
     this.vnp_TmnCode = this.getConfigOrThrow('VNP_TMNCODE');
     this.vnp_HashSecret = this.getConfigOrThrow('VNP_HASHSECRET');
     this.vnp_Url = this.getConfigOrThrow('VNP_URL');
@@ -44,6 +45,11 @@ export class PaymentService {
     this.vnp_IpnUrl = this.getConfigOrThrow('VNP_IPNURL');
     this.payoutCronSchedule = this.configService.get<string>('PAYOUT_CRON_SCHEDULE', '0 0 1,15 * *');
     this.payoutSimulationUrl = this.configService.get<string>('PAYOUT_SIMULATION_URL');
+    this.orderServiceUrl = this.configService.get<string>('ORDER_SERVICE_URL');
+
+    if (!this.orderServiceUrl) {
+        this.logger.warn('ORDER_SERVICE_URL is not defined. Cannot notify Order Service.');
+    }
 
     this.logger.log(`VNPay TmnCode: ${this.vnp_TmnCode ? 'Loaded' : 'MISSING!'}`);
     if (process.env.NODE_ENV !== 'production') {
@@ -51,7 +57,6 @@ export class PaymentService {
     }
   }
 
-  // Helper to ensure required config exists
   private getConfigOrThrow(key: string): string {
       const value = this.configService.get<string>(key);
       if (!value) {
@@ -61,6 +66,7 @@ export class PaymentService {
       return value;
   }
 
+  // --- createPaymentUrl remains the same ---
   async createPaymentUrl(createPaymentDto: CreatePaymentDto): Promise<string> {
     const { orderId, amount, sellerId, orderInfo = 'Order Payment', bankCode, language = 'vn' } = createPaymentDto;
 
@@ -123,11 +129,11 @@ export class PaymentService {
     return paymentUrl;
   }
 
+  // --- handleVnpayReturn remains the same ---
   async handleVnpayReturn(query: VnpayReturnDto): Promise<{ isValid: boolean; code: string; message: string }> {
-    const vnp_Params: any = { ...query }; // Cast to any to allow delete
+    const vnp_Params: any = { ...query };
     const secureHash = vnp_Params['vnp_SecureHash'];
 
-    // Properties are not optional in DTO, but delete requires optional
     delete vnp_Params['vnp_SecureHash'];
     delete vnp_Params['vnp_SecureHashType'];
 
@@ -151,11 +157,11 @@ export class PaymentService {
     }
   }
 
+  // --- handleVnpayIpn updated to call notifyOrderService ---
   async handleVnpayIpn(query: VnpayIpnDto): Promise<{ RspCode: string; Message: string }> {
-    const vnp_Params: any = { ...query }; // Cast to any to allow delete
+    const vnp_Params: any = { ...query };
     const secureHash = vnp_Params['vnp_SecureHash'];
 
-    // Properties are not optional in DTO, but delete requires optional
     delete vnp_Params['vnp_SecureHash'];
     delete vnp_Params['vnp_SecureHashType'];
 
@@ -181,7 +187,6 @@ export class PaymentService {
             return { RspCode: '01', Message: 'Order not found' };
         }
 
-        // Ensure transaction amount is treated as a number for comparison
         if (Number(transaction.amount) !== amount) {
             this.logger.warn(`IPN Amount invalid for TxnRef: ${txnRef}. Expected: ${transaction.amount}, Received: ${amount}`);
             return { RspCode: '04', Message: 'Amount invalid' };
@@ -192,26 +197,31 @@ export class PaymentService {
             return { RspCode: '00', Message: 'Order already confirmed' };
         }
 
+        let finalStatus: PaymentStatus;
         if (rspCode === '00') {
             transaction.status = PaymentStatus.SUCCESS;
-            transaction.vnp_TransactionNo = vnp_Params['vnp_TransactionNo'];
-            transaction.vnp_BankCode = vnp_Params['vnp_BankCode'];
-            transaction.vnp_CardType = vnp_Params['vnp_CardType'];
-            transaction.vnp_PayDate = vnp_Params['vnp_PayDate'];
-            transaction.payoutStatus = PaymentPayoutStatus.PENDING; // Ready for payout
+            transaction.payoutStatus = PaymentPayoutStatus.PENDING;
+            finalStatus = PaymentStatus.SUCCESS;
             this.logger.log(`IPN Payment SUCCESS for TxnRef: ${txnRef}`);
         } else {
             transaction.status = PaymentStatus.FAILED;
             transaction.payoutStatus = PaymentPayoutStatus.NOT_APPLICABLE;
+            finalStatus = PaymentStatus.FAILED;
             this.logger.warn(`IPN Payment FAILED for TxnRef: ${txnRef}. RspCode: ${rspCode}`);
         }
+        // Store VNPay details regardless of success/failure
+        transaction.vnp_TransactionNo = vnp_Params['vnp_TransactionNo'];
+        transaction.vnp_BankCode = vnp_Params['vnp_BankCode'];
+        transaction.vnp_CardType = vnp_Params['vnp_CardType'];
+        transaction.vnp_PayDate = vnp_Params['vnp_PayDate'];
         transaction.vnp_ResponseCode = rspCode;
         transaction.vnp_TransactionStatus = vnp_Params['vnp_TransactionStatus'];
 
         await this.paymentTransactionRepository.save(transaction);
 
-        // TODO: Notify Order Service about payment status change
-        // this.notifyOrderService(transaction.orderId, transaction.status);
+        // Notify Order Service asynchronously (don't wait for it to respond to VNPay)
+        this.notifyOrderService(transaction.orderId, finalStatus)
+            .catch(err => this.logger.error(`Failed to notify order service for order ${transaction.orderId} after IPN: ${err.message}`, err.stack));
 
         return { RspCode: '00', Message: 'Success' };
 
@@ -221,6 +231,7 @@ export class PaymentService {
     }
   }
 
+  // --- addBankAccount and getSellerBankAccounts remain the same ---
   async addBankAccount(dto: AddBankAccountDto): Promise<SellerBankAccount> {
     const { sellerId, bankName, accountNumber, accountHolderName, isDefault = false } = dto;
 
@@ -242,24 +253,19 @@ export class PaymentService {
         this.logger.log(`Updating existing bank account ID ${existingAccount.id} for seller ${sellerId}`);
         existingAccount.accountHolderName = accountHolderName;
         if (isDefault && !existingAccount.isDefault) {
-            // Set this as default, unset others for the same seller
             await this.sellerBankAccountRepository.update({ sellerId, id: Not(existingAccount.id) }, { isDefault: false });
             existingAccount.isDefault = true;
         } else if (!isDefault && existingAccount.isDefault) {
-            // Trying to unset the default - check if it's the only one
             const otherAccountsCount = await this.sellerBankAccountRepository.count({ where: { sellerId, id: Not(existingAccount.id) } });
             if (otherAccountsCount === 0) {
-                // Prevent unsetting the only account as default
                 throw new BadRequestException('Cannot unset the only bank account as default. Add another account first.');
             }
             existingAccount.isDefault = false;
         }
-        // If isDefault is true and existingAccount.isDefault is also true, no change needed for default status
         return this.sellerBankAccountRepository.save(existingAccount);
     } else {
          this.logger.log(`Adding new bank account for seller ${sellerId}`);
          if (isDefault) {
-            // Ensure only one default when adding a new default account
             await this.sellerBankAccountRepository.update({ sellerId }, { isDefault: false });
          }
         const newAccount = this.sellerBankAccountRepository.create({
@@ -280,6 +286,7 @@ export class PaymentService {
       });
   }
 
+  // --- handleScheduledPayouts remains the same ---
   @Cron(process.env.PAYOUT_CRON_SCHEDULE || '0 0 1,15 * *')
   async handleScheduledPayouts() {
     this.logger.log(`Running scheduled payouts cron job at ${new Date().toISOString()}`);
@@ -317,7 +324,6 @@ export class PaymentService {
         const transactionIds = payoutData.transactions.map(tx => tx.id);
 
         try {
-            // Mark as PROCESSING before attempting payout
             await this.paymentTransactionRepository.update(
                 { id: In(transactionIds) },
                 { payoutStatus: PaymentPayoutStatus.PROCESSING }
@@ -332,14 +338,12 @@ export class PaymentService {
                     { id: In(transactionIds) },
                     { payoutStatus: PaymentPayoutStatus.FAILED }
                 );
-                continue; // Skip to next seller
+                continue;
             }
 
             this.logger.log(`Processing payout for Seller ${sellerId}: Amount ₫${payoutData.totalAmount} to account ${bankAccount.accountNumber} (${bankAccount.bankName})`);
 
-            // ** SIMULATION / ACTUAL API CALL **
             const payoutSuccess = await this.simulatePayoutApiCall(sellerId, payoutData.totalAmount, bankAccount);
-            // ** END SIMULATION **
 
             if (payoutSuccess) {
                 await this.paymentTransactionRepository.update(
@@ -353,14 +357,12 @@ export class PaymentService {
 
         } catch (error) {
             this.logger.error(`Payout FAILED for Seller ${sellerId}: ${error.message}`, error.stack);
-            // Ensure status is marked as FAILED if not already completed
             await this.paymentTransactionRepository.update(
-                { id: In(transactionIds), payoutStatus: PaymentPayoutStatus.PROCESSING }, // Only update those still processing
+                { id: In(transactionIds), payoutStatus: PaymentPayoutStatus.PROCESSING },
                 { payoutStatus: PaymentPayoutStatus.FAILED }
             );
         }
     }
-
     this.logger.log('Finished scheduled payouts cron job.');
   }
 
@@ -392,13 +394,29 @@ export class PaymentService {
                  return false;
             }
         }
-
         await new Promise(resolve => setTimeout(resolve, 500));
-        // return Math.random() > 0.1; // Simulate occasional failure
         return true;
    }
 
-   // private async notifyOrderService(orderId: string, status: 'SUCCESS' | 'FAILED') {
-   //     // Implementation to notify order service
-   // }
+   private async notifyOrderService(orderId: string, paymentStatus: PaymentStatus) {
+    if (!this.orderServiceUrl) {
+        this.logger.warn(`Order Service URL not configured. Skipping notification for order ${orderId}.`);
+        return;
+    }
+    const endpoint = `${this.orderServiceUrl}/orders/${orderId}/payment-status`;
+    const payload = { status: paymentStatus === PaymentStatus.SUCCESS ? 'Paid' : 'Failed' };
+
+    try {
+        this.logger.log(`Notifying Order Service at ${endpoint} for order ${orderId} with status ${payload.status}`);
+        await firstValueFrom(
+            this.httpService.patch(endpoint, payload, { timeout: 5000 })
+        );
+        this.logger.log(`Successfully notified Order Service for order ${orderId}.`);
+    } catch (error) {
+         const axiosError = error as AxiosError;
+        this.logger.error(`Failed to notify Order Service for order ${orderId}. Status: ${axiosError.response?.status}, Error: ${axiosError.message}`, axiosError.stack);
+        // maybe retry logic here
+    }
+}
+
 }
