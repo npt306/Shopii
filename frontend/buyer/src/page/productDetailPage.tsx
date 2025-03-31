@@ -154,7 +154,7 @@ export const ProductDetailPage = () => {
 
       try {
         const response = await axios.post(
-          `${EnvValue.API_GATEWAY_URL}/api/order/carts/add-to-cart`,
+          `${EnvValue.API_GATEWAY_URL}/order/carts/add-to-cart`,
           data
         );
         setOpenDialog(true);
