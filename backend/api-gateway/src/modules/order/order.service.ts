@@ -73,42 +73,6 @@ export class OrderService {
     }
   }
 
-  async createOrder(payload: CreateOrderPayload): Promise<any> {
-    try {
-        this.logger.log(`Gateway: Forwarding createOrder request for customer ${payload.customerId}`);
-        const response = await firstValueFrom(
-            this.httpService.post('/orders', payload), // POST to /orders endpoint in order-service
-        );
-        return response.data; // Should return the created order object (including its ID)
-    } catch (error) {
-        this.handleHttpError(error as AxiosError, `createOrder for customer ${payload.customerId}`);
-    }
-  }
-
-  async getOrderById(orderId: number): Promise<any> {
-    try {
-        this.logger.log(`Gateway: Forwarding getOrderById request for order ${orderId}`);
-        const response = await firstValueFrom(
-            this.httpService.get(`/orders/${orderId}`),
-        );
-        return response.data;
-    } catch (error) {
-        this.handleHttpError(error as AxiosError, `getOrderById for order ${orderId}`);
-    }
-  }
-
-  async getOrdersByCustomerId(customerId: number): Promise<any> {
-      try {
-          this.logger.log(`Gateway: Forwarding getOrdersByCustomerId request for customer ${customerId}`);
-          const response = await firstValueFrom(
-              this.httpService.get(`/orders/customer/${customerId}`),
-          );
-          return response.data;
-      } catch (error) {
-          this.handleHttpError(error as AxiosError, `getOrdersByCustomerId for customer ${customerId}`);
-      }
-  }
-
     async getCart(customerId: number): Promise<any> {
         try {
             const response = await firstValueFrom(
