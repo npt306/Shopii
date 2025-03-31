@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { FaCommentDots, FaChevronDown, FaTicketAlt } from "react-icons/fa";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 import { HeaderCart } from "../components/layout/headerCart";
 import { Footer } from "../components/layout/footer";
@@ -14,7 +12,6 @@ import "../css/common/inputField.css";
 import "../css/page/cartPage.css";
 
 import { Cart } from "../types/cart";
-import { PaymentMethod } from "../types/order";
 
 import { useCart } from "../context/cartContext";
 import { formatPrice } from "../helpers/utility/formatPrice";
@@ -47,11 +44,10 @@ const products = [
 
 export const CartPage = () => {
   let navigate = useNavigate();
-  const { updateCart, res: userProfile } = useCart();
+  const { updateCart } = useCart();
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<Cart[]>([]);
-  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   const { id } = useParams<{ id: string }>();
 
@@ -61,8 +57,8 @@ export const CartPage = () => {
         setLoading(true);
         const response = await axios.get(
           // `${ORDER_SERVICE_LOCALHOST}/carts/${id}`
-          // `${API_GATEWAY_LOCALHOST}/api/order/carts/${id}`
-          `${API_GATEWAY_URL}/api/order/carts/${id}`
+          // `${API_GATEWAY_LOCALHOST}/order/carts/${id}`
+          `${API_GATEWAY_URL}/order/carts/${id}`
         );
         console.log(response.data);
         setData(response.data);
@@ -261,7 +257,7 @@ export const CartPage = () => {
       const res = await axios.post(
         // `${ORDER_SERVICE_LOCALHOST}/carts/delete-from-cart`,
         // `${API_GATEWAY_LOCALHOST}/order/carts/delete-from-cart`,
-        `${API_GATEWAY_URL}/api/order/carts/delete-from-cart`,
+        `${API_GATEWAY_URL}/order/carts/delete-from-cart`,
         { id, productTypeId }
       );
     } catch (error) {
@@ -290,7 +286,7 @@ export const CartPage = () => {
         const res = await axios.post(
           // `${ORDER_SERVICE_LOCALHOST}/carts/delete-from-cart`,
           // `${API_GATEWAY_LOCALHOST}/order/carts/delete-from-cart`,
-          `${API_GATEWAY_URL}/api/order/carts/delete-from-cart`,
+          `${API_GATEWAY_URL}/order/carts/delete-from-cart`,
           { id, productTypeId }
         );
         console.log(res);
@@ -328,7 +324,7 @@ export const CartPage = () => {
       const res = await axios.post(
         // `${ORDER_SERVICE_LOCALHOST}/carts/update-cart`,
         // `${API_GATEWAY_LOCALHOST}/order/carts/update-cart`,
-        `${API_GATEWAY_URL}/api/order/carts/update-cart`,
+        `${API_GATEWAY_URL}/order/carts/update-cart`,
         {
           id,
           productTypeId,
@@ -348,103 +344,6 @@ export const CartPage = () => {
       setUpdatedProductId(null); // Reset lại để tránh gọi lại không cần thiết
     }
   }, [updatedProductId, quantities]);
-
-  // --- Function to handle the "Mua Hàng" (Checkout) button click ---
-  const handleCheckout = async () => {
-    if (!userProfile || !userProfile.accountId) {
-      toast.error("Vui lòng đăng nhập để đặt hàng.");
-      // Optionally redirect to login: navigate('/login');
-      return;
-    }
-
-    const selectedItems = data.flatMap(shop =>
-      shop.items.filter(item => selectedCheckboxes[item.productTypeId]?.checked)
-        .map(item => ({
-          productId: item.productId,
-          productTypeId: item.productTypeId,
-          productName: item.productName,
-          variation1: item.type1,
-          variation2: item.type2,
-          quantity: quantities[item.productTypeId] || 1,
-          priceAtTime: item.price, // Use current price for simplicity, ideally fetch price again
-          productImage: item.image,
-        }))
-    );
-
-    if (selectedItems.length === 0) {
-      toast.warn("Vui lòng chọn ít nhất một sản phẩm để đặt hàng.");
-      return;
-    }
-
-    // **TODO:** Get actual shipping address, shipping fee, discounts, voucher
-    const hardcodedShippingAddress = "227 Nguyen Van Cu, Ward 4, District 5, HCMC"; // Replace with actual address selection logic
-    const hardcodedShippingFee = 15000; // Replace with actual shipping calculation
-    const hardcodedDiscount = 0; // Replace with actual voucher/discount logic
-    const finalTotalAmount = totalPrice + hardcodedShippingFee - hardcodedDiscount;
-
-    const orderPayload = {
-      customerId: parseInt(userProfile.accountId, 10), // Ensure ID is number
-      shippingAddress: hardcodedShippingAddress,
-      paymentMethod: PaymentMethod.VNPAY, // Set payment method
-      items: selectedItems,
-      totalAmount: finalTotalAmount,
-      shippingFee: hardcodedShippingFee,
-      discountAmount: hardcodedDiscount,
-      // voucherCode: selectedVoucherCode, // Add if voucher selected
-      // notes: customerNotes, // Add if notes field exists
-    };
-
-    setIsPlacingOrder(true);
-    toast.info("Đang xử lý đơn hàng...");
-
-    try {
-      // 1. Create Order via API Gateway
-      const orderResponse = await axios.post(`${API_GATEWAY_URL}/api/order`, orderPayload);
-      const createdOrder = orderResponse.data;
-
-      if (!createdOrder || !createdOrder.id) {
-        throw new Error("Không thể tạo đơn hàng.");
-      }
-      toast.success(`Đã tạo đơn hàng #${createdOrder.id}. Đang chuyển đến thanh toán...`);
-      console.log("Order created:", createdOrder);
-
-      // 2. Create VNPay Payment URL via API Gateway using the created order ID and seller ID
-      // **Important:** Need sellerId. Assuming first item's seller for simplicity.
-      // In reality, you might handle multi-seller checkouts differently (separate payments or aggregate).
-      const firstSellerId = data.find(shop => shop.items.some(item => selectedCheckboxes[item.productTypeId]?.checked))?.sellerId;
-
-      if (!firstSellerId) {
-        throw new Error("Không tìm thấy thông tin người bán cho sản phẩm đã chọn.");
-      }
-
-      const paymentPayload = {
-        orderId: String(createdOrder.id), // Use the ID from the created order
-        amount: createdOrder.totalAmount, // Use the final amount from the created order
-        sellerId: firstSellerId,
-        orderInfo: `Thanh toan cho don hang ${createdOrder.id}`,
-        // bankCode: selectedBankCode, // Optional
-      };
-
-      const paymentUrlResponse = await axios.post(`${API_GATEWAY_URL}/api/payment/create_url`, paymentPayload);
-      const paymentUrl = paymentUrlResponse.data.paymentUrl;
-
-      if (!paymentUrl) {
-        throw new Error("Không thể tạo link thanh toán.");
-      }
-
-      // 3. Redirect user to VNPay
-      window.location.href = paymentUrl;
-
-    } catch (error) {
-      console.error("Checkout failed:", error);
-      const errorMessage = error instanceof AxiosError
-                          ? error.response?.data?.message || error.message
-                          : (error as Error).message;
-      toast.error(`Đặt hàng thất bại: ${errorMessage}`);
-      setIsPlacingOrder(false); // Re-enable button on error
-    }
-    // No need for finally block to set loading false here, as it redirects on success
-  };
 
   return (
     <>
@@ -552,7 +451,6 @@ export const CartPage = () => {
                           className="w-4 h-4 appearance-none border border-black checked:bg-orange-500 checked:border-orange-500 relative
              before:content-['✔'] before:absolute before:inset-0 before:flex before:items-center before:justify-center
              before:text-white before:opacity-0 checked:before:opacity-100"
-                          aria-label={`Chọn tất cả sản phẩm từ ${product.shopName}`}
                         />
                         <div className="flex flex-row items-center gap-2">
                           <p className="font-bold text-base">
@@ -619,7 +517,6 @@ export const CartPage = () => {
                             className="w-4 h-4 appearance-none border border-black checked:bg-orange-500 checked:border-orange-500 relative
                   before:content-['✔'] before:absolute before:inset-0 before:flex before:items-center before:justify-center
                   before:text-white before:opacity-0 checked:before:opacity-100"
-                            aria-label={`Chọn ${item.productName}`}
                           />
 
                           <div className="grid grid-cols-8 w-full h-auto">
@@ -627,7 +524,6 @@ export const CartPage = () => {
                               <img
                                 src={item.image}
                                 className="w-[10rem] h-[10rem]"
-                                alt={`Hình ảnh ${item.productName}`}
                               />
                               <p
                                 className="max-w-[15rem] line-clamp-2"
@@ -780,7 +676,6 @@ export const CartPage = () => {
                                       )
                                     }
                                     className="text-center border border-gray-400 w-10 h-7 no-spinner focus:border-black"
-                                    aria-label={`Số lượng ${item.productName}`}
                                   />
 
                                   <button
@@ -847,51 +742,79 @@ export const CartPage = () => {
                 ))}
                 <div className="w-full h-5 bg-gray-100"></div>
               </div>
-              <div className="mx-30 p-5 mt-5 bg-white flex flex-row items-center justify-between sticky bottom-0 shadow-[0_-2px_10px_rgba(0,0,0,0.1)]">
+              <div className="mx-30 p-5 mt-5 bg-white flex flex-row items-center justify-between ">
                 <div className="flex flex-row items-center justify-items-center gap-5">
                   <input
                     type="checkbox"
                     checked={toggleAll ?? false}
                     onChange={handleToggleAll}
                     className="w-4 h-4 appearance-none border border-black checked:bg-orange-500 checked:border-orange-500 relative
-                    before:content-['✔'] before:absolute before:inset-0 before:flex before:items-center before:justify-center
-                    before:text-white before:opacity-0 checked:before:opacity-100"
-                    aria-label="Chọn tất cả sản phẩm"
+             before:content-['✔'] before:absolute before:inset-0 before:flex before:items-center before:justify-center
+             before:text-white before:opacity-0 checked:before:opacity-100"
                   />
-                  <span>Chọn Tất Cả ({totalItems})</span>
-                  <div
-                    onClick={() => { 
-                      if (selectedProductCount > 0) setConfirmDeleteAll(true); 
-                      else toast.warn("Vui lòng chọn sản phẩm để xóa."); 
-                    }}
-                    className="cursor-pointer"
-                  >
-                    Xóa
-                  </div>
                 </div>
 
                 <div className="grid grid-cols-8 w-full h-[3rem] text-[1rem]">
                   <div className="col-span-4 px-5 flex items-center justify-start">
-                    {/* Placeholder */}
-                  </div>
-                  <div className="col-span-3 flex justify-end mr-5">
-                    <div className="flex items-center justify-center">
-                      <div className="">Tổng thanh toán ({selectedProductCount} Sản phẩm):</div>
-                      <div className="mketV9">₫{formatPrice(totalPrice)}</div>
+                    <div className="flex flex-row gap-5">
+                      <div>Chọn Tất Cả ({totalItems})</div>
+                      <div
+                        onClick={() => setConfirmDeleteAll(true)}
+                        className="cursor-pointer"
+                      >
+                        Xóa
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-center text-white">
-                    {/* Updated Checkout Button */}
-                    <button
-                      className={`w-full h-[2.5rem] bg-[#ee4d2d] hover:bg-orange-600 disabled:opacity-70 disabled:cursor-not-allowed`}
-                      onClick={handleCheckout}
-                      disabled={isPlacingOrder || selectedProductCount === 0} // Disable while processing or if nothing selected
-                    >
-                      <div className="text-[0.9rem] text-center">
-                        {isPlacingOrder ? 'Đang xử lý...' : 'Mua Hàng'}
+
+                  {totalPrice > 0 ? (
+                    <>
+                      <div className="flex flex-col col-span-3 mr-3">
+                        <div className="flex items-center text-center">
+                          <div className="w-2/3 flex justify-end">
+                            Tổng thanh toán ({selectedProductCount} Sản phẩm):
+                          </div>
+                          <div className="w-1/3">
+                            <div className="mketV9">
+                              ₫{formatPrice(totalPrice)}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center mt-1 px-auto">
+                          <div className="w-2/3"></div>
+                          <div className="w-1/3">
+                            <div className="flex justify-center items-center">
+                              <div className="text-[0.8rem]">Tiết kiệm: </div>
+                              <div className="mketV8 ml-3">₫37k</div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </button>
-                  </div>
+                      <div className="flex items-center justify-center text-white">
+                        <button className="w-full h-[2.5rem] bg-[#ee4d2d] hover:bg-orange-600">
+                          <div className="text-[0.9rem] text-center">
+                            Mua Hàng
+                          </div>
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="col-span-3 flex justify-end  mr-5">
+                        <div className="flex items-center justify-center">
+                          <div className="">Tổng thanh toán (0 Sản phẩm):</div>
+                          <div className="mketV9">₫0</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-center text-white">
+                        <button className="w-full h-[2.5rem] bg-[#ee4d2d] hover:bg-orange-600">
+                          <div className="text-[0.9rem] text-center">
+                            Mua Hàng
+                          </div>
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </>
@@ -901,7 +824,7 @@ export const CartPage = () => {
                 <img
                   className="object-contain flex items-center"
                   src="https://www.stickstuff.com/public/images/empty-cart.png"
-                  alt="Giỏ hàng trống"
+                  alt=""
                 />
                 <div className="font-bold text-gray-400">
                   Giỏ hàng của bạn còn trống
@@ -920,7 +843,6 @@ export const CartPage = () => {
         </>
       )}
       <Footer />
-      <ToastContainer position="bottom-right" autoClose={3000} hideProgressBar />
     </>
   );
 };

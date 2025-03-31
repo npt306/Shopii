@@ -15,8 +15,6 @@ import { CartPage } from "./page/cartPage.tsx";
 import { ProductDetailPage } from "./page/productDetailPage.tsx";
 import { UserPage } from "./page/userPage.tsx";
 import { OrderPage } from "./page/orderPage.tsx";
-import { PaymentSuccessPage, PaymentFailPage } from "./page/PaymentCallbackPages.tsx";
-
 
 import CallbackPage from "./page/callback.tsx";
 import { store, persistor } from "./redux/authStore.ts";
@@ -40,14 +38,6 @@ const router = createBrowserRouter(
       element: <CallbackPage />,
     },
     {
-        path: "/payment/success", // VNPay Success Redirect
-        element: <PaymentSuccessPage />,
-    },
-    {
-        path: "/payment/fail", // VNPay Fail Redirect
-        element: <PaymentFailPage />,
-    },
-    {
       path: "/home",
       element: <HomePage />,
     },
@@ -64,11 +54,11 @@ const router = createBrowserRouter(
       element: <UserPage />,
     },
     {
-      path: "/user/:section",
+      path: "/user/:id",
       element: <UserPage />,
     },
     {
-      path: "/cart",
+      path: "/cart/:id",
       element: <CartPage />,
     },
     {
