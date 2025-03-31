@@ -13,7 +13,7 @@ interface CreateOrderPayload {
   notes?: string;
 }
 
-@Controller('api/orders')
+@Controller('api/order')
 export class OrderController {
   private readonly logger = new Logger(OrderController.name);
 

@@ -58,4 +58,14 @@ jobs:
             -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
             -e DB_NAME=${{ secrets.DB_NAME }} \
             -e PORT=3007 \
+            -e VNP_TMNCODE=CFKBTTI0 \
+            -e VNP_HASHSECRET=N2IBHKJ6PY26XCD6PNBVHDAH4RFTBPSS \
+            -e VNP_URL=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html \
+            -e VNP_API=https://sandbox.vnpayment.vn/merchant_webapi/api/transaction \
+            -e VNP_RETURNURL=http://34.58.241.34:8000/payment/callback \
+            -e VNP_IPNURL=http://34.58.241.34:3007/payment/vnpay_ipn \
+            -e VNP_FRONTEND_BASE_URL=http://34.58.241.34:8000 \
+            -e PAYOUT_CRON_SCHEDULE='0 0 1,15 * *' \
+            -e ORDER_SERVICE_URL=http://34.58.241.34:3004 \
+
             ${{ secrets.DOCKERHUB_USERNAME }}/backend-payment-service:latest
