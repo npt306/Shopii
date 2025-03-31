@@ -5,6 +5,7 @@ import { CiClock2 } from "react-icons/ci";
 import { format, parseISO } from "date-fns";
 import { toast } from "react-toastify";
 import {Voucher} from "./vouchers_interfaces"
+import { EnvValue } from "../../../env-value/envValue";
 
 export const VoucherItem: React.FC<{ voucher: Voucher; userId: number }> = ({
     voucher,
@@ -24,7 +25,7 @@ export const VoucherItem: React.FC<{ voucher: Voucher; userId: number }> = ({
     const handleClaimVoucher = async (voucherId: number) => {
       try {
         const response = await axios.post(
-          `http://localhost:3000/vouchers/claim/`,
+          `${EnvValue.API_GATEWAY_URL}/vouchers/claim/`,
           { OwnerId: userId, VoucherId: voucherId }
         );
         console.log(response.data);

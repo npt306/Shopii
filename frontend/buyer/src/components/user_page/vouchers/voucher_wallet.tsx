@@ -28,7 +28,7 @@ export const VoucherWallet: React.FC<VoucherWalletProps> = ({ userId }) => {
   useEffect(() => {
     const fetchVouchers = async () => {
       try {
-        const response = await axios.get(`${EnvValue.api_gateway_url}/api/vouchers/all`, {
+        const response = await axios.get(`${EnvValue.API_GATEWAY_URL}/api/vouchers/all`, {
           params: { userId },
         });
         console.log(response.data);

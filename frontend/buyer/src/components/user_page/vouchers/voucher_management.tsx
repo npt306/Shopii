@@ -51,10 +51,10 @@ export const VoucherManagement: React.FC<VoucherWalletProps> = ({ userId }) => {
     const fetchVouchers = async () => {
       try {
         const [voucherRes, historyRes] = await Promise.all([
-          axios.get(`${EnvValue.api_gateway_url}/api/vouchers/user-vouchers`, {
+          axios.get(`${EnvValue.API_GATEWAY_URL}/api/vouchers/user-vouchers`, {
             params: { userId },
           }), //Claimed & Expired vouchers
-          axios.get(`${EnvValue.api_gateway_url}/api/vouchers/history/`, {
+          axios.get(`${EnvValue.API_GATEWAY_URL}/api/vouchers/history/`, {
             params: { userId },
           }),
         ]);

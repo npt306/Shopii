@@ -35,7 +35,7 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
     const fetchUserDetail = async () => {
       try {
         const response = await axios.get(
-          `${EnvValue.api_gateway_url}/api/users/${userId}`
+          `${EnvValue.API_GATEWAY_URL}/api/users/${userId}`
         );
         // console.log(response.data);
         setFormData(response.data);
@@ -121,7 +121,7 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
         // Send profile update request
         if(changeForm) {
           const response = await axios.post(
-            `${EnvValue.api_gateway_url}/api/users/update-profile`,
+            `${EnvValue.API_GATEWAY_URL}/api/users/update-profile`,
             formData
           );
           if(response) setChangeForm(false);
@@ -148,7 +148,7 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
           avatarFormData.append("file", avtFile);
           console.log(avatarFormData);
           const avatarResponse = await axios.post(
-            `${EnvValue.api_gateway_url}/api/users/update-avatar/${userId}`,
+            `${EnvValue.API_GATEWAY_URL}/api/users/update-avatar/${userId}`,
             avatarFormData,
             { headers: { "Content-Type": "multipart/form-data" } }
           );

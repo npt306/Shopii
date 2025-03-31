@@ -28,12 +28,11 @@ export const Header = () => {
       <div className="px-30 py-3 flex justify-between items-center">
         <div className="flex items-center gap-4">
           <a
-            href="http://34.58.241.34:8001/portal/settings/shop/profile/"
+            href={`${import.meta.env.VITE_SELLER_URL}/portal/settings/shop/profile/`}
             className="cursor-pointer hover:opacity-80"
           >
             Kênh người bán
           </a>
-          {/* <a href="http://localhost:8001" className="cursor-pointer hover:opacity-80">Kênh người bán</a> */}
           <div>Dowload app</div>
           <div className="flex items-center gap-2">
             <p>Kết nối</p>
@@ -69,9 +68,8 @@ export const Header = () => {
               <span>{language}</span>
               <FaChevronDown
                 size={12}
-                className={`transition-transform duration-300 ${
-                  isLanguageOpen ? "rotate-180" : ""
-                }`}
+                className={`transition-transform duration-300 ${isLanguageOpen ? "rotate-180" : ""
+                  }`}
               />
             </div>
 
@@ -137,9 +135,8 @@ export const Header = () => {
               </>
             ) : (
               <div className="flex items-center gap-3">
-                {/* <a href="http://localhost:8000/login" className="hover:opacity-80">Đăng nhập</a> */}
                 <a
-                  href="http://34.58.241.34:8000/login"
+                  href={`${import.meta.env.VITE_BUYER_URL}/login`}
                   className="hover:opacity-80"
                 >
                   Đăng nhập

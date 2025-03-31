@@ -131,7 +131,7 @@ export const AddAddressModal = ({
     console.log("Form Data:", formData); // Debugging: Check the form data
     try {
       const response = await fetch(
-        `http://34.58.241.34:3005/address/account/${accountId}`,
+        `${import.meta.env.VITE_ACCOUNT_SERVICE_URL}/address/account/${accountId}`,
         {
           method: "POST",
           headers: {

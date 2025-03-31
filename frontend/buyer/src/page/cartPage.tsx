@@ -16,11 +16,7 @@ import { Cart } from "../types/cart";
 import { useCart } from "../context/cartContext";
 import { formatPrice } from "../helpers/utility/formatPrice";
 
-import {
-  ORDER_SERVICE_LOCALHOST,
-  API_GATEWAY_URL,
-  API_GATEWAY_LOCALHOST,
-} from "../config/url";
+import { EnvValue } from "../env-value/envValue";
 
 const products = [
   {
@@ -56,9 +52,7 @@ export const CartPage = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          // `${ORDER_SERVICE_LOCALHOST}/carts/${id}`
-          // `${API_GATEWAY_LOCALHOST}/order/carts/${id}`
-          `${API_GATEWAY_URL}/order/carts/${id}`
+          `${EnvValue.API_GATEWAY_URL}/order/carts/${id}`
         );
         console.log(response.data);
         setData(response.data);
@@ -255,9 +249,7 @@ export const CartPage = () => {
 
     try {
       const res = await axios.post(
-        // `${ORDER_SERVICE_LOCALHOST}/carts/delete-from-cart`,
-        // `${API_GATEWAY_LOCALHOST}/order/carts/delete-from-cart`,
-        `${API_GATEWAY_URL}/order/carts/delete-from-cart`,
+        `${EnvValue.API_GATEWAY_URL}/order/carts/delete-from-cart`,
         { id, productTypeId }
       );
     } catch (error) {
@@ -284,9 +276,7 @@ export const CartPage = () => {
     selectedKeys.map(async (productTypeId) => {
       try {
         const res = await axios.post(
-          // `${ORDER_SERVICE_LOCALHOST}/carts/delete-from-cart`,
-          // `${API_GATEWAY_LOCALHOST}/order/carts/delete-from-cart`,
-          `${API_GATEWAY_URL}/order/carts/delete-from-cart`,
+          `${EnvValue.API_GATEWAY_URL}/order/carts/delete-from-cart`,
           { id, productTypeId }
         );
         console.log(res);
@@ -322,9 +312,7 @@ export const CartPage = () => {
   ) => {
     try {
       const res = await axios.post(
-        // `${ORDER_SERVICE_LOCALHOST}/carts/update-cart`,
-        // `${API_GATEWAY_LOCALHOST}/order/carts/update-cart`,
-        `${API_GATEWAY_URL}/order/carts/update-cart`,
+        `${EnvValue.API_GATEWAY_URL}/order/carts/update-cart`,
         {
           id,
           productTypeId,
