@@ -25,13 +25,13 @@ export class PaymentGatewayController {
 
   constructor(private readonly paymentGatewayService: PaymentGatewayService) {}
 
-  @Post('create_url')
+  @Post('create-payment-url')
   async createPaymentUrl(@Body() payload: CreatePaymentPayload) {
     this.logger.log(`Gateway: Received request to create payment URL for order ${payload.orderId}`);
     return this.paymentGatewayService.createPaymentUrl(payload);
   }
 
-  @Post('bank-account')
+  @Post('add-bank-account')
   async addBankAccount(@Body() payload: AddBankAccountPayload) {
     this.logger.log(`Gateway: Received request to add bank account for seller ${payload.sellerId}`);
     return this.paymentGatewayService.addBankAccount(payload);

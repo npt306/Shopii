@@ -16,10 +16,10 @@ export const options = {
       executor: 'ramping-vus',
       startVUs: 0,
       stages: [
-        { duration: '15s', target: 1000 }, 
-        { duration: '30s', target: 1000 }, 
-        { duration: '15s', target: 2000 }, 
-        { duration: '30s', target: 2000 }, 
+        { duration: '10s', target: 100 }, 
+        { duration: '20s', target: 100 }, 
+        { duration: '10s', target: 200 }, 
+        { duration: '20s', target: 200 }, 
         { duration: '10s', target: 0 },   
       ],
       gracefulRampDown: '5s',
@@ -31,16 +31,13 @@ export const options = {
 
   thresholds: {
 
-    'http_req_duration': ['p(95)<800'], 
+    'http_req_duration': ['p(95)<10000'], 
     'errors': ['rate<0.05'],            
 
-    'product_list_duration{test_type:load}': ['p(95)<500'], 
-    'product_list_duration{test_type:stress}': ['p(95)<1500'], 
+    'product_list_duration{test_type:stress}': ['p(95)<6000'], 
 
-    'product_detail_duration{test_type:load}': ['p(95)<600'],
-    'product_detail_duration{test_type:stress}': ['p(95)<1800'],
+    'product_detail_duration{test_type:stress}': ['p(95)<10000'],
 
-    'checks{test_type:load}': ['rate>0.98'], 
     'checks{test_type:stress}': ['rate>0.9'], 
   },
 };

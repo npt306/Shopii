@@ -23,7 +23,7 @@ export class PaymentController {
         this.frontendBaseUrl = this.configService.get<string>('VNP_FRONTEND_BASE_URL', 'http://localhost:8000');
     }
 
-  @Post('create_payment_url')
+  @Post('create-payment-url')
   @UsePipes(new ValidationPipe({ transform: true }))
   async createPaymentUrl(@Body() createPaymentDto: CreatePaymentDto) {
     this.logger.log(`Received create payment request: ${JSON.stringify(createPaymentDto)}`);

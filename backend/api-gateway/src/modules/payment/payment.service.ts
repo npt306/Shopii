@@ -63,7 +63,7 @@ export class PaymentGatewayService {
 
   async createPaymentUrl(payload: CreatePaymentPayload): Promise<any> {
     try {
-      const url = `${this.paymentServiceUrl}/payment/create_payment_url`;
+      const url = `${this.paymentServiceUrl}/payment/create-payment-url`;
       this.logger.log(`Forwarding createPaymentUrl request to: ${url}`);
       const response = await firstValueFrom(
         this.httpService.post(url, payload),
