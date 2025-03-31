@@ -20,37 +20,37 @@ export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   // Cart Endpoints
-  @Post('/cart/add')
+  @Post('/carts/add')
   async addToCart(@Body() addToCartDto: any): Promise<any> {
     this.logger.log(`Gateway: Received addToCart request`);
     return this.orderService.addToCart(addToCartDto);
   }
 
-  @Post('/cart/delete')
+  @Post('/carts/delete')
   async deleteFromCart(@Body() deleteFromCartDto: any): Promise<any> {
      this.logger.log(`Gateway: Received deleteFromCart request`);
     return this.orderService.deleteFromCart(deleteFromCartDto);
   }
 
-  @Post('/cart/update')
+  @Post('/carts/update')
   async updateCart(@Body() updateCartDto: any): Promise<any> {
     this.logger.log(`Gateway: Received updateCart request`);
     return this.orderService.updateCart(updateCartDto);
   }
 
-  @Get('/cart/delete-all/:customerId')
+  @Get('/carts/delete-all/:customerId')
   async deletedAllCart(@Param('customerId', ParseIntPipe) id: number) {
      this.logger.log(`Gateway: Received deleteAllCart request for customer ${id}`);
     return this.orderService.deleteAllCart(id);
   }
 
-  @Get('/cart/:customerId')
+  @Get('/carts/:customerId')
   async getCart(@Param('customerId', ParseIntPipe) id: number) {
     this.logger.log(`Gateway: Received getCart request for customer ${id}`);
     return this.orderService.getCart(id);
   }
 
-  @Get('/cart/basic/:customerId')
+  @Get('/carts/basic/:customerId')
   async getBasicCart(@Param('customerId', ParseIntPipe) id: number) {
      this.logger.log(`Gateway: Received getBasicCart request for customer ${id}`);
     return this.orderService.getBasicCart(id);
