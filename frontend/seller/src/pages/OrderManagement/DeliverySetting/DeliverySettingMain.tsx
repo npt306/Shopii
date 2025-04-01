@@ -9,6 +9,8 @@ import APISetting from "./APISetting"
 import ChatSetting from "./ChatSetting";
 import DelivertSetting from "./DeliverySetting";
 
+const user_accountId = localStorage.getItem('user_accountId');
+
 const DeliverySetting = () => {
   const { tab: currentTab = "delivery" } = useParams<{ tab: string }>(); // Lấy giá trị `tab` từ URL
   const navigate = useNavigate();
@@ -85,7 +87,7 @@ const DeliverySetting = () => {
           {currentTab === "CollectGood" && <CollectTable />} */}
           {currentTab === "account" && <AccountSecuritySetting />}
           {currentTab === "payment" && <PaymentSetting />}
-          {currentTab === "delivery" && <DelivertSetting />}
+          {currentTab === "delivery" && <DelivertSetting  />}
           {currentTab === "notification" && <NotificationSetting />}
           {currentTab === "restMode" && <RestMode />}
           {currentTab === "apiSetting" && <APISetting />}

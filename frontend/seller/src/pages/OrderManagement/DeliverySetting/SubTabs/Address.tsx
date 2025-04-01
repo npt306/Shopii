@@ -1,130 +1,210 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AddressDialog from "../Components/AddressDialogue";
 
+interface Address {
+  id: number;
+  name: string;
+  phone: string;
+  details: string;
+  province: string;
+  type: string[]; // Includes "Default address", "Shipping address", "Delivery address"
+}
+
 const Address = () => {
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [addresses, setAddresses] = useState([
-        { 
-            Name: "Trịnh Minh Long", 
-            Phone: "84944613610", 
-            Address: "207C, đường Nguyễn Xí, Phường 26, Quận Bình Thạnh, TP. Hồ Chí Minh", 
-            type: ["Địa chỉ lấy hàng"] 
-        },
-        { 
-            Name: "Nguyễn Văn A", 
-            Phone: "84912345678",
-            Address: "123 Đường ABC, Phường XYZ, Quận 1, TP. Hồ Chí Minh", 
-            type: ["Địa chỉ giao hàng"] 
-        },
-        { 
-            Name: "Lê Thị B", 
-            Phone: "84987654321", 
-            Address: "456 Đường DEF, Phường UVW, Quận 2, TP. Hồ Chí Minh", 
-            type: ["Default address"] 
-        },
-        { 
-            Name: "Phạm Văn C", 
-            Phone: "84911223344", 
-            Address: "789 Đường GHI, Phường RST, Quận 3, TP. Hồ Chí Minh", 
-            type: ["Default address", "Địa chỉ lấy hàng", "Địa chỉ trả hàng"] 
-        },
-    ]);
+  const user_accountId = localStorage.getItem("user_accountId"); // Retrieve user_accountId from localStorage
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    interface Address {
-        name: string;
-        phone: string;
-        details: string;
-        province: string;
-        defaultAddress?: boolean;
-        pickupAddress?: boolean;
-        returnAddress?: boolean;
+  // Fetch addresses from backend
+  const fetchAddresses = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `http://34.58.241.34:3005/address/account/${user_accountId}` // Use user_accountId dynamically
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch addresses");
+      }
+      const data = await response.json();
+      setAddresses(
+        data.map((address: any) => ({
+          id: address.id,
+          name: address.fullName,
+          phone: address.phoneNumber,
+          details: address.specificAddress,
+          province: `${address.ward}, ${address.district}, ${address.province}`,
+          type: [
+            address.isDefault && "Default address",
+            address.isShipping && "Shipping address",
+            address.isDelivery && "Delivery address",
+          ].filter(Boolean) as string[], // Filter out falsy values
+        }))
+      );
+    } catch (err: any) {
+      setError(err.message || "An error occurred while fetching addresses");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const handleAddAddress = (newAddress: Address) => {
-        const type = [];
-        if (newAddress.defaultAddress) type.push("Default address");
-        if (newAddress.pickupAddress) type.push("Địa chỉ lấy hàng");
-        if (newAddress.returnAddress) type.push("Địa chỉ trả hàng");
+  useEffect(() => {
+    if (user_accountId) {
+      fetchAddresses();
+    } else {
+      setError("User account ID is missing");
+    }
+  }, [user_accountId]);
 
-        const formattedAddress = {
-            Name: newAddress.name,
-            Phone: newAddress.phone,
-            Address: `${newAddress.details}, ${newAddress.province}`,
-            type: type.length > 0 ? type : ["Địa chỉ giao hàng"]
-        };
+  // Add or update address
+  const handleSaveAddress = async (newAddress: Address) => {
+    try {
+      if (newAddress.id) {
+        // Update address
+        const response = await fetch(
+          `http://34.58.241.34:3005/address/update/${newAddress.id}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newAddress),
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Failed to update address");
+        }
+      } else {
+        // Add new address
+        const response = await fetch(
+          `http://34.58.241.34:3005/address/account/${user_accountId}`, // Use user_accountId dynamically
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newAddress),
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Failed to add address");
+        }
+      }
+      fetchAddresses(); // Refresh the address list
+    } catch (err: any) {
+      setError(err.message || "An error occurred while saving the address");
+    } finally {
+      setIsDialogOpen(false);
+    }
+  };
 
-        setAddresses([...addresses, formattedAddress]);
-        setIsDialogOpen(false);
-    };
-    
-    return (
-        <div className="p-2 text-black w-full max-w-full overflow-hidden">
-            <div className="flex items-center justify-between mb-2">
-                <div>
-                    <h2 className="text-sm font-semibold">Địa Chỉ</h2>
-                    <p className="text-gray-600 text-xs">Quản lý việc vận chuyển và địa chỉ giao hàng của bạn</p>
-                </div>
-                <button 
-                    onClick={() => setIsDialogOpen(true)}
-                    className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
-                >
-                    + Thêm địa chỉ mới
-                </button>
-            </div>
-            
-            {addresses.map((address, index) => (
-                <div key={index} className="mb-4">
-                    <h3 className="text-sm font-medium mb-2">Address {index + 1}</h3>
-                    <div className="space-y-2 text-xs p-2 bg-gray-50 rounded">
-                        <div className="flex">
-                            <div className="w-24 text-gray-600">Họ & Tên</div>
-                            <div className="flex-1">
-                                <span>{address.Name}</span>
-                                {address.type.map((t, i) => {
-                                    let bgColor = "bg-red-50";
-                                    if (t === "Default address") bgColor = "bg-blue-100";
-                                    if (t === "Địa chỉ lấy hàng") bgColor = "bg-red-50";
-                                    if (t === "Địa chỉ trả hàng") bgColor = "bg-yellow-100";
+  // Delete address
+  const handleDeleteAddress = async (id: number) => {
+    try {
+      const response = await fetch(`http://34.58.241.34:3005/address/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete address");
+      }
+      setAddresses(addresses.filter((address) => address.id !== id));
+    } catch (err: any) {
+      setError(err.message || "An error occurred while deleting the address");
+    }
+  };
 
-                                    return (
-                                        <span key={i} className={`text-red-500 text-xs ml-1 ${bgColor} px-1 py-0.5 rounded`}>{t}</span>
-                                    );
-                                })}
-                            </div>
-                            <a 
-                                href="#" 
-                                className="text-blue-500 hover:underline text-xs"
-                                onClick={() => setIsDialogOpen(true)}
-                            >
-                                Sửa
-                            </a>
-                            <a href="#" className="text-red-500 hover:underline ml-2 text-xs">Xóa</a>
-                        </div>
-
-                        <div className="flex">
-                            <div className="w-24 text-gray-600">Số điện thoại</div>
-                            <div className="flex-1">{address.Phone}</div>
-                        </div>
-
-                        <div className="flex">
-                            <div className="w-24 text-gray-600">Địa chỉ</div>
-                            <div className="flex-1 space-y-1">
-                                {address.Address.split(', ').map((line, i) => (
-                                    <p key={i}>{line}</p>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            ))}
-
-            <AddressDialog 
-                isOpen={isDialogOpen} 
-                onClose={() => setIsDialogOpen(false)}
-                onSave={handleAddAddress}
-            />
+  return (
+    <div className="p-2 text-black w-full max-w-full overflow-hidden">
+      <div className="flex items-center justify-between mb-2">
+        <div>
+          <h2 className="text-sm font-semibold">Địa Chỉ</h2>
+          <p className="text-gray-600 text-xs">
+            Quản lý việc vận chuyển và địa chỉ giao hàng của bạn
+          </p>
         </div>
-    );
+        <button
+          onClick={() => {
+            setSelectedAddress(null);
+            setIsDialogOpen(true);
+          }}
+          className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
+        >
+          + Thêm địa chỉ mới
+        </button>
+      </div>
+
+      {loading ? (
+        <p>Loading...</p>
+      ) : error ? (
+        <p className="text-red-500">{error}</p>
+      ) : (
+        addresses.map((address, index) => (
+          <div key={index} className="mb-4">
+            <h3 className="text-sm font-medium mb-2">Address {index + 1}</h3>
+            <div className="space-y-2 text-xs p-2 bg-gray-50 rounded">
+              <div className="flex">
+                <div className="w-24 text-gray-600">Họ & Tên</div>
+                <div className="flex-1">
+                  <span>{address.name}</span>
+                  {address.type.map((t, i) => {
+                    let bgColor = "bg-red-50";
+                    if (t === "Default address") bgColor = "bg-blue-100";
+                    if (t === "Shipping address") bgColor = "bg-green-100";
+                    if (t === "Delivery address") bgColor = "bg-yellow-100";
+
+                    return (
+                      <span
+                        key={i}
+                        className={`text-red-500 text-xs ml-1 ${bgColor} px-1 py-0.5 rounded`}
+                      >
+                        {t}
+                      </span>
+                    );
+                  })}
+                </div>
+                <a
+                  href="#"
+                  className="text-blue-500 hover:underline text-xs"
+                  onClick={() => {
+                    setSelectedAddress(address);
+                    setIsDialogOpen(true);
+                  }}
+                >
+                  Sửa
+                </a>
+                <a
+                  href="#"
+                  className="text-red-500 hover:underline ml-2 text-xs"
+                  onClick={() => handleDeleteAddress(address.id)}
+                >
+                  Xóa
+                </a>
+              </div>
+
+              <div className="flex">
+                <div className="w-24 text-gray-600">Số điện thoại</div>
+                <div className="flex-1">{address.phone}</div>
+              </div>
+
+              <div className="flex">
+                <div className="w-24 text-gray-600">Địa chỉ</div>
+                <div className="flex-1 space-y-1">
+                  {address.details.split(", ").map((line, i) => (
+                    <p key={i}>{line}</p>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))
+      )}
+
+      <AddressDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        onSave={handleSaveAddress}
+        address={selectedAddress} // Pass the selected address for editing
+      />
+    </div>
+  );
 };
 
 export default Address;

@@ -34,6 +34,14 @@ import {
     @IsOptional()
     @IsBoolean()
     isDefault?: boolean; // optional, defaults to false if not provided
+
+    @IsOptional()
+    @IsBoolean()
+    isDelivery?: boolean; // optional, defaults to false if not provided
+
+    @IsOptional()
+    @IsBoolean()
+    isShipping?: boolean; // optional, defaults to false if not provided
   
     // These are optional because they're usually set automatically
     @IsOptional()

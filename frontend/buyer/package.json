@@ -10,12 +10,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@radix-ui/react-toast": "^1.2.6",
     "@reduxjs/toolkit": "^2.6.1",
     "@tailwindcss/vite": "^4.0.3",
     "axios": "^1.8.2",
     "bootstrap": "^5.3.3",
     "classnames": "^2.5.1",
     "date-fns": "^4.1.0",
+    "lucide-react": "^0.485.0",
     "node": "^20.19.0",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.9",

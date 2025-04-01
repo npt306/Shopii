@@ -34,4 +34,10 @@ export class Address {
 
   @Column({ default: false })
   isDefault: boolean;
+
+  @Column({ default: false })
+  isShipping: boolean;
+
+  @Column({ default: false })
+  isDelivery: boolean;
 }

@@ -77,6 +77,7 @@ const ProfileShop = () => {
         {currentTab === "general" && <GeneralInformation />}
         {currentTab === "business" && <BusinessInformation />}
         {currentTab === "identity-information" && <IdentityInformation />}
+        {/* {currentTab === "address" && <AddressInformation />} */}
       </div>
     </div>
   );

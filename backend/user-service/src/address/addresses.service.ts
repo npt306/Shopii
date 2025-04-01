@@ -44,6 +44,8 @@ export class AddressService {
       updatedAt: address.UpdatedAt,
       accountId: address.AccountId,
       isDefault: address.isDefault,
+      isShipping: address.isDefault,
+      isDelivery: address.isDefault,
     }));
 
     return addressList;
@@ -70,6 +72,8 @@ export class AddressService {
       updatedAt: address.UpdatedAt,
       accountId: address.AccountId,
       isDefault: address.isDefault,
+      isShipping: address.isDefault,
+      isDelivery: address.isDefault,
     }));
   }
 
@@ -86,11 +90,66 @@ export class AddressService {
     await this.addressRepository.update({ AddressId: id }, updateAddressDto);
     return this.addressRepository.findOneBy({ AddressId: id });
   }
+  async setDefaultAddress(id: number, accountId: number): Promise<void> {
+    await this.addressRepository.manager.transaction(async (transactionalEntityManager) => {
+      // First, set isDefault to false for all addresses of this account
+      await transactionalEntityManager
+        .createQueryBuilder(Address, 'address')
+        .update(Address)
+        .set({ isDefault: false })
+        .where({ AccountId: accountId }) // Use object syntax for the where clause
+        .execute();
+  
+      // Then, set isDefault to true for the selected address
+      await transactionalEntityManager
+        .createQueryBuilder(Address, 'address')
+        .update(Address)
+        .set({ isDefault: true })
+        .where({ AddressId: id, AccountId: accountId }) // Use object syntax for the where clause
+        .execute();
+    });
+  }
+  async setDeliveryAddress(id: number, accountId: number): Promise<void> {
+    await this.addressRepository.manager.transaction(async (transactionalEntityManager) => {
+      // First, set isDelivery to false for all addresses of this account
+      await transactionalEntityManager
+        .createQueryBuilder(Address, 'address')
+        .update(Address)
+        .set({ isDelivery: false })
+        .where({ AccountId: accountId }) // Use object syntax for the where clause
+        .execute();
+  
+      // Then, set isDelivery to true for the selected address
+      await transactionalEntityManager
+        .createQueryBuilder(Address, 'address')
+        .update(Address)
+        .set({ isDelivery: true })
+        .where({ AddressId: id, AccountId: accountId }) // Use object syntax for the where clause
+        .execute();
+    });
+  }
+  
+  async setShippingAddress(id: number, accountId: number): Promise<void> {
+    await this.addressRepository.manager.transaction(async (transactionalEntityManager) => {
+      // First, set isShipping to false for all addresses of this account
+      await transactionalEntityManager
+        .createQueryBuilder(Address, 'address')
+        .update(Address)
+        .set({ isShipping: false })
+        .where({ AccountId: accountId }) // Use object syntax for the where clause
+        .execute();
+  
+      // Then, set isShipping to true for the selected address
+      await transactionalEntityManager
+        .createQueryBuilder(Address, 'address')
+        .update(Address)
+        .set({ isShipping: true })
+        .where({ AddressId: id, AccountId: accountId }) // Use object syntax for the where clause
+        .execute();
+    });
+  }
 
   findOne(id: number) {
     return `This action returns a #${id} address`;
   }
-
-
-  
 }

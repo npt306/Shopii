@@ -29,6 +29,33 @@ export class AddressController {
   createAddressForAccount(@Param('accountId') accountId: string, @Body() createAddressDto: CreateAddressDto) {
     return this.addressService.createAddressForAccount(+accountId, createAddressDto);
   }
+  @Post(':id/set-default/:accountId')
+  async setDefaultAddress(
+    @Param('id') addressId: string,
+    @Param('accountId') accountId: string
+  ) {
+    await this.addressService.setDefaultAddress(+addressId, +accountId);
+    return { message: 'Default address updated successfully' };
+  }
+
+
+  @Post(':id/set-delivery/:accountId')
+  async setDeliveryAddress(
+    @Param('id') addressId: string,
+    @Param('accountId') accountId: string
+  ) {
+    await this.addressService.setDeliveryAddress(+addressId, +accountId);
+    return { message: 'Delivery address updated successfully' };
+  }
+
+  @Post(':id/set-shipping/:accountId')
+  async setShippingAddress(
+    @Param('id') addressId: string,
+    @Param('accountId') accountId: string
+  ) {
+    await this.addressService.setShippingAddress(+addressId, +accountId);
+    return { message: 'Shipping address updated successfully' };
+  }
   
 
   @Get(':id')
@@ -45,5 +72,4 @@ export class AddressController {
   remove(@Param('id') id: string) {
     return this.addressService.removeById(+id);
   }
-  
 }
