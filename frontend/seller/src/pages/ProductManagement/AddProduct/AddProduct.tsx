@@ -1815,6 +1815,7 @@ const AddProduct = () => {
                                                                                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">₫</span>
                                                                                 <input
                                                                                     type="number"
+                                                                                    name = "product-price"
                                                                                     className="pl-8 pr-4 py-2 border rounded w-full bg-white text-black"
                                                                                     placeholder="Nhập vào"
                                                                                     min="0"
@@ -1832,6 +1833,7 @@ const AddProduct = () => {
                                                                         <td className="border-r p-4 border-t" style={{ minWidth: '150px', width: '150px' }}>
                                                                             <input
                                                                                 type="number"
+                                                                                name = "product-quantity"
                                                                                 className="px-4 py-2 border rounded w-full bg-white text-black"
                                                                                 placeholder="0"
                                                                                 min="0"
@@ -2037,7 +2039,6 @@ const AddProduct = () => {
                         <button className="px-4 py-2 border border-black rounded text-black bg-white" onClick={handleCancelClick}>Hủy</button>
                         <button
                             type="button"
-                            name="save-button"
                             className="px-4 py-2 border border-black bg-orange-500 text-white rounded"
                             onClick={sendProduct}
                         >
