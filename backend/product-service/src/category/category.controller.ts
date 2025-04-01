@@ -6,7 +6,7 @@ interface CategoryWithChildren extends Categories {
     children?: CategoryWithChildren[];
 }
 
-@Controller('api/categories') // Changed to match frontend API_BASE_URL
+@Controller('categories') // Changed to match frontend API_BASE_URL
 export class CategoryController {
     constructor(private readonly categoryService: CategoryService) { }
 

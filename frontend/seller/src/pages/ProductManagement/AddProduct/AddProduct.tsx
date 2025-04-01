@@ -1035,7 +1035,7 @@ const AddProduct = () => {
     const fetchCategories = async () => {
         try {
             // Replace this with your actual API call
-            const response = await axios.get(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/categories`);
+            const response = await axios.get(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/categories/tree`);
             const data = response.data;
             setSelectedCategory(data);
         } catch (error) {
