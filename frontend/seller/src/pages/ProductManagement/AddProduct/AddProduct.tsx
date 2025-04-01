@@ -225,7 +225,10 @@ const CategorySelectorModal = ({
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+        <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30"
+            data-name="category-list-container"
+            >
             <div className="bg-white w-full max-w-4xl h-full max-h-[600px] md:h-[600px] rounded-lg shadow-xl flex flex-col border border-gray-200">
                 {/* Header */}
                 <div className="flex justify-between items-center p-4 border-b border-gray-200">
