@@ -1310,7 +1310,7 @@ const AddProduct = () => {
                                 <label className="cursor-pointer flex items-center px-4 py-2 bg-gray-100 text-blue-600 rounded w-48" onClick={() => handleRatioChangeInf()} >
                                     <Upload className="mr-2 h-5 w-5" />
                                     Thêm hình ảnh (0/9)
-                                    <input type="file" multiple className="hidden" onChange={handleFileChange} />
+                                    <input type="file" name="product-images" multiple className="hidden" onChange={handleFileChange} />
                                 </label>
                                 <div className="mt-4 flex flex-wrap">
                                     {selectedFiles.map((file, index) => (
@@ -1340,7 +1340,7 @@ const AddProduct = () => {
                                 <label className="cursor-pointer flex items-center px-4 py-2 bg-gray-100 text-blue-600 rounded w-48" onClick={() => handleRatioChangeInf()}>
                                     <Upload className="mr-2 h-5 w-5" />
                                     Thêm hình ảnh (0/1)
-                                    <input type="file" className="hidden" onChange={handleOneFileChange} />
+                                    <input type="file" name="product-cover-image" className="hidden" onChange={handleOneFileChange} />
                                 </label>
                                 <div className="mt-4 flex flex-wrap">
                                     {selectedFileOne.map((file, index) => (
@@ -1374,7 +1374,7 @@ const AddProduct = () => {
                                 <label className="cursor-pointer flex items-center px-4 py-2 bg-gray-100 text-blue-600 rounded w-48">
                                     <Upload className="mr-2 h-5 w-5" />
                                     Thêm video (0/1)
-                                    <input type="file" className="hidden" onChange={handleVideoChange} />
+                                    <input type="file" name="product-video" className="hidden" onChange={handleVideoChange} />
                                 </label>
                                 {selectedVideo && (
                                     <div className="mt-4 relative w-64">
@@ -1409,6 +1409,7 @@ const AddProduct = () => {
                                 <div className={`w-full flex items-center border rounded px-3 py-2 bg-white ${productName && (productName.trim().length < 10 || productName !== productName.trim()) ? "border-red-500" : "border-gray-300"}`}>
                                     <input
                                         type="text"
+                                        name="product-name"
                                         value={productName}
                                         onChange={(e) => setProductName(e.target.value)}
                                         placeholder="Tên sản phẩm + Thương hiệu + Model + Thông số kỹ thuật"
@@ -1457,6 +1458,7 @@ const AddProduct = () => {
                                 </label>
                                 <input
                                     type="text"
+                                    name = "product-description"
                                     value={productDescription}
                                     onChange={(e) => setProductDescription(e.target.value)}
                                     className="w-full border rounded px-3 py-2 bg-white text-black h-32"
@@ -1498,6 +1500,7 @@ const AddProduct = () => {
                                                 <div className="w-3/4 px-4 py-2 flex items-center">
                                                     <input
                                                         type="text"
+                                                        name="category-name"
                                                         value={category.name}
                                                         onChange={(e) => updateCategoryName(category.id, e.target.value)}
                                                         placeholder="Nhập tên phân loại"
@@ -1961,6 +1964,7 @@ const AddProduct = () => {
                                                 <div className="flex items-center">
                                                     <input
                                                         type="text"
+                                                        name = "product-weight"
                                                         className={`border rounded p-2 w-32 bg-white text-black ${showError ? 'border-red-500' : 'border-gray-300'}`}
                                                         placeholder="Nhập vào"
                                                         value={inputValue}
@@ -2033,6 +2037,7 @@ const AddProduct = () => {
                         <button className="px-4 py-2 border border-black rounded text-black bg-white" onClick={handleCancelClick}>Hủy</button>
                         <button
                             type="button"
+                            name="save-button"
                             className="px-4 py-2 border border-black bg-orange-500 text-white rounded"
                             onClick={sendProduct}
                         >
