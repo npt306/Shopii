@@ -9,9 +9,11 @@ export class CreateUserVoucherDto {
   OwnerId: number;
 
   @IsISO8601()
+  @IsOptional()
   ExpDate: string; // ISO 8601 date string
 
   @IsInt()
+  @IsOptional()
 //   @IsPositive()
   UsingTimeLeft: number;
 

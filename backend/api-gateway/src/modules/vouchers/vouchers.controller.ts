@@ -49,26 +49,21 @@ export class VouchersController {
     return this.vouchersService.deleteVoucher(id);
   }
 
-  @Get('/all')
-  async getAllUnclaimedVouchers(
-    @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<any> {
+  @Get('/all/:userId')
+  getAllVouchers(@Param('userId', ParseIntPipe) userId: number) {
     return this.vouchersService.getActiveVouchers(userId);
   }
 
-  @Get('/user-vouchers')
-  async getUserVouchers(
-    @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<any> {
+  @Get('/user-vouchers/:userId')
+  getUserVouchers(@Param('userId', ParseIntPipe) userId: number) {
     return this.vouchersService.getUserVouchers(userId);
   }
 
-  @Get('/history')
-  async getVoucherHistory(
-    @Query('userId', ParseIntPipe) userId: number,
-  ): Promise<any> {
+  @Get('/history/:userId')
+  getVoucherHistory(@Param('userId', ParseIntPipe) userId: number) {
     return this.vouchersService.getUserVoucherHistory(userId);
   }
+
 
   @Post('/claim')
   async addVoucherToUser(@Body() createUserVoucherDto: any): Promise<any> {
