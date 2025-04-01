@@ -2040,7 +2040,7 @@ const AddProduct = () => {
                         <button className="px-4 py-2 border border-black rounded text-black bg-white" onClick={handleCancelClick}>Hủy</button>
                         <button
                             type="button"
-                            name="save"
+                            name="save-new-product"
                             className="px-4 py-2 border border-black bg-orange-500 text-white rounded"
                             onClick={sendProduct}
                         >
