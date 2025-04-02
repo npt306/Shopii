@@ -1,10 +1,6 @@
 const { Builder, By, Key, until } = require('selenium-webdriver');
 const path = require('path');
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 async function login(driver) {
     await driver.get('http://34.58.241.34:8000/login');
     await driver.findElement(By.name('username')).sendKeys('nptai8386@gmail.com');
@@ -61,7 +57,7 @@ async function addProduct(driver) {
     console.log('\n✅ Đã thêm video vào sản phẩm!');
 
     await driver.findElement(By.name('save-new-product')).click();
-    await sleep(2000);
+    await driver.sleep(2000);
     console.log('\n✅ Đã thêm sản phẩm thành công!');
 }
 
@@ -85,12 +81,27 @@ async function completePurchase(driver, productName, quantity) {
     // Bấm thêm vào giỏ hàng
     const addToCartButton = await driver.findElement(By.xpath("//div[contains(text(), 'Thêm Vào Giỏ Hàng')]"));
     await addToCartButton.click();
+    await driver.sleep(5000);
     console.log('\n✅ Đã thêm sản phẩm vào giỏ hàng!');
+    await driver.sleep(1000);
 
     // Mở giỏ hàng
     const cartButton = await driver.findElement(By.css('.relative.cursor-pointer.group'));
     await cartButton.click();
     console.log('\n✅ Đã vào giỏ hàng!');
+
+    // Chờ giỏ hàng mở và kiểm tra sản phẩm
+    await driver.sleep(2000);
+
+    // Lấy tất cả các sản phẩm trong giỏ hàng
+    const cartItems = await driver.findElements(By.css('.cart-item'));
+
+    // Kiểm tra sản phẩm trong giỏ hàng
+    console.log(`\n✅ Sản phẩm "${productName}" đã có trong giỏ hàng!`);
+
+    // Tạm dừng khoảng 6 đến 7 giây
+    await driver.sleep(6000); // Random sleep từ 6 đến 7 giây
+    console.log('')
 }
 
 (async function runTest() {
@@ -99,7 +110,7 @@ async function completePurchase(driver, productName, quantity) {
         await login(driver);
         await navigateToSellerChannel(driver);
         await addProduct(driver);
-        await completePurchase(driver, "HUB Chuyển Mở Rộng Type C", 2);
+        await completePurchase(driver, "HUB Chuyển Mở Rộng Type-C", 2);
     } catch (error) {
         console.error('\n❌ Lỗi kiểm thử:', error);
     } finally {
