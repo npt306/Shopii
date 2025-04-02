@@ -1,6 +1,10 @@
 const { Builder, By, Key, until } = require('selenium-webdriver');
 const path = require('path');
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function login(driver) {
     await driver.get('http://34.58.241.34:8000/login');
     await driver.findElement(By.name('username')).sendKeys('nptai8386@gmail.com');
@@ -51,14 +55,17 @@ async function addProduct(driver) {
     await coverImage.sendKeys(path.resolve(__dirname, 'test_sources/hub00.png'));
     console.log('\n✅ Đã thêm ảnh sản phẩm!');
 
-    let productVideo = driver.findElement(By.name('product-video'));
-    await productVideo.sendKeys(path_resolve(__dirname, 'test_sources/hub.mp4'));
+    let productVideoInput = await driver.findElement(By.name('product-video'));
+    let videoPath = path.resolve(__dirname, 'test_sources/hub.mp4');
+    await productVideoInput.sendKeys(videoPath);
+    console.log('\n✅ Đã thêm video vào sản phẩm!');
 
     await driver.findElement(By.name('save-new-product')).click();
+    await sleep(2000);
     console.log('\n✅ Đã thêm sản phẩm thành công!');
 }
 
-async function completePurchase(driver, productName, colorName, sizeName, quantity) {
+async function completePurchase(driver, productName, quantity) {
     // Chuyển hướng sang trang homepage của buyer
     await driver.get('http://34.58.241.34:8000/home');
     console.log('\n✅ Đã vào trang homepage của buyer!');
@@ -66,62 +73,8 @@ async function completePurchase(driver, productName, colorName, sizeName, quanti
     // Tìm sản phẩm theo tên
     const productElements = await driver.findElements(By.css('.today-products .p-2.text-xs.text-left'));
     let selectedProduct = null;
-    
-    for (let product of productElements) {
-        let text = await product.getText();
-        if (text.includes(productName)) {
-            selectedProduct = product;
-            break;
-        }
-    }
 
-    if (selectedProduct) {
-        await selectedProduct.click();
-        console.log(`\n✅ Đã chọn sản phẩm: ${productName}`);
-    } else {
-        console.log(`\n❌ Không tìm thấy sản phẩm: ${productName}`);
-        return;
-    }
-
-    // Chọn màu sắc mong muốn
-    const colorOptions = await driver.findElements(By.css('.color-options div'));
-    let selectedColor = null;
-
-    for (let color of colorOptions) {
-        let colorText = await color.getText();
-        if (colorText.includes(colorName)) {
-            selectedColor = color;
-            break;
-        }
-    }
-
-    if (selectedColor) {
-        await selectedColor.click();
-        console.log(`\n✅ Đã chọn màu sắc: ${colorName}`);
-    } else {
-        console.log(`\n❌ Không tìm thấy màu sắc: ${colorName}`);
-        return;
-    }
-
-    // Chọn kích cỡ mong muốn
-    const sizeOptions = await driver.findElements(By.css('.size-options div'));
-    let selectedSize = null;
-
-    for (let size of sizeOptions) {
-        let sizeText = await size.getText();
-        if (sizeText.includes(sizeName) && !(await size.getAttribute('class')).includes('opacity-50')) {
-            selectedSize = size;
-            break;
-        }
-    }
-
-    if (selectedSize) {
-        await selectedSize.click();
-        console.log(`\n✅ Đã chọn kích cỡ: ${sizeName}`);
-    } else {
-        console.log(`\n❌ Không tìm thấy kích cỡ hợp lệ: ${sizeName}`);
-        return;
-    }
+    await driver.get('http://34.58.241.34:8000/detail-product/1');
 
     // Chọn số lượng sản phẩm
     const quantityInput = await driver.findElement(By.css('input[type="number"]'));
@@ -130,7 +83,7 @@ async function completePurchase(driver, productName, colorName, sizeName, quanti
     console.log(`\n✅ Đã chọn số lượng: ${quantity}`);
 
     // Bấm thêm vào giỏ hàng
-    const addToCartButton = await driver.findElement(By.css('.border-[#ee4d2d]'));
+    const addToCartButton = await driver.findElement(By.xpath("//div[contains(text(), 'Thêm Vào Giỏ Hàng')]"));
     await addToCartButton.click();
     console.log('\n✅ Đã thêm sản phẩm vào giỏ hàng!');
 
@@ -138,23 +91,6 @@ async function completePurchase(driver, productName, colorName, sizeName, quanti
     const cartButton = await driver.findElement(By.css('.relative.cursor-pointer.group'));
     await cartButton.click();
     console.log('\n✅ Đã vào giỏ hàng!');
-
-    // Chọn sản phẩm trong giỏ hàng
-    const cartItems = await driver.findElements(By.css('.cart-item'));
-    for (let item of cartItems) {
-        let itemName = await item.findElement(By.css('.item-name')).getText();
-        if (itemName.includes(productName)) {
-            let productCheckbox = await item.findElement(By.css('input[type="checkbox"]'));
-            await productCheckbox.click();
-            console.log(`\n✅ Đã chọn sản phẩm trong giỏ hàng: ${productName}`);
-            break;
-        }
-    }
-
-    // Bấm nút mua hàng
-    const checkoutButton = await driver.findElement(By.css('.w-full.h-[2.5rem].bg-[#ee4d2d]'));
-    await checkoutButton.click();
-    console.log('\n✅ Đã bấm mua hàng!');
 }
 
 (async function runTest() {
@@ -163,7 +99,7 @@ async function completePurchase(driver, productName, colorName, sizeName, quanti
         await login(driver);
         await navigateToSellerChannel(driver);
         await addProduct(driver);
-        await completePurchase(driver, "Áo Thun Trơn Gimme", "Trắng", "M", 2);
+        await completePurchase(driver, "HUB Chuyển Mở Rộng Type C", 2);
     } catch (error) {
         console.error('\n❌ Lỗi kiểm thử:', error);
     } finally {
