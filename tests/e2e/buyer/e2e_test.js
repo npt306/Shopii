@@ -36,50 +36,26 @@ async function navigateToSellerChannel(driver) {
 }
 
 async function addProduct(driver) {
-    await driver.findElement(By.name('product-name')).sendKeys('Áo thi đấu ĐTQG Việt Nam 2025');
-    await driver.findElement(By.name('product-description')).sendKeys('Mẫu áo đấu từ Jogarbola sẽ đồng hành cùng ĐTQG Việt Nam trong năm 2025');
-    await driver.findElement(By.name('product-price')).sendKeys('234000');
-    await driver.findElement(By.name('product-quantity')).sendKeys('100');
+    await driver.findElement(By.name('product-name')).sendKeys('HUB Chuyển Mở Rộng Type-C Sang HDMI, USB 3.0 và Type-C Tương Thích Macbook');
+    await driver.findElement(By.name('product-description')).sendKeys('Cáp chuyển USB Type C sang USB 3.0 và HDMI được sử dụng để kết nối các thiết bị có hỗ trợ cổng kết nối USB Type C sang các thiết bị trình chiếu như màn hình máy chiếu hoặc Tivi có hỗ trợ cổng kết nối HDMI. Cáp chuyển đổi USB type C có độ phân giải lên đến 4K và tương thích tốt với các thiết bị của Apple.');
+    await driver.findElement(By.name('product-price')).sendKeys('89000');
+    await driver.findElement(By.name('product-quantity')).sendKeys('2002');
 
     let productImage = driver.findElement(By.name('product-images'));
-    await productImage.sendKeys(path.resolve(__dirname, 'test_sources/ao_DTQG_trang.png'));
+    await productImage.sendKeys(path.resolve(__dirname, 'test_sources/hub00.png'));
+    await productImage.sendKeys(path.resolve(__dirname, 'test_sources/hub01.png'));
+    await productImage.sendKeys(path.resolve(__dirname, 'test_sources/hub02.png'));
+    await productImage.sendKeys(path.resolve(__dirname, 'test_sources/hub03.png'));
 
     let coverImage = driver.findElement(By.name('product-cover-image'));
-    await coverImage.sendKeys(path.resolve(__dirname, 'test_sources/ao_DTQG_do.png'));
+    await coverImage.sendKeys(path.resolve(__dirname, 'test_sources/hub00.png'));
     console.log('\n✅ Đã thêm ảnh sản phẩm!');
 
-    // Mở menu chọn ngành hàng và đợi phần tử xuất hiện
-    await driver.wait(until.elementLocated(By.css('[data-name="category-list-container"]')), 10000, 'Không tìm thấy menu chọn ngành hàng!');
+    let productVideo = driver.findElement(By.name('product-video'));
+    await productVideo.sendKeys(path_resolve(__dirname, 'test_sources/hub.mp4'));
 
-    await driver.findElement(By.css('[data-name="category-list-container"]')).click();
-    console.log('\n✅ Đã mở menu chọn ngành hàng!');
-
-    // Tìm tất cả các mục trong danh sách ngành hàng
-    const categoryItems = await driver.findElements(By.css('[data-name="category-item"]'));
-
-    let found = false;
-    for (const category of categoryItems) {
-        const categoryText = await category.getText();
-        
-        if (categoryText === 'Sport & Outdoor') {
-            await category.click(); // Chọn ngành hàng
-            console.log('\n✅ Đã chọn ngành hàng Sport & Outdoor!');
-            found = true;
-            break;
-        }
-    }
-
-    if (!found) {
-        const categoryListContainer = await driver.findElement(By.css('[data-name="category-list-container"]'));
-        
-        await driver.executeScript('arguments[0].scrollTop = arguments[0].scrollHeight', categoryListContainer);
-        console.log('\n🔄 Đang cuộn xuống để tìm ngành hàng...');
-        
-        await addProduct(driver);  // Gọi lại hàm nếu không tìm thấy ngành hàng
-    } else {
-        await driver.findElement(By.name('save-new-product')).click();
-        console.log('\n✅ Đã thêm sản phẩm thành công!');
-    }
+    await driver.findElement(By.name('save-new-product')).click();
+    console.log('\n✅ Đã thêm sản phẩm thành công!');
 }
 
 async function completePurchase(driver, productName, colorName, sizeName, quantity) {
