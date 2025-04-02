@@ -23,7 +23,7 @@ interface Address {
       const fetchAddresses = async () => {
         try {
           setLoading(true);
-          const response = await fetch(`http://34.58.241.34:3005/address/account/${accountId}`);
+          const response = await fetch(`${import.meta.env.VITE_ACCOUNT_SERVICE_URL}/address/account/${accountId}`);
           
           if (!response.ok) {
             throw new Error("Failed to fetch addresses");
@@ -42,7 +42,7 @@ interface Address {
   
     const deleteAddress = async (id: number) => {
       try {
-        const response = await fetch(`http://34.58.241.34:3005/address/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_ACCOUNT_SERVICE_URL}/address/${id}`, {
           method: "DELETE",
         });
         if (!response.ok) {

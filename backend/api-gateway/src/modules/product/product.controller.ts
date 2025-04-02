@@ -9,14 +9,24 @@ import {
   Delete,
   HttpException,
   HttpStatus,
+  Post,
+  Put,
+  UseInterceptors,
+  UploadedFile,
+  Req,
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { FastifyRequest } from 'fastify';
+import * as FormData from 'form-data';
+import * as concat from 'concat-stream';
 
 @Controller('api/product')
 export class ProductController {
-  constructor(private readonly httpService: HttpService) {}
+  constructor(private readonly httpService: HttpService) { }
 
+  // Existing endpoints
   @Get('/detail/:id')
   async getProductDetail(@Param('id') id: number) {
     try {
@@ -51,7 +61,7 @@ export class ProductController {
     }
   }
 
-  // Admin routes
+  // Admin routes - Existing
   @Get('admin/products')
   async getAdminProducts(
     @Query('page') page: string,
@@ -132,6 +142,221 @@ export class ProductController {
         this.httpService.delete(
           `${process.env.PRODUCT_SERVICE_URL}/product/admin/products/${id}`,
           { data: body }, // Send reason in the request body for DELETE
+        ),
+      );
+      return data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  // Get product by ID
+  @Get(':id')
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.get(
+          `${process.env.PRODUCT_SERVICE_URL}/product/${id}`,
+        ),
+      );
+      return data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  // Get products by seller ID
+  @Get('seller/:sellerId')
+  async getProductsBySellerID(@Param('sellerId', ParseIntPipe) sellerId: number) {
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.get(
+          `${process.env.PRODUCT_SERVICE_URL}/product/seller/${sellerId}`,
+        ),
+      );
+      return data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  // Add new product
+  @Post()
+  async addProduct(@Body() createProductDto: any) {
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.post(
+          `${process.env.PRODUCT_SERVICE_URL}/product`,
+          createProductDto,
+        ),
+      );
+      return data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  // Delete product detail
+  @Delete(':productId/detail/:detailIndex')
+  async deleteProductDetail(
+    @Param('productId', ParseIntPipe) productId: number,
+    @Param('detailIndex', ParseIntPipe) detailIndex: number,
+  ) {
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.delete(
+          `${process.env.PRODUCT_SERVICE_URL}/product/${productId}/detail/${detailIndex}`,
+        ),
+      );
+      return data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  // Update product detail
+  @Put('detail/:detailId')
+  async updateProductDetail(
+    @Param('detailId', ParseIntPipe) detailId: number,
+    @Body() updateData: any,
+  ) {
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.put(
+          `${process.env.PRODUCT_SERVICE_URL}/product/detail/${detailId}`,
+          updateData,
+        ),
+      );
+      return data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  // Upload image
+  @Post('uploadIMG')
+  async uploadImage(@Req() req: FastifyRequest) {
+    try {
+      // Make sure we're properly getting the multipart data
+      const data = await req.file();
+
+      if (!data) {
+        throw new HttpException('No file uploaded', HttpStatus.BAD_REQUEST);
+      }
+
+      console.log('Received file data:', data); // Debug the data structure
+
+      // Create a buffer from the file stream
+      const buffer = await data.toBuffer(); // This is a simpler way to get the buffer with Fastify
+
+      // Create FormData object
+      const formData = new FormData();
+      formData.append('file', buffer, {
+        filename: data.filename,
+        contentType: data.mimetype || 'application/octet-stream',
+      });
+
+      // Send to product service
+      const response = await firstValueFrom(
+        this.httpService.post(
+          `${process.env.PRODUCT_SERVICE_URL}/product/uploadIMG`,
+          formData,
+          {
+            headers: {
+              ...formData.getHeaders(),
+            },
+            maxBodyLength: Infinity,
+            maxContentLength: Infinity,
+          },
+        ),
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Upload error:', error);
+      if (error.response) {
+        console.error('Error response details:', error.response.data);
+      }
+      throw new HttpException(
+        'Error uploading file to product service',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  // Delete image
+  @Delete('deleteIMG')
+  async deleteImage(@Body('url') url: string) {
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.delete(
+          `${process.env.PRODUCT_SERVICE_URL}/product/deleteIMG`,
+          { data: { url } },
+        ),
+      );
+      return data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  // Upload video
+  @Post('uploadVideo')
+  async uploadVideo(@Req() req: FastifyRequest) {
+    try {
+      // Make sure we're properly getting the multipart data
+      const data = await req.file();
+
+      if (!data) {
+        throw new HttpException('No file uploaded', HttpStatus.BAD_REQUEST);
+      }
+
+      console.log('Received file data:', data); // Debug the data structure
+
+      // Create a buffer from the file stream
+      const buffer = await data.toBuffer(); // This is a simpler way to get the buffer with Fastify
+
+      // Create FormData object
+      const formData = new FormData();
+      formData.append('file', buffer, {
+        filename: data.filename,
+        contentType: data.mimetype || 'application/octet-stream',
+      });
+
+      // Send to product service
+      const response = await firstValueFrom(
+        this.httpService.post(
+          `${process.env.PRODUCT_SERVICE_URL}/product/uploadVideo`,
+          formData,
+          {
+            headers: {
+              ...formData.getHeaders(),
+            },
+            maxBodyLength: Infinity,
+            maxContentLength: Infinity,
+          },
+        ),
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Upload error:', error);
+      if (error.response) {
+        console.error('Error response details:', error.response.data);
+      }
+      throw new HttpException(
+        'Error uploading file to product service',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  // Delete video
+  @Delete('deleteVideo')
+  async deleteVideo(@Body('url') url: string) {
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.delete(
+          `${process.env.PRODUCT_SERVICE_URL}/product/deleteVideo`,
+          { data: { url } },
         ),
       );
       return data;

@@ -20,13 +20,7 @@ import { formatPrice } from "../helpers/utility/formatPrice";
 import { Account } from "../types/account";
 
 import { useCart } from "../context/cartContext";
-
-import {
-  PRODUCT_SERVICE_LOCALHOST,
-  ORDER_SERVICE_LOCALHOST,
-  API_GATEWAY_LOCALHOST,
-  API_GATEWAY_URL,
-} from "../config/url";
+import { EnvValue } from "../env-value/envValue";
 
 export const ProductDetailPage = () => {
   const res: Account = localStorage.getItem("userProfile")
@@ -119,9 +113,7 @@ export const ProductDetailPage = () => {
     const fetchProductDetail = async () => {
       try {
         const response = await axios.get(
-          // `${PRODUCT_SERVICE_LOCALHOST}/product/classifications/${id}`
-          // `${API_GATEWAY_LOCALHOST}/api/product/detail/${id}`
-          `${API_GATEWAY_URL}/api/product/detail/${id}`
+          `${EnvValue.API_GATEWAY_URL}/api/product/detail/${id}`
         );
         setProductDetail(response.data);
         // console.log(response.data);
@@ -162,8 +154,7 @@ export const ProductDetailPage = () => {
 
       try {
         const response = await axios.post(
-          // `${ORDER_SERVICE_LOCALHOST}/carts/add-to-cart`,
-          `${API_GATEWAY_URL}/order/carts/add-to-cart`,
+          `${EnvValue.API_GATEWAY_URL}/order/carts/add-to-cart`,
           data
         );
         setOpenDialog(true);

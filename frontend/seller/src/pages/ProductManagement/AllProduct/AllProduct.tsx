@@ -14,6 +14,8 @@ import Deboosted from "./Deboosted";
 import Deleted from "./Deleted";
 import Unlisted from "./Unlisted";
 import Draft from "./Draft";
+import { EnvValue } from '../../../env-value/envValue'
+
 
 interface Dimension {
     weight: string;
@@ -115,7 +117,7 @@ const AllProduct = () => {
 
     const fetchProducts = async () => {
         try {
-            const response = await axios.get<Product[]>('http://34.58.241.34:3001/product/seller/1');
+            const response = await axios.get<Product[]>(`${EnvValue.API_GATEWAY_URL}/api/product/seller/1`);
             setProducts(response.data);
             setFilteredProducts(response.data);
             setLoading(false);
@@ -131,7 +133,7 @@ const AllProduct = () => {
 
     const fetchCategories = async () => {
         try {
-            const response = await axios.get('http://34.58.241.34:3001/categories/names');
+            const response = await axios.get(`${EnvValue.API_GATEWAY_URL}/api/categories/names`);
             return response.data;
         } catch (error) {
             console.error('Error fetching categories:', error);

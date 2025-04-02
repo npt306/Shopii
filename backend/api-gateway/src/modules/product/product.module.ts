@@ -3,8 +3,11 @@ import { HttpModule } from '@nestjs/axios';
 import { ProductController } from './product.controller';
 
 @Module({
-  imports: [HttpModule],
+  imports: [
+    HttpModule.register({
+      baseURL: process.env.PRODUCT_SERVICE_URL,
+    }),
+  ],
   controllers: [ProductController],
-  providers: [],
 })
-export class ProductModule {}
+export class ProductModule { }

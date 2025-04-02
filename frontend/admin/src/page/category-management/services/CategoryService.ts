@@ -6,7 +6,7 @@ interface Category {
     children?: Category[];
 }
 
-const API_BASE_URL = 'http://34.58.241.34:3001/api'; // Change this to your actual API URL
+const API_BASE_URL = '/api'; // Change this to your actual API URL
 
 export const CategoryService = {
     async getCategoryTree(): Promise<Category[]> {
