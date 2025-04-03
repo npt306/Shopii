@@ -77,6 +77,44 @@ export class AddressService {
     }));
   }
 
+  async getAddressesByDefaultAccount(accountId: number): Promise<any> {
+    console.log(`Getting default address for accountId: ${accountId}`);
+    
+    const address = await this.addressRepository
+      .createQueryBuilder('address')
+      .where({ AccountId: accountId, isDefault: true })
+      .orderBy('address.CreatedAt', 'DESC')
+      .getOne(); // Use getOne() to fetch a single record
+  
+    if (!address) {
+      console.log(`No default address found for accountId: ${accountId}`);
+      return null; // Return null if no default address is found
+    }
+  
+    console.log(`Found default address for accountId: ${accountId}`);
+  
+    return {
+      id: address.AddressId,
+      fullName: address.FullName,
+      phoneNumber: address.PhoneNumber,
+      province: address.Province,
+      district: address.District,
+      ward: address.Ward,
+      specificAddress: address.SpecificAddress,
+      createdAt: address.CreatedAt,
+      updatedAt: address.UpdatedAt,
+      accountId: address.AccountId,
+      isDefault: address.isDefault,
+      isShipping: address.isShipping,
+      isDelivery: address.isDelivery,
+    };
+  }
+
+
+
+
+
+
   async findAll(): Promise<Address[]> {
     console.log(`This action returns all address`);
     return this.addressRepository.find();

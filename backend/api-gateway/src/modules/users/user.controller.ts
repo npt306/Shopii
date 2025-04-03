@@ -33,4 +33,5 @@ export class UsersController {
   async getProfile(@Param('id', ParseIntPipe) id: number): Promise<any> {
     return this.usersService.getUserProfile(id);
   }
+  
 }

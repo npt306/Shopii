@@ -63,6 +63,13 @@ export class AddressController {
     return this.addressService.findOne(+id);
   }
 
+  @Get('account/default/:accountId')
+  async getAddressesByDefaultAccount(@Param('accountId') accountId: string): Promise<Address[]> {
+    return this.addressService.getAddressesByDefaultAccount(+accountId);
+  }
+
+  
+
   @Post('update/:id')
   updateByPost(@Param('id') id: string, @Body() updateAddressDto: UpdateAddressDto) {
     return this.addressService.update(+id, updateAddressDto);

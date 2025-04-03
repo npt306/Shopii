@@ -7,7 +7,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
   imports: [
     HttpModule.register({
       //baseURL: process.env.USERS_SERVICE_URL, 
-      baseURL: 'localhost:3005', // Default value, can be overridden by ConfigService
+      baseURL: 'http://localhost:3005', // Default value, can be overridden by ConfigService
     }),
   ],
   controllers: [UsersController],
