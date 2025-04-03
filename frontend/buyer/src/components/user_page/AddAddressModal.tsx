@@ -74,7 +74,7 @@ export const AddAddressModal = ({
       const provinceOption = provinceOptions.find(
         (opt) => opt.label === formData.Province
       );
-      if (provinceOption) {
+      if (provinceOption) { 
         fetchDistricts(provinceOption.id);
       }
     }

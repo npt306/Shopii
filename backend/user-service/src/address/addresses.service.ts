@@ -26,16 +26,41 @@ export class AddressService {
     const existingAddresses = await this.addressRepository.count({ where: { AccountId: accountId } });
     
     // If no addresses exist, set the new address as default, shipping, and delivery
-    if (existingAddresses == 0) {
+    if (existingAddresses === 0) {
       createAddressDto.isDefault = true;
       createAddressDto.isShipping = true;
       createAddressDto.isDelivery = true;
     }
-    console.log(`Creating address for accountId ${accountId} with default settings:`, createAddressDto);
-    // Create and save the new address
-    const address = this.addressRepository.create(createAddressDto);
-    console.log(`Address created:`, address);
-    return this.addressRepository.save(address);
+  
+    return await this.addressRepository.manager.transaction(async (tm) => {
+      // If the incoming address should be default, first reset all others
+      if (createAddressDto.isDefault) {
+        await tm.createQueryBuilder(Address, 'address')
+          .update(Address)
+          .set({ isDefault: false })
+          .where({ AccountId: accountId })
+          .execute();
+      }
+      // If the incoming address should be used for shipping, first reset all others
+      if (createAddressDto.isShipping) {
+        await tm.createQueryBuilder(Address, 'address')
+          .update(Address)
+          .set({ isShipping: false })
+          .where({ AccountId: accountId })
+          .execute();
+      }
+      // If the incoming address should be used for delivery, first reset all others
+      if (createAddressDto.isDelivery) {
+        await tm.createQueryBuilder(Address, 'address')
+          .update(Address)
+          .set({ isDelivery: false })
+          .where({ AccountId: accountId })
+          .execute();
+      }
+  
+      const address = this.addressRepository.create(createAddressDto);
+      return await tm.save(address);
+    });
   }
 
   async getAllAddresses(): Promise<any[]> {
@@ -143,16 +168,42 @@ export class AddressService {
   // }
 
   async update(id: number, updateAddressDto: UpdateAddressDto): Promise<Address> {
-    // Preload creates a new entity by merging existing data with new values.
-    const address = await this.addressRepository.preload({
-      AddressId: id,
-      ...updateAddressDto,
+    return await this.addressRepository.manager.transaction(async (tm) => {
+      // Preload merges the existing address with new values.
+      const address = await this.addressRepository.preload({
+        AddressId: id,
+        ...updateAddressDto,
+      });
+      if (!address) {
+        throw new NotFoundException(`Address with id ${id} not found`);
+      }
+      const accountId = address.AccountId;
+
+      // If update DTO requests a flag true, unset that flag on all other addresses for this account.
+      if (updateAddressDto.isDefault) {
+        await tm.createQueryBuilder(Address, 'address')
+          .update(Address)
+          .set({ isDefault: false })
+          .where({ AccountId: accountId })
+          .execute();
+      }
+      if (updateAddressDto.isShipping) {
+        await tm.createQueryBuilder(Address, 'address')
+          .update(Address)
+          .set({ isShipping: false })
+          .where({ AccountId: accountId })
+          .execute();
+      }
+      if (updateAddressDto.isDelivery) {
+        await tm.createQueryBuilder(Address, 'address')
+          .update(Address)
+          .set({ isDelivery: false })
+          .where({ AccountId: accountId })
+          .execute();
+      }
+
+      return await tm.save(address);
     });
-    if (!address) {
-      console.log(`Address with id ${id} not found`);
-      throw new NotFoundException(`Address with id ${id} not found`);
-    }
-    return this.addressRepository.save(address);
   }
 
   async setDefaultAddress(id: number, accountId: number): Promise<void> {

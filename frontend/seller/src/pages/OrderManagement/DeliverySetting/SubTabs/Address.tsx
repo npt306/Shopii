@@ -18,6 +18,7 @@ const Address = () => {
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editAddress, setEditAddress] = useState<Address | null>(null);
 
   // Fetch addresses from backend
   const fetchAddresses = async () => {
@@ -76,7 +77,7 @@ const Address = () => {
       if (newAddress.id) {
         // Update address
         const response = await fetch(
-          `${EnvValue.API_GATEWAY_URL}/address/update/${newAddress.id}`,
+          `${EnvValue.API_GATEWAY_URL}/api/address/update/${newAddress.id}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -214,6 +215,7 @@ const Address = () => {
         onClose={() => setIsDialogOpen(false)}
         onSave={handleSaveAddress}
         address={selectedAddress} // Pass the selected address for editing
+        //editAddress={editAddress} // Pass the address to edit
       />
     </div>
   );
