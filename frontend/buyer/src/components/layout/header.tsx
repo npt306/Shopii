@@ -25,7 +25,7 @@ export const Header = () => {
 
   return (
     <div className="flex flex-col bg-[#ee4d2d] text-white">
-      <div className="px-30 py-3 flex justify-between items-center">
+      <div className="mx-30 py-3 flex justify-between items-center">
         <div className="flex items-center gap-4">
           <a
             href="http://34.58.241.34:8001/portal/settings/shop/profile/"
@@ -37,7 +37,7 @@ export const Header = () => {
           <div>Dowload app</div>
           <div className="flex items-center gap-2">
             <p>Kết nối</p>
-            <div className="flex flex-row pt-0.75 gap-1">
+            <div className="flex flex-row justify-center gap-1">
               <FaFacebook size={15} />
               <FaInstagram size={15} />
             </div>
