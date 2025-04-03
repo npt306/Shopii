@@ -13,11 +13,11 @@ export const userService = {
     try {
       axios.defaults.withCredentials = true;
       // localhost:3003 for testing
-      // console.log(`http://34.58.241.34:3003/Users/login`);
-      // 'http://34.58.241.34:3003'
+      // console.log(`${EnvValue.AUTH_SERVICE_URL}/Users/login`);
+      // '${EnvValue.AUTH_SERVICE_URL}'
       // const response = await axios.post<LoginResponse>(EnvValue.backend_url + '/Users/login', { username, password });
       const response = await axios.post<LoginResponse>(
-        `http://34.58.241.34:3003/Users/login`,
+        `${EnvValue.AUTH_SERVICE_URL}/Users/login`,
         { username, password }
       );
       return response.data;
@@ -31,9 +31,9 @@ export const userService = {
   register: async (userData: any): Promise<RegisterResponse> => {
     try {
       axios.defaults.withCredentials = true;
-      console.log(EnvValue.backend_url + "/Users/register");
+      console.log(EnvValue.AUTH_SERVICE_URL + "/Users/register");
       const response = await axios.post<RegisterResponse>(
-        EnvValue.backend_url + "/Users/register",
+        EnvValue.AUTH_SERVICE_URL + "/Users/register",
         userData
       );
       // const response = await axios.post<RegisterResponse>(`http://localhost:3003/Users/register`, userData);
@@ -52,7 +52,7 @@ export const userService = {
     try {
       axios.defaults.withCredentials = true;
       const response = await axios.post<{ success: boolean; message: string }>(
-        `http://34.58.241.34:3003/Users/send-verification-email`,
+        `${EnvValue.AUTH_SERVICE_URL}/Users/send-verification-email`,
         { email }
       );
       return response.data;
@@ -68,7 +68,7 @@ export const userService = {
     try {
       axios.defaults.withCredentials = true;
       const response = await axios.post<RefreshTokenResponse>(
-        EnvValue.backend_url + "/Users/refreshToken",
+        EnvValue.AUTH_SERVICE_URL + "/Users/refreshToken",
         { refresh_token: refreshToken }
       );
       return response.data;
@@ -86,7 +86,7 @@ export const userService = {
     try {
       axios.defaults.withCredentials = true;
       const response = await axios.post<{ success: boolean; message: string }>(
-        `http://34.58.241.34:3003/Users/check-email-verification`,
+        `${EnvValue.AUTH_SERVICE_URL}/Users/check-email-verification`,
         { email }
       );
       return response.data;
@@ -102,8 +102,8 @@ export const userService = {
     try {
       axios.defaults.withCredentials = true;
       const response = await axios.post<{ success: boolean; message: string }>(
-        // `http://34.58.241.34:3003/Users/logout`
-        EnvValue.backend_url + "/Users/logout"
+        // `${EnvValue.AUTH_SERVICE_URL}/Users/logout`
+        EnvValue.AUTH_SERVICE_URL + "/Users/logout"
       );
 
       // Clear all items from localStorage

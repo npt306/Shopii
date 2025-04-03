@@ -4,7 +4,7 @@ import DeliveryBill from "./SubTabs/DeliveryBill";
 import Address from "./SubTabs/Address";
 
 const DeliverySetting = () => {
-    const [activeTab, setActiveTab] = useState("Đơn vị vận chuyển");
+    const [activeTab, setActiveTab] = useState("Địa Chỉ");
     const [inkBarStyle, setInkBarStyle] = useState({ left: 0, width: 0 });
     const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -20,8 +20,8 @@ const DeliverySetting = () => {
 
     const tabs = [
         "Địa Chỉ",
-        "Đơn vị vận chuyển",
-        "Chứng từ vận chuyển",
+        //"Đơn vị vận chuyển",
+        //"Chứng từ vận chuyển",
     ];
 
     return (
@@ -58,8 +58,8 @@ const DeliverySetting = () => {
             </div>
 
             {activeTab === "Địa Chỉ" && <Address />}
-            {activeTab === "Đơn vị vận chuyển" && <DeliveryOptions />}
-            {activeTab === "Chứng từ vận chuyển" && <DeliveryBill />}
+            {/* {activeTab === "Đơn vị vận chuyển" && <DeliveryOptions />} */}
+            {/* {activeTab === "Chứng từ vận chuyển" && <DeliveryBill />} */}
         </div>
     );
 };

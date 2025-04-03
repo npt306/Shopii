@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ArrowRightOnRectangleIcon, CogIcon, BuildingStorefrontIcon   } from "@heroicons/react/20/solid";
 import axios from "axios";
+import { EnvValue } from "../../env-value/envValue";
 
 const Header = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -109,7 +110,7 @@ const Header = () => {
                   // Call logout API using axios
                   axios.defaults.withCredentials = true;
                   const response = await axios.post<{ success: boolean; message: string }>(
-                      `http://34.58.241.34:3003/Users/logout`
+                      `${EnvValue.AUTH_SERVICE_URL}/Users/logout`
                       // 'http://localhost:3003/Users/logout',
                   );
                   
@@ -118,7 +119,7 @@ const Header = () => {
                   
                   // Redirect to login page
                   // window.location.href = 'http://localhost:8000/home';
-                  window.location.href = 'http://34.58.241.34:3003/home';
+                  window.location.href = `${EnvValue.AUTH_SERVICE_URL}/home`;
                 } catch (error) {
                   console.error('Logout failed:', error);
                 }

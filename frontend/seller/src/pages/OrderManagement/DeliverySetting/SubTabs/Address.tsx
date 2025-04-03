@@ -9,9 +9,10 @@ interface Address {
   province: string;
   type: string[]; // Includes "Default address", "Shipping address", "Delivery address"
 }
-
+//localStorage.setItem('user_accountId', String(userData.accountId));
 const Address = () => {
   const user_accountId = localStorage.getItem("user_accountId"); // Retrieve user_accountId from localStorage
+  console.log("user_accountId", user_accountId); // Log the user_accountId for debugging
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
@@ -23,7 +24,7 @@ const Address = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `http://34.58.241.34:3005/address/account/${user_accountId}` // Use user_accountId dynamically
+        `http://localhost:3005/address/account/${user_accountId}` // Use user_accountId dynamically
       );
       if (!response.ok) {
         throw new Error("Failed to fetch addresses");
@@ -54,7 +55,8 @@ const Address = () => {
     if (user_accountId) {
       fetchAddresses();
     } else {
-      setError("User account ID is missing");
+      fetchAddresses();
+      // setError("User account ID is missing");
     }
   }, [user_accountId]);
 
@@ -64,7 +66,7 @@ const Address = () => {
       if (newAddress.id) {
         // Update address
         const response = await fetch(
-          `http://34.58.241.34:3005/address/update/${newAddress.id}`,
+          `http://localhost:3005/address/update/${newAddress.id}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -77,7 +79,7 @@ const Address = () => {
       } else {
         // Add new address
         const response = await fetch(
-          `http://34.58.241.34:3005/address/account/${user_accountId}`, // Use user_accountId dynamically
+          `http://localhost:3005/address/account/${user_accountId}`, // Use user_accountId dynamically
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

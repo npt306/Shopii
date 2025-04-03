@@ -18,7 +18,7 @@ import ShopRegister from './pages/RegisterShop/Register';
 import ProtectedRoute from './components/hook/protectedRoute';
 import { ToastContainer } from "react-toastify";
 import { useEffect, useState } from 'react';
-
+import { EnvValue } from './env-value/envValue';
 
 function App() {
   // Getting user's profile and saving it in localStorage
@@ -28,7 +28,7 @@ function App() {
     const fetchUserData = async () => {
       try {
         // const response = await fetch('http://localhost:3003/Users/my-profile/', {
-          const response = await fetch('http://34.58.241.34:3003/Users/my-profile/', {
+          const response = await fetch(`${EnvValue.AUTH_SERVICE_URL}/Users/my-profile/`, {
           credentials: 'include', // Ensure cookies are sent
         });
   

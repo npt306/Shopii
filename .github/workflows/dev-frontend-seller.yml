@@ -52,7 +52,7 @@ jobs:
             docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/frontend-seller:latest || true
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/frontend-seller:latest
             docker run -d --name frontend-seller -p 8001:8001 \
-            -e VITE_API_URL="34.58.241.34:3001" \
             -e "VITE_API_GATEWAY_URL=http://34.58.241.34:3000" \
             -e "VITE_AUTH_SERVICE_URL=http://34.58.241.34:3003" \
+            -e "VITE_PRODUCT_SERVICE_URL=http://34.58.241.34:3001" \
             ${{ secrets.DOCKERHUB_USERNAME }}/frontend-seller:latest

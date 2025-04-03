@@ -40,33 +40,32 @@ export const HomeLayout = () => {
             {menuItems
               .filter(item => item.name !== 'Logout')
               .map(({ icon, name, link }) => (
-              <li key={name}>
-                <Link
-                  to={link}
-                  className={`flex items-center gap-3 p-3 rounded-lg transition-all text-sm font-medium no-underline
-                    ${
-                      location.pathname.startsWith(link)
+                <li key={name}>
+                  <Link
+                    to={link}
+                    className={`flex items-center gap-3 p-3 rounded-lg transition-all text-sm font-medium no-underline
+                    ${location.pathname.startsWith(link)
                         ? "bg-orange-100 text-orange-700 font-semibold"
                         : "text-gray-800 hover:bg-gray-100 hover:text-gray-900"
-                    }`}
-                >
-                  {icon}
-                  <span>{name}</span>
-                </Link>
-              </li>
-            ))}
+                      }`}
+                  >
+                    {icon}
+                    <span>{name}</span>
+                  </Link>
+                </li>
+              ))}
           </ul>
         </nav>
 
         {/* Logout Item */}
         <div className="mt-auto pt-4 border-t">
-           {menuItems
-              .filter(item => item.name === 'Logout')
-              .map(({ icon, name, link }) => (
+          {menuItems
+            .filter(item => item.name === 'Logout')
+            .map(({ icon, name, link }) => (
               <li key={name} className="list-none">
                 <Link
                   to={link}
-                   className={`flex items-center gap-3 p-3 rounded-lg transition-all text-sm font-medium no-underline text-gray-800 hover:bg-gray-100 hover:text-gray-900`}
+                  className={`flex items-center gap-3 p-3 rounded-lg transition-all text-sm font-medium no-underline text-gray-800 hover:bg-gray-100 hover:text-gray-900`}
                 >
                   {icon}
                   <span>{name}</span>
@@ -78,7 +77,7 @@ export const HomeLayout = () => {
 
       {/* Main Content Area */}
       <main className="ml-60 flex-1 overflow-y-auto p-6 bg-gray-100">
-          <Outlet />
+        <Outlet />
       </main>
 
     </div>

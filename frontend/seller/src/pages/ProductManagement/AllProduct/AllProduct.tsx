@@ -115,7 +115,7 @@ const AllProduct = () => {
 
     const fetchProducts = async () => {
         try {
-            const response = await axios.get<Product[]>('http://34.58.241.34:3001/product/seller/1');
+            const response = await axios.get<Product[]>(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/seller/1`);
             setProducts(response.data);
             setFilteredProducts(response.data);
             setLoading(false);
@@ -131,7 +131,7 @@ const AllProduct = () => {
 
     const fetchCategories = async () => {
         try {
-            const response = await axios.get('http://34.58.241.34:3001/categories/names');
+            const response = await axios.get(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/categories/names`);
             return response.data;
         } catch (error) {
             console.error('Error fetching categories:', error);

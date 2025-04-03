@@ -225,7 +225,10 @@ const CategorySelectorModal = ({
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+        <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30"
+            data-name="category-list-container"
+            >
             <div className="bg-white w-full max-w-4xl h-full max-h-[600px] md:h-[600px] rounded-lg shadow-xl flex flex-col border border-gray-200">
                 {/* Header */}
                 <div className="flex justify-between items-center p-4 border-b border-gray-200">
@@ -813,7 +816,7 @@ const AddProduct = () => {
             formData.append("file", file);
 
             try {
-                const response = await axios.post(`http://34.58.241.34:3001/product/uploadIMG`, formData, {
+                const response = await axios.post(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/uploadIMG`, formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                 });
                 return response.data.url; // Trả về URL từ server
@@ -838,7 +841,7 @@ const AddProduct = () => {
 
         // Gọi API xóa ảnh trên server nếu cần
         try {
-            await axios.delete(`http://34.58.241.34:3001/product/deleteIMG`, { data: { url: removedUrl } });
+            await axios.delete(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/deleteIMG`, { data: { url: removedUrl } });
         } catch (error) {
             console.error("Lỗi khi xóa ảnh trên server:", error);
         }
@@ -856,7 +859,7 @@ const AddProduct = () => {
             formData.append("file", file);
 
             try {
-                const response = await axios.post(`http://34.58.241.34:3001/product/uploadIMG`, formData, {
+                const response = await axios.post(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/uploadIMG`, formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                 });
                 return response.data.url; // Trả về URL từ server
@@ -881,7 +884,7 @@ const AddProduct = () => {
 
         // Gọi API xóa ảnh trên server nếu cần
         try {
-            await axios.delete(`http://34.58.241.34:3001/product/deleteIMG`, { data: { url: removedUrl } });
+            await axios.delete(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/deleteIMG`, { data: { url: removedUrl } });
         } catch (error) {
             console.error("Lỗi khi xóa ảnh trên server:", error);
         }
@@ -919,7 +922,7 @@ const AddProduct = () => {
                 const formData = new FormData();
                 formData.append("file", file);
 
-                axios.post(`http://34.58.241.34:3001/product/uploadVideo`, formData, {
+                axios.post(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/uploadVideo`, formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                 })
                     .then(response => {
@@ -935,7 +938,7 @@ const AddProduct = () => {
     const handleRemoveVideo = async () => {
         if (uploadedVideoUrl) {
             try {
-                await axios.delete(`http://34.58.241.34:3001/product/deleteVideo`, { data: { url: uploadedVideoUrl } });
+                await axios.delete(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/deleteVideo`, { data: { url: uploadedVideoUrl } });
                 setUploadedVideoUrl(null);
                 setSelectedVideo(null);
             } catch (error) {
@@ -1019,7 +1022,7 @@ const AddProduct = () => {
         };
 
         try {
-            const response = await axios.post(`http://34.58.241.34:3001/product`, sampleProduct);
+            const response = await axios.post(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product`, sampleProduct);
             console.log('Product added:', response.data);
             toast.success("Thêm sản phẩm thành công!", {
                 onClose: () => {
@@ -1035,8 +1038,7 @@ const AddProduct = () => {
     const fetchCategories = async () => {
         try {
             // Replace this with your actual API call
-            const response = await axios.get(`http://34.58.241.34:3001/categories`);
-            console.log(import.meta.env.VITE_API_URL);
+            const response = await axios.get(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/categories/tree`);
             const data = response.data;
             setSelectedCategory(data);
         } catch (error) {
@@ -1311,7 +1313,7 @@ const AddProduct = () => {
                                 <label className="cursor-pointer flex items-center px-4 py-2 bg-gray-100 text-blue-600 rounded w-48" onClick={() => handleRatioChangeInf()} >
                                     <Upload className="mr-2 h-5 w-5" />
                                     Thêm hình ảnh (0/9)
-                                    <input type="file" multiple className="hidden" onChange={handleFileChange} />
+                                    <input type="file" name="product-images" multiple className="hidden" onChange={handleFileChange} />
                                 </label>
                                 <div className="mt-4 flex flex-wrap">
                                     {selectedFiles.map((file, index) => (
@@ -1341,7 +1343,7 @@ const AddProduct = () => {
                                 <label className="cursor-pointer flex items-center px-4 py-2 bg-gray-100 text-blue-600 rounded w-48" onClick={() => handleRatioChangeInf()}>
                                     <Upload className="mr-2 h-5 w-5" />
                                     Thêm hình ảnh (0/1)
-                                    <input type="file" className="hidden" onChange={handleOneFileChange} />
+                                    <input type="file" name="product-cover-image" className="hidden" onChange={handleOneFileChange} />
                                 </label>
                                 <div className="mt-4 flex flex-wrap">
                                     {selectedFileOne.map((file, index) => (
@@ -1375,7 +1377,7 @@ const AddProduct = () => {
                                 <label className="cursor-pointer flex items-center px-4 py-2 bg-gray-100 text-blue-600 rounded w-48">
                                     <Upload className="mr-2 h-5 w-5" />
                                     Thêm video (0/1)
-                                    <input type="file" className="hidden" onChange={handleVideoChange} />
+                                    <input type="file" name="product-video" className="hidden" onChange={handleVideoChange} />
                                 </label>
                                 {selectedVideo && (
                                     <div className="mt-4 relative w-64">
@@ -1410,6 +1412,7 @@ const AddProduct = () => {
                                 <div className={`w-full flex items-center border rounded px-3 py-2 bg-white ${productName && (productName.trim().length < 10 || productName !== productName.trim()) ? "border-red-500" : "border-gray-300"}`}>
                                     <input
                                         type="text"
+                                        name="product-name"
                                         value={productName}
                                         onChange={(e) => setProductName(e.target.value)}
                                         placeholder="Tên sản phẩm + Thương hiệu + Model + Thông số kỹ thuật"
@@ -1458,6 +1461,7 @@ const AddProduct = () => {
                                 </label>
                                 <input
                                     type="text"
+                                    name = "product-description"
                                     value={productDescription}
                                     onChange={(e) => setProductDescription(e.target.value)}
                                     className="w-full border rounded px-3 py-2 bg-white text-black h-32"
@@ -1499,6 +1503,7 @@ const AddProduct = () => {
                                                 <div className="w-3/4 px-4 py-2 flex items-center">
                                                     <input
                                                         type="text"
+                                                        name="category-name"
                                                         value={category.name}
                                                         onChange={(e) => updateCategoryName(category.id, e.target.value)}
                                                         placeholder="Nhập tên phân loại"
@@ -1671,7 +1676,7 @@ const AddProduct = () => {
                                                                     if (currentUrl && currentUrl !== "") {
                                                                         try {
                                                                             await axios.delete(
-                                                                                `http://34.58.241.34:3001/product/deleteIMG`,
+                                                                                `${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/deleteIMG`,
                                                                                 { data: { url: currentUrl } }
                                                                             );
                                                                         } catch (error) {
@@ -1682,7 +1687,7 @@ const AddProduct = () => {
 
                                                                     // Upload the image to the server
                                                                     const response = await axios.post(
-                                                                        `http://34.58.241.34:3001/product/uploadIMG`,
+                                                                        `${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/uploadIMG`,
                                                                         formData,
                                                                         {
                                                                             headers: { "Content-Type": "multipart/form-data" },
@@ -1768,7 +1773,7 @@ const AddProduct = () => {
                                                                                                     if (groupImage) {
                                                                                                         try {
                                                                                                             await axios.delete(
-                                                                                                                `http://34.58.241.34:3001/product/deleteIMG`,
+                                                                                                                `${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/deleteIMG`,
                                                                                                                 { data: { url: groupImage } }
                                                                                                             );
 
@@ -1813,6 +1818,7 @@ const AddProduct = () => {
                                                                                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">₫</span>
                                                                                 <input
                                                                                     type="number"
+                                                                                    name = "product-price"
                                                                                     className="pl-8 pr-4 py-2 border rounded w-full bg-white text-black"
                                                                                     placeholder="Nhập vào"
                                                                                     min="0"
@@ -1830,6 +1836,7 @@ const AddProduct = () => {
                                                                         <td className="border-r p-4 border-t" style={{ minWidth: '150px', width: '150px' }}>
                                                                             <input
                                                                                 type="number"
+                                                                                name = "product-quantity"
                                                                                 className="px-4 py-2 border rounded w-full bg-white text-black"
                                                                                 placeholder="0"
                                                                                 min="0"
@@ -1962,6 +1969,7 @@ const AddProduct = () => {
                                                 <div className="flex items-center">
                                                     <input
                                                         type="text"
+                                                        name = "product-weight"
                                                         className={`border rounded p-2 w-32 bg-white text-black ${showError ? 'border-red-500' : 'border-gray-300'}`}
                                                         placeholder="Nhập vào"
                                                         value={inputValue}
@@ -2034,6 +2042,7 @@ const AddProduct = () => {
                         <button className="px-4 py-2 border border-black rounded text-black bg-white" onClick={handleCancelClick}>Hủy</button>
                         <button
                             type="button"
+                            name="save-new-product"
                             className="px-4 py-2 border border-black bg-orange-500 text-white rounded"
                             onClick={sendProduct}
                         >

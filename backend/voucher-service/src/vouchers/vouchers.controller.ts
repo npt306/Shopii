@@ -54,19 +54,18 @@ export class VouchersController {
     return this.vouchersService.remove(id);
   }
 
-  @Get('/all')
-  getAllVouchers(@Query('userId', ParseIntPipe) userId: number) {
-
+  @Get('/all/:userId')
+  getAllVouchers(@Param('userId', ParseIntPipe) userId: number) {
     return this.vouchersService.getActiveVouchers(userId);
   }
 
-  @Get('/user-vouchers')
-  getUserVouchers(@Query('userId', ParseIntPipe) userId: number) {
+  @Get('/user-vouchers/:userId')
+  getUserVouchers(@Param('userId', ParseIntPipe) userId: number) {
     return this.vouchersService.getUserVouchers(userId);
   }
 
-  @Get('/history')
-  getVoucherHistory(@Query('userId', ParseIntPipe) userId: number) {
+  @Get('/history/:userId')
+  getVoucherHistory(@Param('userId', ParseIntPipe) userId: number) {
     return this.vouchersService.getUserVoucherHistory(userId);
   }
 

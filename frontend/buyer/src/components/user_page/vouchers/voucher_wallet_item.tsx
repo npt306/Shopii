@@ -5,6 +5,7 @@ import { CiClock2 } from "react-icons/ci";
 import { format, parseISO } from "date-fns";
 import { toast } from "react-toastify";
 import {Voucher} from "./vouchers_interfaces"
+import { EnvValue } from "../../../env-value/envValue";
 
 export const VoucherItem: React.FC<{ voucher: Voucher; userId: number }> = ({
     voucher,
@@ -24,7 +25,7 @@ export const VoucherItem: React.FC<{ voucher: Voucher; userId: number }> = ({
     const handleClaimVoucher = async (voucherId: number) => {
       try {
         const response = await axios.post(
-          `http://localhost:3000/vouchers/claim/`,
+          `${EnvValue.API_GATEWAY_URL}/api/vouchers/claim`,
           { OwnerId: userId, VoucherId: voucherId }
         );
         console.log(response.data);
@@ -57,10 +58,10 @@ export const VoucherItem: React.FC<{ voucher: Voucher; userId: number }> = ({
           <div className="text-sm font-normal">{voucher.description}</div>
           <div className="progress-bar border border-orange-300 rounded-2xl">
             <div
-              className="progress-fill text-center !text-xs text-white items-center h-full"
+              className="progress-fill text-center !text-xs text-white items-center "
               style={{ width: `${usedPercentage}%` }}
             >
-              {usedPercentage}%
+              {/* {usedPercentage}% */}
             </div>
           </div>
           <div className="text-xs text-gray-500 flex items-center">

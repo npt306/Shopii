@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Spinner, Alert, Button } from 'react-bootstrap';
 import axios from 'axios';
+import { EnvValue } from '../env-value/envValue';
 
 const CallbackPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -28,7 +29,7 @@ const CallbackPage: React.FC = () => {
         
         // Send code to backend to exchange for tokens
         const response = await axios.post(
-          'http://localhost:3000/Users/auth/exchange-token',
+          `${EnvValue.API_GATEWAY_URL}/Users/auth/exchange-token`,
           { code, sessionState },
           { 
             withCredentials: true,

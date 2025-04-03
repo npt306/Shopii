@@ -50,21 +50,21 @@ export class VouchersService {
 
   async getActiveVouchers(userId: number): Promise<any> {
     const response = await firstValueFrom(
-      this.httpService.get('/vouchers/all', { params: { userId } })
+      this.httpService.get(`/vouchers/all/${userId}`)
     );
     return response.data;
   }
 
   async getUserVouchers(userId: number): Promise<any> {
     const response = await firstValueFrom(
-      this.httpService.get('/vouchers/user-vouchers', { params: { userId } })
+      this.httpService.get(`/vouchers/user-vouchers/${userId}`)
     );
     return response.data;
   }
 
   async getUserVoucherHistory(userId: number): Promise<any> {
     const response = await firstValueFrom(
-      this.httpService.get('/vouchers/history', { params: { userId } })
+      this.httpService.get(`/vouchers/history/${userId}`)
     );
     return response.data;
   }

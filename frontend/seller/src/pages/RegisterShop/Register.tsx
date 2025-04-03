@@ -3,7 +3,7 @@ import ShopInformationForm from './ShopInformationRegister';
 import TaxRegister from './TaxRegister';
 import FinalizeRegister from './FinalizeRegister';
 import axios from 'axios';
-
+import { EnvValue } from '../../env-value/envValue';
 type Step = 'shopInformation' | 'taxRegister' | 'finalize';
 
 interface FormData {
@@ -60,7 +60,7 @@ const ShopRegister = () => {
       console.log(formData);
       axios.defaults.withCredentials = true;
       // const response = await axios.post('http://localhost:3003/Users/register-shop', formData);
-      const response = await axios.post('http://34.58.241.34:3003/Users/register-shop', formData);
+      const response = await axios.post(`${EnvValue.AUTH_SERVICE_URL}/Users/register-shop`, formData);
       console.log('Response from server:', response.data);
       // Handle success
     } catch (error: any) {

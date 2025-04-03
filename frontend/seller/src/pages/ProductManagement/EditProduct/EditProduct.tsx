@@ -88,7 +88,7 @@ const EditProductVariantModal = ({ isOpen, onClose, productName, productId, vari
 
             // Tải lên hình ảnh lên server
             const response = await axios.post(
-                `http://34.58.241.34:3001/product/uploadIMG`,
+                `${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/uploadIMG`,
                 uploadFormData,
                 { headers: { "Content-Type": "multipart/form-data" } }
             );
@@ -219,7 +219,7 @@ const EditProductVariantModal = ({ isOpen, onClose, productName, productId, vari
                                         }
 
                                         try {
-                                            await axios.delete(`http://34.58.241.34:3001/product/deleteIMG`, { data: { url: oldImageUrl } });
+                                            await axios.delete(`${import.meta.env.VITE_PRODUCT_SERVICE_URL}/product/deleteIMG`, { data: { url: oldImageUrl } });
                                         } catch (deleteError) {
                                             // Ghi lại lỗi nhưng không cản trở người dùng
                                             console.warn("Không thể xóa hình ảnh cũ, nhưng không ảnh hưởng đến tải lên mới:", deleteError);

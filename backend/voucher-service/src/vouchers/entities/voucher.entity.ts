@@ -34,6 +34,9 @@ import {
     @Column({ type: 'int', default: 100 })
     total_usage_limit: number;
   
+    @Column({ type: 'int' }) // Should be initialized based on total_usage_limit
+    total_uses_left?: number;
+
     @Column({
       type: 'enum',
       enum: VoucherConditionType,

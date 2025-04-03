@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-
+import { EnvValue } from '../../env-value/envValue';
 export interface UserProfile {
   // Adjust according to your JWT payload structure
   realm_access?: {
@@ -18,7 +18,7 @@ export const useUserProfile = () => {
   useEffect(() => {
     // http://localhost:3003/Users/me for testing local
     // http://34.58.241.34:3003/Users/me for testing on server
-    axios.get<UserProfile>('http://localhost:3003/Users/me', { withCredentials: true })
+    axios.get<UserProfile>(`${EnvValue.AUTH_SERVICE_URL}/Users/me`, { withCredentials: true })
       .then((response) => {
         console.log('User profile:', response.data);
         setUser(response.data);

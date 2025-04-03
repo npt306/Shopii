@@ -1,13 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import {
-  PRODUCT_SERVICE_LOCALHOST,
-  API_GATEWAY_LOCALHOST,
-  API_GATEWAY_URL,
-} from "../../config/url";
-
-const PRODUCT_SERVICE_URL = "http://34.58.241.34:3001";
+import { EnvValue } from "../../env-value/envValue";
 
 type Product = {
   id: number;
@@ -22,9 +16,7 @@ const fetchProductData = async (
 ) => {
   try {
     const response = await axios.get(
-      // `${PRODUCT_SERVICE_LOCALHOST}/product/`
-      // `${API_GATEWAY_LOCALHOST}/api/product/list`,
-      `${API_GATEWAY_URL}/api/product/list`
+      `${EnvValue.API_GATEWAY_URL}/api/product/list`
     );
     setProductList(response.data.products);
   } catch (error) {
