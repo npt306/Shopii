@@ -4,13 +4,13 @@ import { ProductDisplay } from "../components/features/productList";
 import { HomeLayout } from "../layout/home";
 
 export const HomePage = () => {
-    return (
-        <>
-            <HomeLayout>
-                <Categories />
-                <CrossBar />
-                <ProductDisplay />
-            </HomeLayout>
-        </>
-    );
-}
+  return (
+    <>
+      <HomeLayout>
+        <Categories />
+        <CrossBar />
+        <ProductDisplay />
+      </HomeLayout>
+    </>
+  );
+};
