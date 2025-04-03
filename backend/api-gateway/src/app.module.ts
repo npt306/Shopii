@@ -13,7 +13,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { PermissionsGuard } from './guard/permission.guard';
 import { AccountsModule } from './modules/accounts/accounts.module';
-
+import { AddressModule } from './modules/address/address.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -36,6 +36,7 @@ import { AccountsModule } from './modules/accounts/accounts.module';
     AccountsModule,
     PaymentModule,
     CategoryModule,
+    AddressModule
   ],
   controllers: [AppController],
   providers: [

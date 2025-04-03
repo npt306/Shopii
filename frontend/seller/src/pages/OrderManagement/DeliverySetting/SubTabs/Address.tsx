@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import AddressDialog from "../Components/AddressDialogue";
-
+import { EnvValue } from '../../../../env-value/envValue';
 interface Address {
   id: number;
   name: string;
@@ -24,25 +24,35 @@ const Address = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `http://localhost:3005/address/account/${user_accountId}` // Use user_accountId dynamically
+        `${EnvValue.API_GATEWAY_URL}/api/address/account/${user_accountId}` // Use user_accountId dynamically
       );
       if (!response.ok) {
         throw new Error("Failed to fetch addresses");
       }
       const data = await response.json();
       setAddresses(
-        data.map((address: any) => ({
-          id: address.id,
-          name: address.fullName,
-          phone: address.phoneNumber,
-          details: address.specificAddress,
-          province: `${address.ward}, ${address.district}, ${address.province}`,
-          type: [
-            address.isDefault && "Default address",
-            address.isShipping && "Shipping address",
-            address.isDelivery && "Delivery address",
-          ].filter(Boolean) as string[], // Filter out falsy values
-        }))
+        data.map((address: any) => {
+          // Check each flag individually
+          const types: string[] = [];
+          if (address.isDefault === true) {
+            types.push("Default address");
+          }
+          if (address.isShipping === true) {
+            types.push("Shipping address");
+          }
+          if (address.isDelivery === true) {
+            types.push("Delivery address");
+          }
+    
+          return {
+            id: address.id,
+            name: address.fullName,
+            phone: address.phoneNumber,
+            details: address.specificAddress,
+            province: `${address.ward}, ${address.district}, ${address.province}`,
+            type: types,
+          };
+        })
       );
     } catch (err: any) {
       setError(err.message || "An error occurred while fetching addresses");
@@ -66,7 +76,7 @@ const Address = () => {
       if (newAddress.id) {
         // Update address
         const response = await fetch(
-          `http://localhost:3005/address/update/${newAddress.id}`,
+          `${EnvValue.API_GATEWAY_URL}/address/update/${newAddress.id}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -79,7 +89,7 @@ const Address = () => {
       } else {
         // Add new address
         const response = await fetch(
-          `http://localhost:3005/address/account/${user_accountId}`, // Use user_accountId dynamically
+          `${EnvValue.API_GATEWAY_URL}/api/address/account/${user_accountId}`, // Use user_accountId dynamically
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -101,7 +111,7 @@ const Address = () => {
   // Delete address
   const handleDeleteAddress = async (id: number) => {
     try {
-      const response = await fetch(`http://34.58.241.34:3005/address/${id}`, {
+      const response = await fetch(`${EnvValue.API_GATEWAY_URL}/api/address/${id}`, {
         method: "DELETE",
       });
       if (!response.ok) {

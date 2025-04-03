@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable,NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateAddressDto } from './dto/create-address.dto';
@@ -21,7 +21,20 @@ export class AddressService {
   async createAddressForAccount(accountId: number, createAddressDto: CreateAddressDto): Promise<Address> {
     // Ensure the DTO has the correct account id
     createAddressDto.AccountId = accountId;
+  
+    // Check if there are any existing addresses for this account
+    const existingAddresses = await this.addressRepository.count({ where: { AccountId: accountId } });
+    
+    // If no addresses exist, set the new address as default, shipping, and delivery
+    if (existingAddresses == 0) {
+      createAddressDto.isDefault = true;
+      createAddressDto.isShipping = true;
+      createAddressDto.isDelivery = true;
+    }
+    console.log(`Creating address for accountId ${accountId} with default settings:`, createAddressDto);
+    // Create and save the new address
     const address = this.addressRepository.create(createAddressDto);
+    console.log(`Address created:`, address);
     return this.addressRepository.save(address);
   }
 
@@ -44,8 +57,8 @@ export class AddressService {
       updatedAt: address.UpdatedAt,
       accountId: address.AccountId,
       isDefault: address.isDefault,
-      isShipping: address.isDefault,
-      isDelivery: address.isDefault,
+      isShipping: address.isShipping,
+      isDelivery: address.isDelivery,
     }));
 
     return addressList;
@@ -54,7 +67,7 @@ export class AddressService {
     console.log(`Getting addresses for accountId: ${accountId}`);
     const addresses = await this.addressRepository
       .createQueryBuilder('address')
-      .where('address.AccountId = :accountId', { accountId })
+      .where({ AccountId: accountId })
       .orderBy('address.CreatedAt', 'DESC')
       .getMany();
 
@@ -72,8 +85,8 @@ export class AddressService {
       updatedAt: address.UpdatedAt,
       accountId: address.AccountId,
       isDefault: address.isDefault,
-      isShipping: address.isDefault,
-      isDelivery: address.isDefault,
+      isShipping: address.isShipping,
+      isDelivery: address.isDelivery,
     }));
   }
 
@@ -123,11 +136,25 @@ export class AddressService {
     await this.addressRepository.delete({ AddressId: id });
   }
 
-  async update(id: number, updateAddressDto: UpdateAddressDto){
-    console.log(`This action update address by addressId`);
-    await this.addressRepository.update({ AddressId: id }, updateAddressDto);
-    return this.addressRepository.findOneBy({ AddressId: id });
+  // async update(id: number, updateAddressDto: UpdateAddressDto){
+  //   console.log(`This action update address by addressId`);
+  //   await this.addressRepository.update({ AddressId: id }, updateAddressDto);
+  //   return this.addressRepository.findOneBy({ AddressId: id });
+  // }
+
+  async update(id: number, updateAddressDto: UpdateAddressDto): Promise<Address> {
+    // Preload creates a new entity by merging existing data with new values.
+    const address = await this.addressRepository.preload({
+      AddressId: id,
+      ...updateAddressDto,
+    });
+    if (!address) {
+      console.log(`Address with id ${id} not found`);
+      throw new NotFoundException(`Address with id ${id} not found`);
+    }
+    return this.addressRepository.save(address);
   }
+
   async setDefaultAddress(id: number, accountId: number): Promise<void> {
     await this.addressRepository.manager.transaction(async (transactionalEntityManager) => {
       // First, set isDefault to false for all addresses of this account
