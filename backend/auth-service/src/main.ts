@@ -14,8 +14,8 @@ async function bootstrap() {
     app.use(new KeycloakMiddleware().use);
     app.enableCors({
       // `http://34.58.241.34:8000` 
-      //origin: [`http://34.58.241.34:8000`, `http://34.58.241.34:8001`, `http://34.58.241.34:8002`], // frontend URL
-      origin: [`http://localhost:8000`, `http://localhost:8001`, `http://34.58.241.34:8002`], // frontend URLs
+      origin: [`http://34.58.241.34:8000`, `http://34.58.241.34:8001`, `http://34.58.241.34:8002`], // frontend URL
+      //origin: [`http://localhost:8000`, `http://localhost:8001`, `http://34.58.241.34:8002`], // frontend URLs
       // origin: EnvValue.origin,
       //origin: EnvValue.corsOrigins,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

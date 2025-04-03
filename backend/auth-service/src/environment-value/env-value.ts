@@ -11,8 +11,8 @@ export class EnvValue {
 
     //origin
     // origin: [`http://localhost:8000`, `http://localhost:8001`], // frontend URLs
-    //public static origin = [`http://34.58.241.34:8000`, `http://34.58.241.34:8001`, `http://34.58.241.34:8002`];
-    public static origin: [`http://localhost:8000`, `http://localhost:8001`] // frontend URLs
+    public static origin = [`http://34.58.241.34:8000`, `http://34.58.241.34:8001`, `http://34.58.241.34:8002`];
+    //public static origin: [`http://localhost:8000`, `http://localhost:8001`] // frontend URLs
 
     //static readonly corsOrigins: string[] = process.env.CORS_ORIGINS?.split(',') || [];
 }
