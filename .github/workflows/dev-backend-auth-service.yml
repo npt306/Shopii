@@ -59,6 +59,7 @@ jobs:
             -e "USER_URL=http://34.58.241.34:8000" \
             -e "SELLER_URL=http://34.58.241.34:8001" \
             -e "ADMIN_URL=http://34.58.241.34:8002" \
+            -e "DOMAIN=http://34.58.241.34" \
             -e KEYCLOAK_BASE_URL=${{ secrets.KEYCLOAK_BASE_URL }} \
             -e KEYCLOAK_REALM=${{ secrets.KEYCLOAK_REALM }} \
             -e KEYCLOAK_ADMIN_USERNAME=${{ secrets.KEYCLOAK_ADMIN_USERNAME }} \
