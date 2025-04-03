@@ -6,11 +6,11 @@ interface CategoryWithChildren extends Categories {
     children?: CategoryWithChildren[];
 }
 
-@Controller('categories') // Changed to match frontend API_BASE_URL
+@Controller('categories')
 export class CategoryController {
     constructor(private readonly categoryService: CategoryService) { }
 
-    @Get('tree') // Added 'tree' to match frontend getCategoryTree() URL
+    @Get('tree')
     async getCategoryTree(): Promise<CategoryWithChildren[]> {
         return this.categoryService.getCategoryTree();
     }
@@ -35,7 +35,7 @@ export class CategoryController {
         return this.categoryService.createCategory(categoryData);
     }
 
-    @Patch(':id') // Changed from Put to Patch to match frontend
+    @Patch(':id')
     async updateCategory(
         @Param('id') id: number,
         @Body() categoryData: Partial<Categories>

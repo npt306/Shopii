@@ -141,13 +141,13 @@ export const CategoryTree = ({
                         >
                             {/* Description column (combined No. and Description) */}
                             <div className="flex items-center col-span-2">
+                                {/* Indentation based on level */}
+                                <div style={{ width: `${level * 24}px` }}></div>
+
                                 {/* Number */}
                                 <div className="mr-3 w-8 text-gray-500">
                                     {currentIndex}
                                 </div>
-
-                                {/* Indentation based on level */}
-                                <div style={{ width: `${level * 24}px` }}></div>
 
                                 {/* Expand/collapse icon if has children */}
                                 {(category.children && category.children.length > 0) ? (

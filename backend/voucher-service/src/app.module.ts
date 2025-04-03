@@ -30,4 +30,4 @@ import { Voucher } from './vouchers/entities/voucher.entity';
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule { }

@@ -37,7 +37,7 @@ export const HeaderProduct = () => {
 
   return (
     <>
-      <Header />
+      <Header></Header>
       <div className="bg-[#ee4d2d] px-30 flex justify-center items-center text-white">
         <div
           onClick={() => navigate("/home")}

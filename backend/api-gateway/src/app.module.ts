@@ -7,6 +7,7 @@ import { VouchersModule } from './modules/vouchers/vouchers.module';
 import { UsersModule } from './modules/users/user.module';
 import { OrderModule } from './modules/order/order.module';
 import { PaymentModule } from './modules/payment/payment.module';
+import { CategoryModule } from './modules/category/category.module';
 import { ConfigModule } from '@nestjs/config';
 
 import { APP_GUARD } from '@nestjs/core';
@@ -18,7 +19,7 @@ import { AccountsModule } from './modules/accounts/accounts.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-  }),
+    }),
     // Protect Gateway from DDoS attacks and limit number of requests per IP
     ThrottlerModule.forRoot({
       throttlers: [
@@ -34,6 +35,7 @@ import { AccountsModule } from './modules/accounts/accounts.module';
     OrderModule,
     AccountsModule,
     PaymentModule,
+    CategoryModule,
   ],
   controllers: [AppController],
   providers: [
@@ -44,4 +46,4 @@ import { AccountsModule } from './modules/accounts/accounts.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }
