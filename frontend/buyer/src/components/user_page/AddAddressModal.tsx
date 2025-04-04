@@ -25,23 +25,26 @@ export const AddAddressModal = ({
   accountId,
   onClose,
   onAddressAdded,
+  onAddressUpdated,
+  editAddress,
 }: AddAddressModalProps) => {
   const [formData, setFormData] = useState({
-    FullName: "",
-    PhoneNumber: "",
-    Province: "",
-    District: "",
-    Ward: "",
-    SpecificAddress: "",
-    isDefault: false,
+    FullName: editAddress?.fullName || "",
+    PhoneNumber: editAddress?.phoneNumber || "",
+    Province: editAddress?.province || "",
+    District: editAddress?.district || "",
+    Ward: editAddress?.ward || "",
+    SpecificAddress: editAddress?.specificAddress || "",
+    isDefault: editAddress?.isDefault || false,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [provinceOptions, setProvinceOptions] = useState([]); // State for provinces
-  const [districtOptions, setDistrictOptions] = useState([]);
-  const [wardOptions, setWardOptions] = useState([]);
 
-  // Fetch provinces dynamically
+  const [provinceOptions, setProvinceOptions] = useState<any[]>([]);
+  const [districtOptions, setDistrictOptions] = useState<any[]>([]);
+  const [wardOptions, setWardOptions] = useState<any[]>([]);
+
+  // Fetch provinces dynamically on mount
   useEffect(() => {
     const fetchProvinces = async () => {
       try {
@@ -65,22 +68,48 @@ export const AddAddressModal = ({
     fetchProvinces();
   }, []);
 
+  // If editing, after provinces are loaded, fetch districts for the selected province.
+  useEffect(() => {
+    if (editAddress && formData.Province && provinceOptions.length > 0) {
+      const provinceOption = provinceOptions.find(
+        (opt) => opt.label === formData.Province
+      );
+      if (provinceOption) {
+        fetchDistricts(provinceOption.id);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editAddress, formData.Province, provinceOptions]);
+
+  // If editing, after districts are loaded, fetch wards for the selected district.
+  useEffect(() => {
+    if (editAddress && formData.District && districtOptions.length > 0) {
+      const districtOption = districtOptions.find(
+        (opt) => opt.label === formData.District
+      );
+      if (districtOption) {
+        fetchWards(districtOption.id);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editAddress, formData.District, districtOptions]);
+
   const handleSelectChange = (selectedOption: any, field: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: selectedOption?.label || "",
-      ...(field === "Province" && { District: "", Ward: "" }), // Reset District and Ward when Province changes
-      ...(field === "District" && { Ward: "" }), // Reset Ward when District changes
+      ...(field === "Province" && { District: "", Ward: "" }),
+      ...(field === "District" && { Ward: "" }),
     }));
 
     if (field === "Province") {
       setDistrictOptions([]);
-      setWardOptions([]); // Clear ward options
-      fetchDistricts(selectedOption?.id); // Fetch districts for the selected province
+      setWardOptions([]);
+      fetchDistricts(selectedOption?.id);
     }
 
     if (field === "District") {
-      fetchWards(selectedOption?.id); // Fetch wards for the selected district
+      fetchWards(selectedOption?.id);
     }
   };
 
@@ -108,7 +137,7 @@ export const AddAddressModal = ({
     try {
       const response = await fetch(
         `https://open.oapi.vn/location/wards/${districtId}?page=0&size=100`
-      ); // Replace with the correct endpoint if different
+      );
       if (!response.ok) {
         throw new Error("Failed to fetch wards");
       }
@@ -141,20 +170,6 @@ export const AddAddressModal = ({
       return;
     }
 
-    console.log("Form Data:", formData); // Debugging: Check the form data
-    try {
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_ACCOUNT_SERVICE_URL
-        }/address/account/${accountId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
     try {
       const url = editAddress
         ? `${EnvValue.API_GATEWAY_URL}/api/address/update/${editAddress.id}`

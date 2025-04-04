@@ -28,7 +28,6 @@ export const UpdateAdressInOrderModal: React.FC<
 
   useEffect(() => {
     if (updateAddress) {
-      console.log(updateAddress);
       setFormData({
         FullName: updateAddress.FullName,
         PhoneNumber: updateAddress.PhoneNumber,
@@ -41,9 +40,9 @@ export const UpdateAdressInOrderModal: React.FC<
     }
   }, [updateAddress]);
 
-  const [provinceOptions, setProvinceOptions] = useState([]);
-  const [districtOptions, setDistrictOptions] = useState([]);
-  const [wardOptions, setWardOptions] = useState([]);
+  const [provinceOptions, setProvinceOptions] = useState<any[]>([]);
+  const [districtOptions, setDistrictOptions] = useState<any[]>([]);
+  const [wardOptions, setWardOptions] = useState<any[]>([]);
 
   const [isDefaultAddress, setIsDefaultAddress] = useState<boolean>(false);
   const [isInputDisabled, setIsInputDisabled] = useState<boolean>(true);
@@ -114,6 +113,28 @@ export const UpdateAdressInOrderModal: React.FC<
   useEffect(() => {
     fetchProvinces();
   }, []);
+
+  useEffect(() => {
+    if (formData.Province && provinceOptions.length > 0) {
+      const provinceOption = provinceOptions.find(
+        (opt: any) => opt.label === formData.Province
+      );
+      if (provinceOption) {
+        fetchDistricts(provinceOption.id);
+      }
+    }
+  }, [formData.Province, provinceOptions]);
+
+  useEffect(() => {
+    if (formData.District && districtOptions.length > 0) {
+      const districtOption = districtOptions.find(
+        (opt: any) => opt.label === formData.District
+      );
+      if (districtOption) {
+        fetchWards(districtOption.id);
+      }
+    }
+  }, [formData.District, districtOptions]);
 
   const handleSelectChange = (selectedOption: any, field: string) => {
     setFormData((prev) => ({
@@ -241,6 +262,11 @@ export const UpdateAdressInOrderModal: React.FC<
                       onChange={(selectedOption) =>
                         handleSelectChange(selectedOption, "Province")
                       }
+                      value={
+                        provinceOptions.find(
+                          (option: any) => option.label === formData.Province
+                        ) || null
+                      }
                       className="flex-1/3 text-nowrap"
                       placeholder="Tỉnh/Thành Phố"
                       required
@@ -257,6 +283,11 @@ export const UpdateAdressInOrderModal: React.FC<
                       onChange={(selectedOption) =>
                         handleSelectChange(selectedOption, "District")
                       }
+                      value={
+                        districtOptions.find(
+                          (option) => option.label === formData.District
+                        ) || null
+                      }
                       className="flex-1/3"
                       placeholder="Quận/Huyện"
                       required
@@ -272,6 +303,11 @@ export const UpdateAdressInOrderModal: React.FC<
                       options={wardOptions}
                       onChange={(selectedOption) =>
                         handleSelectChange(selectedOption, "Ward")
+                      }
+                      value={
+                        wardOptions.find(
+                          (option) => option.label === formData.Ward
+                        ) || null
                       }
                       className="flex-1/3"
                       placeholder="Phường/Xã"
