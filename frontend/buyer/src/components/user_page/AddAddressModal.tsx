@@ -1,10 +1,24 @@
 import React, { useState, useEffect } from "react";
-import Select from "react-select"; // Import react-select
+import Select from "react-select";
+import { EnvValue } from "../../env-value/envValue";
+
+interface Address {
+  id: number;
+  fullName: string;
+  phoneNumber: string;
+  province: string;
+  district: string;
+  ward: string;
+  specificAddress: string;
+  isDefault: boolean;
+}
 
 interface AddAddressModalProps {
   accountId: number;
   onClose: () => void;
-  onAddressAdded: (newAddress: any) => void;
+  onAddressAdded: (newAddress: Address) => void;
+  onAddressUpdated: (updatedAddress: Address) => void;
+  editAddress: Address | null;
 }
 
 export const AddAddressModal = ({
@@ -114,7 +128,7 @@ export const AddAddressModal = ({
     e.preventDefault();
     setLoading(true);
     setError("");
-    // Validation: Check if required fields are filled
+
     if (
       !formData.FullName ||
       !formData.PhoneNumber ||
@@ -141,11 +155,30 @@ export const AddAddressModal = ({
           body: JSON.stringify(formData),
         }
       );
+    try {
+      const url = editAddress
+        ? `${EnvValue.API_GATEWAY_URL}/api/address/update/${editAddress.id}`
+        : `${EnvValue.API_GATEWAY_URL}/api/address/account/${accountId}`;
+      const method = "POST";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
       if (!response.ok) {
-        throw new Error("Failed to create address");
+        throw new Error(
+          editAddress ? "Failed to update address" : "Failed to create address"
+        );
       }
-      const newAddress = await response.json();
-      onAddressAdded(newAddress);
+      const updatedAddress = await response.json();
+      if (editAddress) {
+        onAddressUpdated(updatedAddress);
+      } else {
+        onAddressAdded(updatedAddress);
+      }
       onClose();
     } catch (err: any) {
       setError(err.message || "Error creating address");
@@ -155,7 +188,7 @@ export const AddAddressModal = ({
   };
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-30 flex justify-center items-center z-50">
+    <div className="fixed inset-0 backdrop-brightness-50 flex justify-center items-center z-50">
       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
         <button
           onClick={onClose}
@@ -163,7 +196,9 @@ export const AddAddressModal = ({
         >
           ✕
         </button>
-        <h2 className="text-xl font-semibold mb-4">Thêm Địa Chỉ</h2>
+        <h2 className="text-xl font-semibold mb-4">
+          {editAddress ? "Cập nhật Địa Chỉ" : "Thêm Địa Chỉ"}
+        </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">
@@ -204,6 +239,11 @@ export const AddAddressModal = ({
               }
               placeholder="Chọn Tỉnh/Thành Phố"
               className="mt-1"
+              value={
+                provinceOptions.find(
+                  (option) => option.label === formData.Province
+                ) || null
+              }
             />
           </div>
           <div>
@@ -217,7 +257,12 @@ export const AddAddressModal = ({
               }
               placeholder="Chọn Quận/Huyện"
               className="mt-1"
-              isDisabled={!formData.Province} // Disable until a province is selected
+              isDisabled={!formData.Province}
+              value={
+                districtOptions.find(
+                  (option) => option.label === formData.District
+                ) || null
+              }
             />
           </div>
           <div>
@@ -231,7 +276,11 @@ export const AddAddressModal = ({
               }
               placeholder="Chọn Phường/Xã"
               className="mt-1"
-              isDisabled={!formData.District} // Disable until a district is selected
+              isDisabled={!formData.District}
+              value={
+                wardOptions.find((option) => option.label === formData.Ward) ||
+                null
+              }
             />
           </div>
           <div>
@@ -254,7 +303,11 @@ export const AddAddressModal = ({
             disabled={loading}
             className="w-full bg-orange-500 text-white py-2 rounded-md hover:bg-orange-600 disabled:bg-gray-300"
           >
-            {loading ? "Saving..." : "Save Address"}
+            {loading
+              ? "Saving..."
+              : editAddress
+              ? "Update Address"
+              : "Save Address"}
           </button>
         </form>
       </div>

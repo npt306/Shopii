@@ -1,6 +1,19 @@
 import { useState, useEffect } from "react";
 import Select from "react-select"; // Import react-select
 
+interface Address {
+  id: number;
+  fullName: string;
+  phoneNumber: string;
+  province: string;
+  district: string;
+  ward: string;
+  specificAddress: string;
+  isDefault: boolean;
+  isShipping: boolean;
+  isDelivery: boolean;
+}
+
 export default function AddressDialog({
   isOpen,
   onClose,
@@ -10,18 +23,19 @@ export default function AddressDialog({
   isOpen: boolean;
   onClose: () => void;
   onSave: (formData: any) => void;
-  address: any | null; // Pass the selected address for editing
+  address: any | null; 
 }) {
   const [formData, setFormData] = useState({
-    FullName: "",
-    PhoneNumber: "",
-    Province: "",
-    District: "",
-    Ward: "",
-    SpecificAddress: "",
-    isDefault: false,
-    isShipping: false,
-    isDelivery: false,
+    id: null, // add the ID field
+    FullName:address?.fullName || "",
+    PhoneNumber:address?.phoneNumber || "",
+    Province:address?.province || "",
+    District:address?.district || "",
+    Ward:address?.ward || "",
+    SpecificAddress:address?.specificAddress || "",
+    isDefault:address?.isDefault || false,
+    isShipping:address?.isShipping || false,
+    isDelivery: address?.isDelivery || false,
   });
 
   const [errors, setErrors] = useState({
@@ -41,12 +55,13 @@ export default function AddressDialog({
   useEffect(() => {
     if (address) {
       setFormData({
-        FullName: address.FullName || "",
-        PhoneNumber: address.PhoneNumber || "",
-        Province: address.Province || "",
-        District: address.District || "",
-        Ward: address.Ward || "",
-        SpecificAddress: address.SpecificAddress || "",
+        id: address?.id,
+        FullName: address?.fullName || "",
+        PhoneNumber: address?.phoneNumber || "",
+        Province: address?.province || "",
+        District: address?.district || "",
+        Ward: address?.ward || "",
+        SpecificAddress: address.specificAddress || "",
         isDefault: address.isDefault || false,
         isShipping: address.isShipping || false,
         isDelivery: address.isDelivery || false,
@@ -54,6 +69,7 @@ export default function AddressDialog({
     } else {
       // Reset form for adding a new address
       setFormData({
+        id: null,
         FullName: "",
         PhoneNumber: "",
         Province: "",
@@ -93,6 +109,10 @@ export default function AddressDialog({
     };
     fetchProvinces();
   }, []);
+
+  
+  
+
 
   const handleSelectChange = (selectedOption: any, field: string) => {
     setFormData((prev) => ({

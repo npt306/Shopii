@@ -2,7 +2,7 @@
 import "../../../css/user/addresses.css";
 import React, { useState, useEffect } from "react";
 import { AddAddressModal } from "../AddAddressModal.tsx";
-
+import { EnvValue } from "../../../env-value/envValue";
 interface Address {
     id: number;
     fullName: string;
@@ -26,7 +26,7 @@ interface Address {
       try {
         // setLoading(true);
         const response = await fetch(
-          `${import.meta.env.VITE_ACCOUNT_SERVICE_URL}/address/account/${accountId}`
+          `${EnvValue.API_GATEWAY_URL}/api/address/account/${accountId}`
         );
         if (!response.ok) {
           throw new Error("Failed to fetch addresses");
@@ -47,7 +47,7 @@ interface Address {
 
     const deleteAddress = async (id: number) => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_ACCOUNT_SERVICE_URL}/address/${id}`, {
+        const response = await fetch(`${EnvValue.API_GATEWAY_URL}/api/address/${id}`, {
           method: "DELETE",
         });
         if (!response.ok) {
@@ -62,7 +62,7 @@ interface Address {
     const setDefaultAddress = async (id: number) => {
       try {
         const response = await fetch(
-          `${import.meta.env.VITE_ACCOUNT_SERVICE_URL}/address/${id}/set-default/${accountId}`,
+          `${EnvValue.API_GATEWAY_URL}/api/address/${id}/set-default/${accountId}`,
           {
             method: "POST",
           }
@@ -75,15 +75,6 @@ interface Address {
         setError(err.message || "An error occurred while setting default address");
       }
     };
-    // const setDefaultAddress = (id: number) => {
-    //   setAddresses(
-    //     addresses.map((address) =>
-    //       address.id === id
-    //         ? { ...address, isDefault: true }
-    //         : { ...address, isDefault: false }
-    //     )
-    //   );
-    // };
 
       // Open the modal for adding or editing an address
     const handleOpenModal = (address?: Address) => {
@@ -174,8 +165,8 @@ interface Address {
             accountId={accountId}
             onClose={() => setShowModal(false)}
             onAddressAdded={handleAddressAdded}
-            //editAddress={handleAddressUpdated} // Pass the address to edit
-            //onAddressUpdated={handleAddressUpdated} // Handle updates
+            onAddressUpdated={handleAddressUpdated}
+            editAddress={editAddress} // Pass the address to edit
           />
         )}
       </div>
