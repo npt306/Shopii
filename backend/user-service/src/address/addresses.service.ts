@@ -157,15 +157,25 @@ export class AddressService {
     console.log(`This action returns all address`);
     return this.addressRepository.find();
   }
+  // async removeById(id: number): Promise<void> {
+  //   await this.addressRepository.delete({ AddressId: id });
+  // }
   async removeById(id: number): Promise<void> {
+    const addressToDelete = await this.addressRepository.findOne({ where: { AddressId: id } });
+  
+    if (!addressToDelete) {
+      throw new NotFoundException(`Address with id ${id} not found`);
+    }
+  
+    if (addressToDelete.isDefault) {
+      throw new Error('Cannot delete the default address. Please set another address as default before deleting this one.');
+    }
+  
     await this.addressRepository.delete({ AddressId: id });
   }
+  
 
-  // async update(id: number, updateAddressDto: UpdateAddressDto){
-  //   console.log(`This action update address by addressId`);
-  //   await this.addressRepository.update({ AddressId: id }, updateAddressDto);
-  //   return this.addressRepository.findOneBy({ AddressId: id });
-  // }
+
 
   async update(id: number, updateAddressDto: UpdateAddressDto): Promise<Address> {
     return await this.addressRepository.manager.transaction(async (tm) => {

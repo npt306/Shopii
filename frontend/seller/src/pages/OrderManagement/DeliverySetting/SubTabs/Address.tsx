@@ -3,114 +3,52 @@ import AddressDialog from "../Components/AddressDialogue";
 import { EnvValue } from '../../../../env-value/envValue';
 interface Address {
   id: number;
-  name: string;
-  phone: string;
-  details: string;
+  fullName: string;
+  phoneNumber: string;
   province: string;
-  type: string[]; // Includes "Default address", "Shipping address", "Delivery address"
+  district: string;
+  ward: string;
+  specificAddress: string;
+  isDefault: boolean;
+  isShipping: boolean;
+  isDelivery: boolean;
 }
 //localStorage.setItem('user_accountId', String(userData.accountId));
 const Address = () => {
   const user_accountId = localStorage.getItem("user_accountId"); // Retrieve user_accountId from localStorage
+  const user_accountId_num = Number(localStorage.getItem("user_accountId")); // Retrieve user_accountId from localStorage
   console.log("user_accountId", user_accountId); // Log the user_accountId for debugging
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [addresses, setAddresses] = useState<Address[]>([]);
-  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [addresses, setAddresses] = useState<Address[]>([]); // Explicitly define the type
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
   const [editAddress, setEditAddress] = useState<Address | null>(null);
 
   // Fetch addresses from backend
   const fetchAddresses = async () => {
     try {
-      setLoading(true);
+      // setLoading(true);
       const response = await fetch(
-        `${EnvValue.API_GATEWAY_URL}/api/address/account/${user_accountId}` // Use user_accountId dynamically
+        `${EnvValue.API_GATEWAY_URL}/api/address/account/${user_accountId}`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch addresses");
       }
-      const data = await response.json();
-      setAddresses(
-        data.map((address: any) => {
-          // Check each flag individually
-          const types: string[] = [];
-          if (address.isDefault === true) {
-            types.push("Default address");
-          }
-          if (address.isShipping === true) {
-            types.push("Shipping address");
-          }
-          if (address.isDelivery === true) {
-            types.push("Delivery address");
-          }
-    
-          return {
-            id: address.id,
-            name: address.fullName,
-            phone: address.phoneNumber,
-            details: address.specificAddress,
-            province: `${address.ward}, ${address.district}, ${address.province}`,
-            type: types,
-          };
-        })
-      );
+      const data: Address[] = await response.json();
+      setAddresses(data);
     } catch (err: any) {
-      setError(err.message || "An error occurred while fetching addresses");
-    } finally {
-      setLoading(false);
-    }
+      setError(err.message || "An error occurred");
+    } 
+    // finally {
+    //   setLoading(false);
+    // }
   };
 
   useEffect(() => {
-    if (user_accountId) {
-      fetchAddresses();
-    } else {
-      fetchAddresses();
-      // setError("User account ID is missing");
-    }
+    fetchAddresses();
   }, [user_accountId]);
 
-  // Add or update address
-  const handleSaveAddress = async (newAddress: Address) => {
-    try {
-      if (newAddress.id) {
-        // Update address
-        const response = await fetch(
-          `${EnvValue.API_GATEWAY_URL}/api/address/update/${newAddress.id}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newAddress),
-          }
-        );
-        if (!response.ok) {
-          throw new Error("Failed to update address");
-        }
-      } else {
-        // Add new address
-        const response = await fetch(
-          `${EnvValue.API_GATEWAY_URL}/api/address/account/${user_accountId}`, // Use user_accountId dynamically
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newAddress),
-          }
-        );
-        if (!response.ok) {
-          throw new Error("Failed to add address");
-        }
-      }
-      fetchAddresses(); // Refresh the address list
-    } catch (err: any) {
-      setError(err.message || "An error occurred while saving the address");
-    } finally {
-      setIsDialogOpen(false);
-    }
-  };
-
-  // Delete address
-  const handleDeleteAddress = async (id: number) => {
+  const deleteAddress = async (id: number) => {
     try {
       const response = await fetch(`${EnvValue.API_GATEWAY_URL}/api/address/${id}`, {
         method: "DELETE",
@@ -118,11 +56,53 @@ const Address = () => {
       if (!response.ok) {
         throw new Error("Failed to delete address");
       }
+      // Remove the deleted address from the state
       setAddresses(addresses.filter((address) => address.id !== id));
     } catch (err: any) {
       setError(err.message || "An error occurred while deleting the address");
     }
   };
+  
+  const setDefaultAddress = async (id: number) => {
+    try {
+      const response = await fetch(
+        `${EnvValue.API_GATEWAY_URL}/api/address/${id}/set-default/${user_accountId}`,
+        {
+          method: "POST",
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to set default address");
+      }
+      await fetchAddresses(); // Refresh the address list
+    } catch (err: any) {
+      setError(err.message || "An error occurred while setting default address");
+    }
+  };
+
+  // Add or update address
+  const handleOpenModal = (address?: Address) => {
+    if (address) {
+      setEditAddress(address); // Pass the address to edit
+      
+    } else {
+      setEditAddress(null); // Open modal for adding a new address
+    }
+    setShowModal(true);
+  };
+  const handleAddressAdded = async (newAddress: Address) => {
+    setAddresses([...addresses, newAddress]);
+    await fetchAddresses();
+  };
+
+
+  const handleAddressUpdated = async (updatedAddress: Address) => {
+    setAddresses((prev) =>
+      prev.map((addr) => (addr.id === updatedAddress.id ? updatedAddress : addr))
+    );
+    await fetchAddresses();
+  };
+
 
   return (
     <div className="p-2 text-black w-full max-w-full overflow-hidden">
@@ -135,8 +115,7 @@ const Address = () => {
         </div>
         <button
           onClick={() => {
-            setSelectedAddress(null);
-            setIsDialogOpen(true);
+            handleOpenModal()
           }}
           className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
         >
@@ -144,11 +123,7 @@ const Address = () => {
         </button>
       </div>
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : error ? (
-        <p className="text-red-500">{error}</p>
-      ) : (
+      {
         addresses.map((address, index) => (
           <div key={index} className="mb-4">
             <h3 className="text-sm font-medium mb-2">Address {index + 1}</h3>
@@ -156,67 +131,75 @@ const Address = () => {
               <div className="flex">
                 <div className="w-24 text-gray-600">Họ & Tên</div>
                 <div className="flex-1">
-                  <span>{address.name}</span>
-                  {address.type.map((t, i) => {
-                    let bgColor = "bg-red-50";
-                    if (t === "Default address") bgColor = "bg-blue-100";
-                    if (t === "Shipping address") bgColor = "bg-green-100";
-                    if (t === "Delivery address") bgColor = "bg-yellow-100";
+                  <span>{address.fullName}</span>
 
-                    return (
-                      <span
-                        key={i}
-                        className={`text-red-500 text-xs ml-1 ${bgColor} px-1 py-0.5 rounded`}
-                      >
-                        {t}
+                  {address.isDefault && (
+                    <span className="text-red-500 text-xs ml-1 bg-blue-100 px-1 py-0.5 rounded">
+                      Default Address
+                    </span>
+                  )}
+                  {address.isShipping && (
+                    <span className="text-red-500 text-xs ml-1 bg-green-100 px-1 py-0.5 rounded">
+                      Shipping Address
+                    </span>
+                  )}
+                  {address.isDelivery && (
+                      <span className="text-red-500 text-xs ml-1 bg-yellow-100 px-1 py-0.5 rounded">
+                        Delivery Address
                       </span>
-                    );
-                  })}
+                    )}
+
                 </div>
                 <a
                   href="#"
                   className="text-blue-500 hover:underline text-xs"
                   onClick={() => {
-                    setSelectedAddress(address);
-                    setIsDialogOpen(true);
+                    handleOpenModal(address)
                   }}
                 >
                   Sửa
                 </a>
-                <a
-                  href="#"
-                  className="text-red-500 hover:underline ml-2 text-xs"
-                  onClick={() => handleDeleteAddress(address.id)}
-                >
-                  Xóa
-                </a>
+                {!address.isDefault && (
+                    <a
+                      href="#"
+                      className="text-red-500 hover:underline ml-2 text-xs"
+                      onClick={() => deleteAddress(address.id)}
+                    >
+                      Xóa
+                    </a>
+                  )}
               </div>
 
               <div className="flex">
                 <div className="w-24 text-gray-600">Số điện thoại</div>
-                <div className="flex-1">{address.phone}</div>
+                <div className="flex-1">{address.phoneNumber}</div>
               </div>
 
               <div className="flex">
                 <div className="w-24 text-gray-600">Địa chỉ</div>
                 <div className="flex-1 space-y-1">
-                  {address.details.split(", ").map((line, i) => (
-                    <p key={i}>{line}</p>
-                  ))}
+                  
+                <p className="text-gray-600">
+                {address.specificAddress}, {address.ward}, {address.district},{" "}
+                {address.province}
+              </p>
+                  
                 </div>
               </div>
             </div>
           </div>
         ))
-      )}
+      }
 
-      <AddressDialog
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        onSave={handleSaveAddress}
-        address={selectedAddress} // Pass the selected address for editing
-        //editAddress={editAddress} // Pass the address to edit
-      />
+          {showModal && (
+          <AddressDialog
+            accountId={user_accountId_num}
+            onClose={() => setShowModal(false)}
+            onAddressAdded={handleAddressAdded}
+            onAddressUpdated={handleAddressUpdated}
+            editAddress={editAddress} // Pass the address to edit
+          />
+        )}
     </div>
   );
 };
