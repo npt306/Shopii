@@ -4,6 +4,7 @@ import { Address } from "../../types/address";
 import axios from "axios";
 import Select from "react-select";
 import "../../css/page/orderPage.css";
+import { EnvValue } from "../../env-value/envValue";
 
 type UpdateAdressInOrderModalProps = {
   open: boolean;
@@ -177,7 +178,8 @@ export const UpdateAdressInOrderModal: React.FC<
 
     try {
       const response = await axios.post(
-        `http://localhost:3005/address/update/${updateAddress?.AddressId}`,
+        // `http://localhost:3005/address/update/${updateAddress?.AddressId}`,
+        `${EnvValue.API_GATEWAY_URL}/api/address/update/${updateAddress?.AddressId}`,
         formData
       );
       // console.log(response);
@@ -339,20 +341,38 @@ export const UpdateAdressInOrderModal: React.FC<
                     }} // Số dòng mặc định
                   />
 
-                  <div className="flex flex-row gap-2">
-                    <input
-                      type="checkbox"
-                      checked={isDefaultAddress}
-                      onChange={() => {
-                        formData.isDefault = !isDefaultAddress;
-                        setIsDefaultAddress(!isDefaultAddress);
-                      }}
-                      className="w-4 h-4 appearance-none border border-black checked:bg-orange-500 checked:border-orange-500 relative
+                  {updateAddress?.isDefault ? (
+                    <>
+                      <div className="flex flex-row gap-2">
+                        <input
+                          type="checkbox"
+                          checked={formData.isDefault}
+                          onChange={() => {}}
+                          className="w-4 h-4 appearance-none border border-black checked:bg-orange-500 checked:border-orange-500 relative
              before:content-['✔'] before:absolute before:inset-0 before:flex before:items-center before:justify-center
              before:text-white before:opacity-0 checked:before:opacity-100"
-                    />
-                    <div>Đặt làm địa chỉ mặc định</div>
-                  </div>
+                        />
+                        <div>Đặt làm địa chỉ mặc định</div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex flex-row gap-2">
+                        <input
+                          type="checkbox"
+                          checked={isDefaultAddress}
+                          onChange={() => {
+                            formData.isDefault = !isDefaultAddress;
+                            setIsDefaultAddress(!isDefaultAddress);
+                          }}
+                          className="w-4 h-4 appearance-none border border-black checked:bg-orange-500 checked:border-orange-500 relative
+             before:content-['✔'] before:absolute before:inset-0 before:flex before:items-center before:justify-center
+             before:text-white before:opacity-0 checked:before:opacity-100"
+                        />
+                        <div>Đặt làm địa chỉ mặc định</div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className="border-black/10 pb-5 bottom-0 h-[64px] py-3 justify-end !items-center flex mt-5 border-t-0">

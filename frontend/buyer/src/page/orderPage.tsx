@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { EnvValue } from "../env-value/envValue";
 import "../css/page/orderPage.css";
+
 import { HeaderOrder } from "../components/layout/headerOrder";
 import { Footer } from "../components/layout/footer";
 
@@ -48,7 +50,6 @@ export const OrderPage = () => {
   };
 
   const handleUpdateDataFromModal = (data: any) => {
-    // console.log(data);
     setSelectedUpdateAddress(data); // Lưu dữ liệu từ modal vào state
     setOpenAddressModal(false); // Đóng modal
   };
@@ -56,7 +57,8 @@ export const OrderPage = () => {
   const fetchDefaultAddress = async () => {
     try {
       const response = await axios.get<any>(
-        `http://localhost:3005/address/account/default/${id}`
+        // `http://localhost:3005/address/account/default/${id}`
+        `${EnvValue.API_GATEWAY_URL}/api/address/account/default/${id}`
       );
       if (response.data != "") {
         let defaultAddress: Address = {
@@ -70,9 +72,6 @@ export const OrderPage = () => {
           isDefault: response.data.isDefault,
         };
         setSelectedAddress(defaultAddress);
-        setOpenAddDefaultAddressModal(false); // test
-      } else {
-        setOpenAddDefaultAddressModal(true); // test
       }
     } catch (error) {
       console.error("Error fetching default address:", error);
@@ -102,11 +101,14 @@ export const OrderPage = () => {
         open={openVoucherModal}
         setOpen={setOpenVoucherModal}
       />
-      <AddDefaultAdressInOrderModal
-        open={openAddDefaultAddressModal}
-        setOpen={setOpenAddDefaultAddressModal}
-        handleAddressDefault={handleAddressDefault}
-      />
+      {/* {!selectedAddress && (
+        <>
+          <AddDefaultAdressInOrderModal
+            open={true}
+            handleAddressDefault={handleAddressDefault}
+          />
+        </>
+      )} */}
       <AddressListInOrderModal
         open={openAddressModal}
         setOpen={setOpenAddressModal}

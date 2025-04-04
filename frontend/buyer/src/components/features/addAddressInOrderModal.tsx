@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import Select from "react-select";
 import axios from "axios";
 import "../../css/page/orderPage.css";
+import { EnvValue } from "../../env-value/envValue";
 
 type AddAdressInOrderModalProps = {
   open: boolean;
@@ -143,7 +144,8 @@ export const AddAdressInOrderModal: React.FC<AddAdressInOrderModalProps> = ({
 
     try {
       const response = await axios.post(
-        `http://localhost:3005/address/account/${id}`,
+        // `http://localhost:3005/address/account/${id}`,
+        `${EnvValue.API_GATEWAY_URL}/api/address/account/${id}`,
         formData
       );
       // console.log(response);

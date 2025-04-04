@@ -3,16 +3,16 @@ import { useParams } from "react-router-dom";
 import Select from "react-select";
 import axios from "axios";
 import "../../css/page/orderPage.css";
+import { EnvValue } from "../../env-value/envValue";
 
 type AddDefaultAdressInOrderModalProps = {
   open: boolean;
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   handleAddressDefault: () => void;
 };
 
 export const AddDefaultAdressInOrderModal: React.FC<
   AddDefaultAdressInOrderModalProps
-> = ({ open, setOpen, handleAddressDefault }) => {
+> = ({ open, handleAddressDefault }) => {
   const { id } = useParams<{ id: string }>();
   const [formData, setFormData] = useState({
     FullName: "",
@@ -142,7 +142,8 @@ export const AddDefaultAdressInOrderModal: React.FC<
 
     try {
       const response = await axios.post(
-        `http://localhost:3005/address/account/${id}`,
+        // `http://localhost:3005/address/account/${id}`,
+        `${EnvValue.API_GATEWAY_URL}/api/address/account/${id}`,
         formData
       );
       // console.log(response);
@@ -167,10 +168,11 @@ export const AddDefaultAdressInOrderModal: React.FC<
       SpecificAddress: "",
       isDefault: false,
     });
-    setOpen(false); // Đóng Modal 1
   };
 
   if (!open) return null;
+
+  const [isVisible, setIsVisible] = useState(false);
 
   return (
     <>
@@ -291,18 +293,33 @@ export const AddDefaultAdressInOrderModal: React.FC<
                     }} // Số dòng mặc định
                   />
 
-                  <div className="flex flex-row gap-2">
-                    <input
-                      type="checkbox"
-                      checked={true}
-                      onChange={() => {}}
-                      className="w-4 h-4 appearance-none border border-black checked:bg-orange-500 checked:border-orange-500 relative
+                  <div
+                    className="relative cursor-pointer group w-fit"
+                    onMouseEnter={() => setIsVisible(true)}
+                  >
+                    <div className="flex flex-row gap-2 opacity-35">
+                      <input
+                        type="checkbox"
+                        checked={true}
+                        onChange={() => {}}
+                        className="w-4 h-4 appearance-none border border-black checked:bg-orange-500 checked:border-orange-500 relative
                     before:content-['✔'] before:absolute before:inset-0 before:flex before:items-center before:justify-center
                     before:text-white before:opacity-0 checked:before:opacity-100"
-                    />
-                    <div className="text-gray-300">
-                      Đặt làm địa chỉ mặc định
+                      />
+                      <div>Đặt làm địa chỉ mặc định</div>
                     </div>
+                    {isVisible && (
+                      <>
+                        <div
+                          className="p-2 absolute top-[1.5rem] border border-gray-300 text-black bg-white shadow-lg w-[12rem] h-auto text-center
+              flex items-center justify-center z-30"
+                          onMouseMove={() => setIsVisible(true)}
+                          onMouseLeave={() => setIsVisible(false)}
+                        >
+                          Bạn không thể xóa nhãn địa chỉ mặc định.
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 

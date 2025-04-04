@@ -3,6 +3,7 @@ import { Address } from "../../types/address";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import { FormatPhoneNumber } from "../../helpers/utility/phoneFormat";
+import { EnvValue } from "../../env-value/envValue";
 
 const RadioButton = ({ checked, onChange }: any) => {
   return (
@@ -57,7 +58,8 @@ export const AddressListInOrderModal: React.FC<
   const fetchListAddress = async () => {
     try {
       const response = await axios.get<any>(
-        `http://localhost:3005/address/account/${id}`
+        // `http://localhost:3005/address/account/${id}`
+        `${EnvValue.API_GATEWAY_URL}/api/address/account/${id}`
       );
       const addresses: Address[] = [];
       response.data.forEach((item: any) => {
