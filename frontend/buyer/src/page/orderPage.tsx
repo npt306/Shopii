@@ -1,18 +1,30 @@
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import { EnvValue } from "../env-value/envValue";
 import "../css/page/orderPage.css";
+
 import { HeaderOrder } from "../components/layout/headerOrder";
 import { Footer } from "../components/layout/footer";
+
 import { formatPrice } from "../helpers/utility/formatPrice";
+import { Address } from "../types/address";
+import { FormatPhoneNumber } from "../helpers/utility/phoneFormat";
 
 import { VoucherShopeeModal } from "../components/features/voucherShopeeModal";
 import { AddressListInOrderModal } from "../components/features/addressListInOrder";
 import { AddAdressInOrderModal } from "../components/features/addAddressInOrderModal";
 import { UpdateAdressInOrderModal } from "../components/features/updateAddresInOrderModal";
+import { AddDefaultAdressInOrderModal } from "../components/features/addDefaultAddressInOrder";
 
 export const OrderPage = () => {
+  const { id } = useParams<{ id: string }>();
+
   const [openAddressModal, setOpenAddressModal] = useState(false);
   const [openAddAddressModal, setOpenAddAddressModal] = useState(false);
   const [openUpdateAddressModal, setOpenUpdateAddressModal] = useState(false);
+  const [openAddDefaultAddressModal, setOpenAddDefaultAddressModal] =
+    useState(false); // add address default if not have any address
 
   const [openDeliveryModal, setOpenDeliveryModal] = useState(false);
 
@@ -28,12 +40,60 @@ export const OrderPage = () => {
     document.title = "Thanh toán";
   }, []);
 
-  const [selectedAddress, setSelectedAddress] = useState(null);
+  const [selectedAddress, setSelectedAddress] = useState<Address>();
+  const [selectedUpdateAddress, setSelectedUpdateAddress] =
+    useState<Address | null>(null);
 
   const handleDataFromModal = (data: any) => {
     setSelectedAddress(data); // Lưu dữ liệu từ modal vào state
     setOpenAddressModal(false); // Đóng modal
   };
+
+  const handleUpdateDataFromModal = (data: any) => {
+    setSelectedUpdateAddress(data); // Lưu dữ liệu từ modal vào state
+    setOpenAddressModal(false); // Đóng modal
+  };
+
+  const fetchDefaultAddress = async () => {
+    try {
+      const response = await axios.get<any>(
+        // `http://localhost:3005/address/account/default/${id}`
+        `${EnvValue.API_GATEWAY_URL}/api/address/account/default/${id}`
+      );
+      if (response.data != "") {
+        let defaultAddress: Address = {
+          AddressId: response.data.id,
+          FullName: response.data.fullName,
+          PhoneNumber: response.data.phoneNumber,
+          Province: response.data.province,
+          District: response.data.district,
+          Ward: response.data.ward,
+          SpecificAddress: response.data.specificAddress,
+          isDefault: response.data.isDefault,
+        };
+        setSelectedAddress(defaultAddress);
+      }
+    } catch (error) {
+      console.error("Error fetching default address:", error);
+    }
+  };
+
+  // check if no address default
+  const [isAddressDefault, setIsAddressDefault] = useState(false);
+
+  const handleAddressDefault = () => {
+    setIsAddressDefault((prev) => !prev); // Toggle để kích hoạt useEffect
+  };
+
+  useEffect(() => {
+    const storedAddress = sessionStorage.getItem("selectedAddress");
+    if (storedAddress) {
+      const selectedAddressInSession = JSON.parse(storedAddress);
+      setSelectedAddress(selectedAddressInSession);
+    } else {
+      fetchDefaultAddress();
+    }
+  }, [id, isAddressDefault]);
 
   return (
     <div className="App">
@@ -41,12 +101,21 @@ export const OrderPage = () => {
         open={openVoucherModal}
         setOpen={setOpenVoucherModal}
       />
+      {/* {!selectedAddress && (
+        <>
+          <AddDefaultAdressInOrderModal
+            open={true}
+            handleAddressDefault={handleAddressDefault}
+          />
+        </>
+      )} */}
       <AddressListInOrderModal
         open={openAddressModal}
         setOpen={setOpenAddressModal}
         setOpenModalAdd={setOpenAddAddressModal}
         setOpenModalUpdate={setOpenUpdateAddressModal}
         onSelectAddress={handleDataFromModal}
+        onSelectUpdateAddress={handleUpdateDataFromModal} // Truyền handleDataFromModal vào prop
       />
       <AddAdressInOrderModal
         open={openAddAddressModal}
@@ -57,6 +126,7 @@ export const OrderPage = () => {
         open={openUpdateAddressModal}
         setOpen={setOpenUpdateAddressModal}
         setOpenModal={setOpenAddressModal}
+        updateAddress={selectedUpdateAddress}
       />
       <HeaderOrder></HeaderOrder>
       <div className="flex-1 mx-30">
@@ -86,23 +156,43 @@ export const OrderPage = () => {
               <div className="flex items-center">
                 <div>
                   <div className="items-center flex text-base">
-                    <div className="font-semibold flex flex-col w-auto min-w-[15rem]">
-                      <div>Nguyễn Huỳnh Phú Quí</div>
-                      <div>(+84) 787820631</div>
-                    </div>
-                    <div className="">
-                      {/* KTX Khoa học Tự nhiẻn (P611), 135b trần hưng đạo, phường
-                      cầu ông lãnh, 71011, quận 1, Phường Cầu Ông Lãnh, Quận 1, TP. Hồ Chí
-                      Minh */}
-                      {selectedAddress}
-                    </div>
-                    <div className="address-default-tag">Mặc định</div>
-                    <button
-                      className="change-button"
-                      onClick={() => setOpenAddressModal(true)}
-                    >
-                      <div className="text-sky-700">Thay đổi</div>
-                    </button>
+                    {selectedAddress ? (
+                      <>
+                        <div className="font-semibold flex flex-col w-auto min-w-[15rem]">
+                          <div>{selectedAddress?.FullName}</div>
+                          <div>
+                            (+84){" "}
+                            {FormatPhoneNumber(
+                              selectedAddress ? selectedAddress.PhoneNumber : ""
+                            )}
+                          </div>
+                        </div>
+                        <div className="">
+                          {selectedAddress?.SpecificAddress},{" "}
+                          {selectedAddress?.Ward}, {selectedAddress?.District},{" "}
+                          {selectedAddress?.Province}
+                        </div>
+                        {selectedAddress?.isDefault && (
+                          <div className="address-default-tag">Mặc định</div>
+                        )}
+                        <button
+                          className="change-button"
+                          onClick={() => setOpenAddressModal(true)}
+                        >
+                          <div className="text-sky-700 text-[0.9rem]">
+                            Thay đổi
+                          </div>
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button className="px-7">
+                          <div className="text-sky-700 text-[0.9rem]">
+                            Thay đổi
+                          </div>
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

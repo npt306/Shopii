@@ -74,7 +74,7 @@ export const AddAddressModal = ({
       const provinceOption = provinceOptions.find(
         (opt) => opt.label === formData.Province
       );
-      if (provinceOption) { 
+      if (provinceOption) {
         fetchDistricts(provinceOption.id);
       }
     }
@@ -215,7 +215,7 @@ export const AddAddressModal = ({
           {editAddress ? "Cập nhật Địa Chỉ" : "Thêm Địa Chỉ"}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
+          <div>
             <label className="block text-sm font-medium text-gray-700">
               Họ và Tên:
             </label>
@@ -293,9 +293,8 @@ export const AddAddressModal = ({
               className="mt-1"
               isDisabled={!formData.District}
               value={
-                wardOptions.find(
-                  (option) => option.label === formData.Ward
-                ) || null
+                wardOptions.find((option) => option.label === formData.Ward) ||
+                null
               }
             />
           </div>
@@ -319,7 +318,11 @@ export const AddAddressModal = ({
             disabled={loading}
             className="w-full bg-orange-500 text-white py-2 rounded-md hover:bg-orange-600 disabled:bg-gray-300"
           >
-            {loading ? "Saving..." : editAddress ? "Update Address" : "Save Address"}
+            {loading
+              ? "Saving..."
+              : editAddress
+              ? "Update Address"
+              : "Save Address"}
           </button>
         </form>
       </div>

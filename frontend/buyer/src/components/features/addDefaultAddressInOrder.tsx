@@ -1,21 +1,18 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Address } from "../../types/address";
-import axios from "axios";
 import Select from "react-select";
+import axios from "axios";
 import "../../css/page/orderPage.css";
 import { EnvValue } from "../../env-value/envValue";
 
-type UpdateAdressInOrderModalProps = {
+type AddDefaultAdressInOrderModalProps = {
   open: boolean;
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setOpenModal: React.Dispatch<React.SetStateAction<boolean>>;
-  updateAddress: Address | null;
+  handleAddressDefault: () => void;
 };
 
-export const UpdateAdressInOrderModal: React.FC<
-  UpdateAdressInOrderModalProps
-> = ({ open, setOpen, setOpenModal, updateAddress }) => {
+export const AddDefaultAdressInOrderModal: React.FC<
+  AddDefaultAdressInOrderModalProps
+> = ({ open, handleAddressDefault }) => {
   const { id } = useParams<{ id: string }>();
   const [formData, setFormData] = useState({
     FullName: "",
@@ -27,25 +24,10 @@ export const UpdateAdressInOrderModal: React.FC<
     isDefault: false,
   });
 
-  useEffect(() => {
-    if (updateAddress) {
-      setFormData({
-        FullName: updateAddress.FullName,
-        PhoneNumber: updateAddress.PhoneNumber,
-        Province: updateAddress.Province,
-        District: updateAddress.District,
-        Ward: updateAddress.Ward,
-        SpecificAddress: updateAddress.SpecificAddress,
-        isDefault: updateAddress.isDefault,
-      });
-    }
-  }, [updateAddress]);
+  const [provinceOptions, setProvinceOptions] = useState([]);
+  const [districtOptions, setDistrictOptions] = useState([]);
+  const [wardOptions, setWardOptions] = useState([]);
 
-  const [provinceOptions, setProvinceOptions] = useState<any[]>([]);
-  const [districtOptions, setDistrictOptions] = useState<any[]>([]);
-  const [wardOptions, setWardOptions] = useState<any[]>([]);
-
-  const [isDefaultAddress, setIsDefaultAddress] = useState<boolean>(false);
   const [isInputDisabled, setIsInputDisabled] = useState<boolean>(true);
 
   const [error, setError] = useState<string>("");
@@ -115,28 +97,6 @@ export const UpdateAdressInOrderModal: React.FC<
     fetchProvinces();
   }, []);
 
-  useEffect(() => {
-    if (formData.Province && provinceOptions.length > 0) {
-      const provinceOption = provinceOptions.find(
-        (opt: any) => opt.label === formData.Province
-      );
-      if (provinceOption) {
-        fetchDistricts(provinceOption.id);
-      }
-    }
-  }, [formData.Province, provinceOptions]);
-
-  useEffect(() => {
-    if (formData.District && districtOptions.length > 0) {
-      const districtOption = districtOptions.find(
-        (opt: any) => opt.label === formData.District
-      );
-      if (districtOption) {
-        fetchWards(districtOption.id);
-      }
-    }
-  }, [formData.District, districtOptions]);
-
   const handleSelectChange = (selectedOption: any, field: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -159,6 +119,8 @@ export const UpdateAdressInOrderModal: React.FC<
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Validation: Check if required fields are filled
+    formData.isDefault = true;
+
     if (
       !formData.FullName ||
       !formData.PhoneNumber ||
@@ -176,23 +138,26 @@ export const UpdateAdressInOrderModal: React.FC<
       return;
     }
 
+    // console.log("Form Data:", formData);
+
     try {
       const response = await axios.post(
-        // `http://localhost:3005/address/update/${updateAddress?.AddressId}`,
-        `${EnvValue.API_GATEWAY_URL}/api/address/update/${updateAddress?.AddressId}`,
+        // `http://localhost:3005/address/account/${id}`,
+        `${EnvValue.API_GATEWAY_URL}/api/address/account/${id}`,
         formData
       );
       // console.log(response);
+      handleAddressDefault();
     } catch (error) {
       console.error("Error creating address:", error);
     }
+
     // reset form data
     resetForm();
   };
 
   const resetForm = () => {
     setIsInputDisabled(true);
-    setIsDefaultAddress(false);
     setError("");
     setFormData({
       FullName: "",
@@ -203,11 +168,11 @@ export const UpdateAdressInOrderModal: React.FC<
       SpecificAddress: "",
       isDefault: false,
     });
-    setOpen(false); // Đóng Modal 1
-    setOpenModal(true);
   };
 
   if (!open) return null;
+
+  const [isVisible, setIsVisible] = useState(false);
 
   return (
     <>
@@ -217,7 +182,10 @@ export const UpdateAdressInOrderModal: React.FC<
             <form onSubmit={handleSubmit}>
               <div className="flex flex-col h-[auto] w-[32rem] px-5">
                 <div className="">
-                  <div className="text-[1.25rem] my-5">Cập nhật địa chỉ</div>
+                  <div className="text-[1.25rem] my-5">
+                    {" "}
+                    Thêm địa chỉ nhận hàng
+                  </div>
                 </div>
 
                 <div className="flex flex-col w-full h-auto gap-5">
@@ -264,11 +232,6 @@ export const UpdateAdressInOrderModal: React.FC<
                       onChange={(selectedOption) =>
                         handleSelectChange(selectedOption, "Province")
                       }
-                      value={
-                        provinceOptions.find(
-                          (option: any) => option.label === formData.Province
-                        ) || null
-                      }
                       className="flex-1/3 text-nowrap"
                       placeholder="Tỉnh/Thành Phố"
                       required
@@ -284,11 +247,6 @@ export const UpdateAdressInOrderModal: React.FC<
                       options={districtOptions}
                       onChange={(selectedOption) =>
                         handleSelectChange(selectedOption, "District")
-                      }
-                      value={
-                        districtOptions.find(
-                          (option) => option.label === formData.District
-                        ) || null
                       }
                       className="flex-1/3"
                       placeholder="Quận/Huyện"
@@ -306,11 +264,6 @@ export const UpdateAdressInOrderModal: React.FC<
                       onChange={(selectedOption) =>
                         handleSelectChange(selectedOption, "Ward")
                       }
-                      value={
-                        wardOptions.find(
-                          (option) => option.label === formData.Ward
-                        ) || null
-                      }
                       className="flex-1/3"
                       placeholder="Phường/Xã"
                       styles={{
@@ -323,7 +276,6 @@ export const UpdateAdressInOrderModal: React.FC<
                   </div>
 
                   <textarea
-                    value={formData.SpecificAddress}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -341,48 +293,37 @@ export const UpdateAdressInOrderModal: React.FC<
                     }} // Số dòng mặc định
                   />
 
-                  {updateAddress?.isDefault ? (
-                    <>
-                      <div className="flex flex-row gap-2">
-                        <input
-                          type="checkbox"
-                          checked={formData.isDefault}
-                          onChange={() => {}}
-                          className="w-4 h-4 appearance-none border border-black checked:bg-orange-500 checked:border-orange-500 relative
-             before:content-['✔'] before:absolute before:inset-0 before:flex before:items-center before:justify-center
-             before:text-white before:opacity-0 checked:before:opacity-100"
-                        />
-                        <div>Đặt làm địa chỉ mặc định</div>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex flex-row gap-2">
-                        <input
-                          type="checkbox"
-                          checked={isDefaultAddress}
-                          onChange={() => {
-                            formData.isDefault = !isDefaultAddress;
-                            setIsDefaultAddress(!isDefaultAddress);
-                          }}
-                          className="w-4 h-4 appearance-none border border-black checked:bg-orange-500 checked:border-orange-500 relative
-             before:content-['✔'] before:absolute before:inset-0 before:flex before:items-center before:justify-center
-             before:text-white before:opacity-0 checked:before:opacity-100"
-                        />
-                        <div>Đặt làm địa chỉ mặc định</div>
-                      </div>
-                    </>
-                  )}
+                  <div
+                    className="relative cursor-pointer group w-fit"
+                    onMouseEnter={() => setIsVisible(true)}
+                  >
+                    <div className="flex flex-row gap-2 opacity-35">
+                      <input
+                        type="checkbox"
+                        checked={true}
+                        onChange={() => {}}
+                        className="w-4 h-4 appearance-none border border-black checked:bg-orange-500 checked:border-orange-500 relative
+                    before:content-['✔'] before:absolute before:inset-0 before:flex before:items-center before:justify-center
+                    before:text-white before:opacity-0 checked:before:opacity-100"
+                      />
+                      <div>Đặt làm địa chỉ mặc định</div>
+                    </div>
+                    {isVisible && (
+                      <>
+                        <div
+                          className="p-2 absolute top-[1.5rem] border border-gray-300 text-black bg-white shadow-lg w-[12rem] h-auto text-center
+              flex items-center justify-center z-30"
+                          onMouseMove={() => setIsVisible(true)}
+                          onMouseLeave={() => setIsVisible(false)}
+                        >
+                          Bạn không thể xóa nhãn địa chỉ mặc định.
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 <div className="border-black/10 pb-5 bottom-0 h-[64px] py-3 justify-end !items-center flex mt-5 border-t-0">
-                  <button
-                    type="button"
-                    className="!mr-2 gray-button"
-                    onClick={() => resetForm()}
-                  >
-                    Trở lại
-                  </button>
                   <button type="submit" className="color-button">
                     Hoàn thành
                   </button>
@@ -391,7 +332,7 @@ export const UpdateAdressInOrderModal: React.FC<
             </form>
           </div>
         </div>
-        <div className="modal-bg" onClick={() => setOpen(false)} />
+        <div className="modal-bg" />
       </div>
     </>
   );
