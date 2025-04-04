@@ -33,11 +33,6 @@ const products = [
   },
 ];
 
-// const productSummary = mockProduct.flatMap((shop) =>
-//   shop.items.map(({ productTypeId, price }) => ({ productTypeId, price }))
-// console.log(productSummary);
-// );
-
 export const CartPage = () => {
   let navigate = useNavigate();
   const { updateCart } = useCart();
@@ -67,6 +62,14 @@ export const CartPage = () => {
       fetchCart();
     }
   }, [id]);
+
+  // const productSummary: any = data?.flatMap((shop: any) =>
+  //   shop.items.map(({ productTypeId, price }: any) => ({
+  //     productTypeId,
+  //     price,
+  //   }))
+  // );
+  // console.log(productSummary);
 
   const [overQuantityProductId, setOverQuantityProductId] = useState<
     number | null

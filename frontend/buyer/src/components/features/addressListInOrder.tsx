@@ -1,57 +1,8 @@
 import { useState, useEffect } from "react";
 import { Address } from "../../types/address";
-
-const mockAddressData: Address[] = [
-  {
-    AddressId: 1,
-    FullName: "Nguyen Huynh Phu Qui",
-    PhoneNumber: "0787820631",
-    Province: "Tien Giang",
-    District: "My Tho",
-    Ward: "Phuong 4",
-    SpecificAddress: "308/9/34 Tran Hung Dao, Khu Pho 4",
-    isDefault: false,
-  },
-  {
-    AddressId: 2,
-    FullName: "Ly San",
-    PhoneNumber: "0359476220",
-    Province: "Bà Rịa - Vũng Tàu",
-    District: "Huyện Châu Đức",
-    Ward: "Thị Trấn Ngãi Giao",
-    SpecificAddress:
-      "Hội Nạn Nhân Chất Độc Da Cam Và Bảo Trợ Xã Hội Huyện Châu Đức, Số 58, Đường 30/4",
-    isDefault: false,
-  },
-  {
-    AddressId: 3,
-    FullName: "Lý San",
-    PhoneNumber: "0359476221",
-    Province: "Bà Rịa - Vũng Tàu",
-    District: "Huyện Châu Đức",
-    Ward: "Thị Trấn Ngãi Giao",
-    SpecificAddress: "Số 23, Mỹ Xuân - Ngãi Giao, Mỹ Xuân",
-    isDefault: false,
-  },
-  {
-    AddressId: 4,
-    FullName: "Huỳnh Oanh",
-    PhoneNumber: "0922136873",
-    Province: "Tien Giang",
-    District: "My Tho",
-    Ward: "Phuong 4",
-    SpecificAddress: "85/33, Đống Đa, khu phố 4 (trong hẻm)",
-    isDefault: true,
-  },
-];
-
-const formatPhoneNumber = (phone: string) => {
-  let newFormat = phone.slice(1);
-  return newFormat
-    .split("")
-    .map((char, i) => ((i + 1) % 3 === 0 ? char + " " : char))
-    .join("");
-};
+import axios from "axios";
+import { useParams } from "react-router-dom";
+import { FormatPhoneNumber } from "../../helpers/utility/phoneFormat";
 
 const RadioButton = ({ checked, onChange }: any) => {
   return (
@@ -74,7 +25,8 @@ type AddressListInOrderModalProps = {
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setOpenModalAdd: React.Dispatch<React.SetStateAction<boolean>>;
   setOpenModalUpdate: React.Dispatch<React.SetStateAction<boolean>>;
-  onSelectAddress: React.Dispatch<React.SetStateAction<string>>;
+  onSelectAddress: React.Dispatch<React.SetStateAction<Address>>;
+  onSelectUpdateAddress: React.Dispatch<React.SetStateAction<Address>>;
 };
 
 export const AddressListInOrderModal: React.FC<
@@ -85,20 +37,58 @@ export const AddressListInOrderModal: React.FC<
   setOpenModalAdd,
   setOpenModalUpdate,
   onSelectAddress,
+  onSelectUpdateAddress,
 }) => {
+  const { id } = useParams<{ id: string }>();
   const [sortAddress, setSortAddress] = useState<Address[]>();
   const [selectedAddress, setSelectedAddress] = useState<Number | null>(null);
 
-  const handleConfirm = () => {
-    const selectedData = "123 Nguyễn Văn A, Quận 1"; // Giả sử đây là địa chỉ người dùng chọn
-    onSelectAddress(selectedData); // Gửi dữ liệu lên component cha
+  const [addressDataFetch, setAddressDataFetch] = useState<Address[]>();
+
+  const selectedAddr = sortAddress?.find(
+    (address) => address.AddressId === selectedAddress
+  );
+
+  const handleConfirm = (address: any) => {
+    sessionStorage.setItem("selectedAddress", JSON.stringify(address));
+    onSelectAddress(address); // Gửi dữ liệu lên component cha
+  };
+
+  const fetchListAddress = async () => {
+    try {
+      const response = await axios.get<any>(
+        `http://localhost:3005/address/account/${id}`
+      );
+      const addresses: Address[] = [];
+      response.data.forEach((item: any) => {
+        let address: Address = {
+          AddressId: item.id,
+          FullName: item.fullName,
+          PhoneNumber: item.phoneNumber,
+          Province: item.province,
+          District: item.district,
+          Ward: item.ward,
+          SpecificAddress: item.specificAddress,
+          isDefault: item.isDefault,
+        };
+
+        addresses.push(address);
+      });
+      setAddressDataFetch(addresses);
+    } catch (error) {
+      console.error("Error fetching list address:", error);
+    }
   };
 
   useEffect(() => {
-    if (mockAddressData) {
-      sortAddresses(mockAddressData);
+    fetchListAddress();
+  }, [open]);
+
+  useEffect(() => {
+    if (addressDataFetch) {
+      sortAddresses(addressDataFetch);
     }
-  }, [mockAddressData]);
+  }, [addressDataFetch]);
 
   const sortAddresses = (addresses: Address[]) => {
     const defaultAddresses = addresses.filter(
@@ -141,9 +131,9 @@ export const AddressListInOrderModal: React.FC<
                         <div className="h-auto">
                           <RadioButton
                             checked={selectedAddress === address.AddressId}
-                            onChange={() =>
-                              setSelectedAddress(address.AddressId)
-                            }
+                            onChange={() => {
+                              setSelectedAddress(address.AddressId);
+                            }}
                           />
                         </div>
                         <div className="w-full flex flex-col py-2 gap-1">
@@ -156,7 +146,7 @@ export const AddressListInOrderModal: React.FC<
                                 <div>|</div>
                               </div>
                               <div className="addr-info text-[#00000070]">
-                                (+84) {formatPhoneNumber(address.PhoneNumber)}
+                                (+84) {FormatPhoneNumber(address.PhoneNumber)}
                               </div>
                             </div>
                             <div
@@ -167,6 +157,7 @@ export const AddressListInOrderModal: React.FC<
                                 onClick={() => {
                                   setOpen(false); // Đóng Modal 1
                                   setOpenModalUpdate(true); // Mở Modal 2
+                                  onSelectUpdateAddress(address);
                                 }}
                               >
                                 Cập nhật
@@ -189,7 +180,7 @@ export const AddressListInOrderModal: React.FC<
                           )}
                         </div>
                       </div>
-                      {index < 3 ? (
+                      {index < sortAddress.length - 1 ? (
                         <>
                           <hr className="border-t border-gray-300 mt-2 w-[95%] mx-auto" />
                         </>
@@ -233,7 +224,7 @@ export const AddressListInOrderModal: React.FC<
                   <button
                     className="color-button"
                     onClick={() => {
-                      handleConfirm();
+                      handleConfirm(selectedAddr ?? ({} as Address));
                       setOpen(false);
                     }}
                   >

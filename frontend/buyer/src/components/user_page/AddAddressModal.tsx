@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Select from "react-select"; // Import react-select
 
 interface AddAddressModalProps {
@@ -8,108 +8,107 @@ interface AddAddressModalProps {
 }
 
 export const AddAddressModal = ({
-    accountId,
-    onClose,
-    onAddressAdded,
-  }: AddAddressModalProps) => {
-    const [formData, setFormData] = useState({
-      FullName: "",
-      PhoneNumber: "",
-      Province: "",
-      District: "",
-      Ward: "",
-      SpecificAddress: "",
-      isDefault: false,
-    });
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [provinceOptions, setProvinceOptions] = useState([]); // State for provinces
-    const [districtOptions, setDistrictOptions] = useState([]);
-    const [wardOptions, setWardOptions] = useState([]);
-  
-    // Fetch provinces dynamically
-    useEffect(() => {
-      const fetchProvinces = async () => {
-        try {
-          const response = await fetch(
-            "https://open.oapi.vn/location/provinces?page=0&size=64"
-          );
-          if (!response.ok) {
-            throw new Error("Failed to fetch provinces");
-          }
-          const data = await response.json();
-          const formattedProvinces = data.data.map((province: any) => ({
-            id: province.id, 
-            value: province.name, 
-            label: province.name, 
-          }));
-          setProvinceOptions(formattedProvinces);
-        } catch (err: any) {
-          setError(err.message || "Error fetching provinces");
-        }
-      };
-      fetchProvinces();
-    }, []);
+  accountId,
+  onClose,
+  onAddressAdded,
+}: AddAddressModalProps) => {
+  const [formData, setFormData] = useState({
+    FullName: "",
+    PhoneNumber: "",
+    Province: "",
+    District: "",
+    Ward: "",
+    SpecificAddress: "",
+    isDefault: false,
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [provinceOptions, setProvinceOptions] = useState([]); // State for provinces
+  const [districtOptions, setDistrictOptions] = useState([]);
+  const [wardOptions, setWardOptions] = useState([]);
 
-    
-    const handleSelectChange = (selectedOption: any, field: string) => {
-        setFormData((prev) => ({
-          ...prev,
-          [field]: selectedOption?.label || "",
-          ...(field === "Province" && { District: "", Ward: "" }), // Reset District and Ward when Province changes
-          ...(field === "District" && { Ward: "" }), // Reset Ward when District changes
+  // Fetch provinces dynamically
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      try {
+        const response = await fetch(
+          "https://open.oapi.vn/location/provinces?page=0&size=64"
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch provinces");
+        }
+        const data = await response.json();
+        const formattedProvinces = data.data.map((province: any) => ({
+          id: province.id,
+          value: province.name,
+          label: province.name,
         }));
-      
-        if (field === "Province") {
-          setDistrictOptions([]);
-          setWardOptions([]); // Clear ward options
-          fetchDistricts(selectedOption?.id); // Fetch districts for the selected province
-        }
-      
-        if (field === "District") {
-          fetchWards(selectedOption?.id); // Fetch wards for the selected district
-        }
-      };
-  
-    const fetchDistricts = async (provinceId: string) => {
-        try {
-          const response = await fetch(
-            `https://open.oapi.vn/location/districts/${provinceId}?page=0&size=100`
-          );
-          if (!response.ok) {
-            throw new Error("Failed to fetch districts");
-          }
-          const data = await response.json();
-          const formattedDistricts = data.data.map((district: any) => ({
-            id: district.id, 
-            value: district.name, 
-            label: district.name, 
-          }));
-          setDistrictOptions(formattedDistricts);
-        } catch (err: any) {
-          setError(err.message || "Error fetching districts");
-        }
-      };
-  
-      const fetchWards = async (districtId: string) => {
-        try {
-          const response = await fetch(
-            `https://open.oapi.vn/location/wards/${districtId}?page=0&size=100`
-          ); // Replace with the correct endpoint if different
-          if (!response.ok) {
-            throw new Error("Failed to fetch wards");
-          }
-          const data = await response.json();
-          const formattedWards = data.data.map((ward: any) => ({
-            id: ward.id, 
-            value: ward.name, 
-            label: ward.name, 
-          }));
-          setWardOptions(formattedWards);
-        } catch (err: any) {
-          setError(err.message || "Error fetching wards");
-        }
-      };
+        setProvinceOptions(formattedProvinces);
+      } catch (err: any) {
+        setError(err.message || "Error fetching provinces");
+      }
+    };
+    fetchProvinces();
+  }, []);
+
+  const handleSelectChange = (selectedOption: any, field: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: selectedOption?.label || "",
+      ...(field === "Province" && { District: "", Ward: "" }), // Reset District and Ward when Province changes
+      ...(field === "District" && { Ward: "" }), // Reset Ward when District changes
+    }));
+
+    if (field === "Province") {
+      setDistrictOptions([]);
+      setWardOptions([]); // Clear ward options
+      fetchDistricts(selectedOption?.id); // Fetch districts for the selected province
+    }
+
+    if (field === "District") {
+      fetchWards(selectedOption?.id); // Fetch wards for the selected district
+    }
+  };
+
+  const fetchDistricts = async (provinceId: string) => {
+    try {
+      const response = await fetch(
+        `https://open.oapi.vn/location/districts/${provinceId}?page=0&size=100`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch districts");
+      }
+      const data = await response.json();
+      const formattedDistricts = data.data.map((district: any) => ({
+        id: district.id,
+        value: district.name,
+        label: district.name,
+      }));
+      setDistrictOptions(formattedDistricts);
+    } catch (err: any) {
+      setError(err.message || "Error fetching districts");
+    }
+  };
+
+  const fetchWards = async (districtId: string) => {
+    try {
+      const response = await fetch(
+        `https://open.oapi.vn/location/wards/${districtId}?page=0&size=100`
+      ); // Replace with the correct endpoint if different
+      if (!response.ok) {
+        throw new Error("Failed to fetch wards");
+      }
+      const data = await response.json();
+      const formattedWards = data.data.map((ward: any) => ({
+        id: ward.id,
+        value: ward.name,
+        label: ward.name,
+      }));
+      setWardOptions(formattedWards);
+    } catch (err: any) {
+      setError(err.message || "Error fetching wards");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -117,21 +116,23 @@ export const AddAddressModal = ({
     setError("");
     // Validation: Check if required fields are filled
     if (
-        !formData.FullName ||
-        !formData.PhoneNumber ||
-        !formData.Province ||
-        !formData.District ||
-        !formData.Ward
+      !formData.FullName ||
+      !formData.PhoneNumber ||
+      !formData.Province ||
+      !formData.District ||
+      !formData.Ward
     ) {
-        setError("Please fill in all required fields.");
-        setLoading(false);
-        return;
+      setError("Please fill in all required fields.");
+      setLoading(false);
+      return;
     }
 
     console.log("Form Data:", formData); // Debugging: Check the form data
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_ACCOUNT_SERVICE_URL}/address/account/${accountId}`,
+        `${
+          import.meta.env.VITE_ACCOUNT_SERVICE_URL
+        }/address/account/${accountId}`,
         {
           method: "POST",
           headers: {

@@ -4,17 +4,15 @@ import Select from "react-select";
 import axios from "axios";
 import "../../css/page/orderPage.css";
 
-type AddAdressInOrderModalProps = {
+type AddDefaultAdressInOrderModalProps = {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setOpenModal: React.Dispatch<React.SetStateAction<boolean>>;
+  handleAddressDefault: () => void;
 };
 
-export const AddAdressInOrderModal: React.FC<AddAdressInOrderModalProps> = ({
-  open,
-  setOpen,
-  setOpenModal,
-}) => {
+export const AddDefaultAdressInOrderModal: React.FC<
+  AddDefaultAdressInOrderModalProps
+> = ({ open, setOpen, handleAddressDefault }) => {
   const { id } = useParams<{ id: string }>();
   const [formData, setFormData] = useState({
     FullName: "",
@@ -30,7 +28,6 @@ export const AddAdressInOrderModal: React.FC<AddAdressInOrderModalProps> = ({
   const [districtOptions, setDistrictOptions] = useState([]);
   const [wardOptions, setWardOptions] = useState([]);
 
-  const [isDefaultAddress, setIsDefaultAddress] = useState<boolean>(false);
   const [isInputDisabled, setIsInputDisabled] = useState<boolean>(true);
 
   const [error, setError] = useState<string>("");
@@ -122,6 +119,8 @@ export const AddAdressInOrderModal: React.FC<AddAdressInOrderModalProps> = ({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Validation: Check if required fields are filled
+    formData.isDefault = true;
+
     if (
       !formData.FullName ||
       !formData.PhoneNumber ||
@@ -147,16 +146,17 @@ export const AddAdressInOrderModal: React.FC<AddAdressInOrderModalProps> = ({
         formData
       );
       // console.log(response);
+      handleAddressDefault();
     } catch (error) {
       console.error("Error creating address:", error);
     }
+
     // reset form data
     resetForm();
   };
 
   const resetForm = () => {
     setIsInputDisabled(true);
-    setIsDefaultAddress(false);
     setError("");
     setFormData({
       FullName: "",
@@ -168,7 +168,6 @@ export const AddAdressInOrderModal: React.FC<AddAdressInOrderModalProps> = ({
       isDefault: false,
     });
     setOpen(false); // Đóng Modal 1
-    setOpenModal(true);
   };
 
   if (!open) return null;
@@ -181,7 +180,10 @@ export const AddAdressInOrderModal: React.FC<AddAdressInOrderModalProps> = ({
             <form onSubmit={handleSubmit}>
               <div className="flex flex-col h-[auto] w-[32rem] px-5">
                 <div className="">
-                  <div className="text-[1.25rem] my-5">Địa chỉ mới</div>
+                  <div className="text-[1.25rem] my-5">
+                    {" "}
+                    Thêm địa chỉ nhận hàng
+                  </div>
                 </div>
 
                 <div className="flex flex-col w-full h-auto gap-5">
@@ -292,27 +294,19 @@ export const AddAdressInOrderModal: React.FC<AddAdressInOrderModalProps> = ({
                   <div className="flex flex-row gap-2">
                     <input
                       type="checkbox"
-                      checked={isDefaultAddress}
-                      onChange={() => {
-                        formData.isDefault = !isDefaultAddress;
-                        setIsDefaultAddress(!isDefaultAddress);
-                      }}
+                      checked={true}
+                      onChange={() => {}}
                       className="w-4 h-4 appearance-none border border-black checked:bg-orange-500 checked:border-orange-500 relative
                     before:content-['✔'] before:absolute before:inset-0 before:flex before:items-center before:justify-center
                     before:text-white before:opacity-0 checked:before:opacity-100"
                     />
-                    <div>Đặt làm địa chỉ mặc định</div>
+                    <div className="text-gray-300">
+                      Đặt làm địa chỉ mặc định
+                    </div>
                   </div>
                 </div>
 
                 <div className="border-black/10 pb-5 bottom-0 h-[64px] py-3 justify-end !items-center flex mt-5 border-t-0">
-                  <button
-                    type="button"
-                    className="!mr-2 gray-button"
-                    onClick={() => resetForm()}
-                  >
-                    Trở lại
-                  </button>
                   <button type="submit" className="color-button">
                     Hoàn thành
                   </button>
@@ -321,7 +315,7 @@ export const AddAdressInOrderModal: React.FC<AddAdressInOrderModalProps> = ({
             </form>
           </div>
         </div>
-        <div className="modal-bg" onClick={() => setOpen(false)} />
+        <div className="modal-bg" />
       </div>
     </>
   );
