@@ -80,6 +80,7 @@ interface Address {
     const handleOpenModal = (address?: Address) => {
       if (address) {
         setEditAddress(address); // Pass the address to edit
+        
       } else {
         setEditAddress(null); // Open modal for adding a new address
       }
@@ -141,12 +142,14 @@ interface Address {
                 >
                   Cập nhật
                 </button>
-                <button
-                  className="px-3 py-1 bg-white-500 text-white rounded-md hover:underline"
-                  onClick={() => deleteAddress(address.id)}
-                >
-                  Xóa
-                </button>
+                {!address.isDefault && (
+                    <button
+                      className="px-3 py-1 bg-white-500 text-red-500 rounded-md hover:underline"
+                      onClick={() => deleteAddress(address.id)}
+                    >
+                      Xóa
+                    </button>
+                  )}
               </div>
               {!address.isDefault && (
                 <button
