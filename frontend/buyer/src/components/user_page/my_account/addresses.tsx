@@ -154,12 +154,14 @@ export const Addressesupdate = ({ accountId }: { accountId: number }) => {
               >
                 Cập nhật
               </button>
+              {!address.isDefault && (
               <button
                 className="px-3 py-1 bg-white-500 text-white rounded-md hover:underline"
                 onClick={() => deleteAddress(address.id)}
               >
                 Xóa
               </button>
+              )}
             </div>
             {!address.isDefault && (
               <button
