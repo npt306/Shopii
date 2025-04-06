@@ -1018,11 +1018,16 @@ const AddProduct = () => {
         const productDetails = convertCategoriesToDetails(categories, combinationData);
         const totalQuantity = productDetails.reduce((sum, detail) => sum + detail.Quantity, 0);
 
-        console.log("Classifications:", productClassifications);
-        console.log("Details:", productDetails);
+        const sellerInfoStr = localStorage.getItem('sellerInfo');
+        if (!sellerInfoStr) {
+            console.error('Missing sellerInfo in localStorage');
+            return;
+        }
+        const sellerInfo = JSON.parse(sellerInfoStr);
+        const sellerId = sellerInfo.id;
 
         const sampleProduct = {
-            SellerID: localStorage.getItem('user_accountId'),
+            SellerID: sellerId,
             Name: productName,
             Description: productDescription,
             Categories: selectedCategoryPath.map(category => category.CategoryID),
