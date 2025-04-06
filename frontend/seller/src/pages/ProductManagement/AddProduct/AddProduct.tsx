@@ -1022,7 +1022,7 @@ const AddProduct = () => {
         console.log("Details:", productDetails);
 
         const sampleProduct = {
-            SellerID: 1,
+            SellerID: localStorage.getItem('user_accountId'),
             Name: productName,
             Description: productDescription,
             Categories: selectedCategoryPath.map(category => category.CategoryID),

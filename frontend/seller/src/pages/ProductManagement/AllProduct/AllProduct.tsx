@@ -116,8 +116,14 @@ const AllProduct = () => {
     ];
 
     const fetchProducts = async () => {
+        const id = localStorage.getItem('user_accountId');
+
+        if (!id) {
+            console.error('User account ID is missing in localStorage');
+            return;
+        }
         try {
-            const response = await axios.get<Product[]>(`${EnvValue.API_GATEWAY_URL}/api/product/seller/1`);
+            const response = await axios.get<Product[]>(`${EnvValue.API_GATEWAY_URL}/api/product/seller/${id}`);
             setProducts(response.data);
             setFilteredProducts(response.data);
             setLoading(false);
