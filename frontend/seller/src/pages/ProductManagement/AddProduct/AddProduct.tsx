@@ -1043,18 +1043,18 @@ const AddProduct = () => {
         console.log("final Product:", sampleProduct);
 
 
-        // try {
-        //     const response = await axios.post(`${EnvValue.API_GATEWAY_URL}/api/product`, sampleProduct);
-        //     console.log('Product added:', response.data);
-        //     toast.success("Thêm sản phẩm thành công!", {
-        //         onClose: () => {
-        //             // window.location.reload();
-        //         },
-        //         autoClose: 1000 // 2 seconds delay before auto-closing
-        //     });
-        // } catch (error) {
-        //     console.error('Error adding product:', error);
-        // }
+        try {
+            const response = await axios.post(`${EnvValue.API_GATEWAY_URL}/api/product`, sampleProduct);
+            console.log('Product added:', response.data);
+            toast.success("Thêm sản phẩm thành công!", {
+                onClose: () => {
+                    window.location.reload();
+                },
+                autoClose: 1000 // 2 seconds delay before auto-closing
+            });
+        } catch (error) {
+            console.error('Error adding product:', error);
+        }
     };
 
     const fetchCategories = async () => {
