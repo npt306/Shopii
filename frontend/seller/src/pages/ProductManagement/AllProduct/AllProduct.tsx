@@ -116,14 +116,17 @@ const AllProduct = () => {
     ];
 
     const fetchProducts = async () => {
-        const id = localStorage.getItem('user_accountId');
+        const sellerInfoStr = localStorage.getItem('sellerInfo');
 
-        if (!id) {
-            console.error('User account ID is missing in localStorage');
+        if (!sellerInfoStr) {
+            console.error('Missing sellerInfo in localStorage');
             return;
         }
+
+        const sellerInfo = JSON.parse(sellerInfoStr);
+        const sellerId = sellerInfo.id;
         try {
-            const response = await axios.get<Product[]>(`${EnvValue.API_GATEWAY_URL}/api/product/seller/${id}`);
+            const response = await axios.get<Product[]>(`${EnvValue.API_GATEWAY_URL}/api/product/seller/${sellerId}`);
             setProducts(response.data);
             setFilteredProducts(response.data);
             setLoading(false);
