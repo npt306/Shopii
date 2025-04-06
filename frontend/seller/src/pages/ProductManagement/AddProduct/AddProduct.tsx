@@ -80,6 +80,7 @@ interface RemoveOptionParams {
 type CategoryType = {
     CategoryID: number;
     CategoryName: string;
+    isActive: boolean;
     ParentID: number | null;
 }
 
@@ -117,12 +118,23 @@ const CategorySelectorModal = ({
 
     // Process categories để chắc chắn nó là mảng đúng định dạng
     const processedCategories = useMemo(() => {
-        // Nếu categories là mảng của mảng (như trong dữ liệu của bạn), lấy phần tử đầu tiên
-        if (Array.isArray(categories) && categories.length > 0 && Array.isArray(categories[0])) {
-            return categories[0] as CategoryWithChildren[];
-        }
+        // Helper function to recursively filter categories
+        const filterInactiveCategories = (cats: CategoryWithChildren[]): CategoryWithChildren[] => {
+            return cats
+                .filter(cat => cat.isActive !== false) // Keep only active categories
+                .map(cat => ({
+                    ...cat,
+                    children: cat.children ? filterInactiveCategories(cat.children) : []
+                }));
+        };
 
-        return categories;
+        // If categories is an array of arrays, get the first element
+        let cats = Array.isArray(categories) && categories.length > 0 && Array.isArray(categories[0])
+            ? categories[0] as CategoryWithChildren[]
+            : categories;
+
+        // Apply the filter function
+        return filterInactiveCategories(cats);
     }, [categories]);
 
     // Reset selections when modal is closed
@@ -146,11 +158,13 @@ const CategorySelectorModal = ({
                 {
                     CategoryID: selectedCategory.CategoryID,
                     CategoryName: selectedCategory.CategoryName,
+                    isActive: selectedCategory.isActive,
                     ParentID: selectedCategory.ParentID
                 },
                 selectionPath.map(cat => ({
                     CategoryID: cat.CategoryID,
                     CategoryName: cat.CategoryName,
+                    isActive: cat.isActive,
                     ParentID: cat.ParentID
                 }))
 
@@ -728,7 +742,7 @@ const AddProduct = () => {
                 const dimensionType = field.split('.')[1] as 'length' | 'width' | 'height';
                 updated[variantId].dimensions[dimensionType] = value as number[];
             }
-            console.log(updated);
+            console.log("Only", updated);
             return updated;
         });
     };
@@ -738,13 +752,13 @@ const AddProduct = () => {
         setInputValue(value);
         setShowError(value.trim() === "");
 
-        updateAllOptions({ field: 'weight', value: parseFloat(value) || 0 });
+        updateAllOptions({ field: 'weight', value: [parseFloat(value) || 0] });
     };
 
     const handleChangeOptions = () => {
         setUseCustomSettings(!useCustomSettings)
         setInputValue('0');
-        updateAllOptions({ field: 'weight', value: 0 });
+        updateAllOptions({ field: 'weight', value: [0] });
     };
     const updateAllOptions = ({ field, value }: { field: string; value: number | number[] }) => {
         setCombinationData(prev => {
@@ -782,9 +796,9 @@ const AddProduct = () => {
                 }
             });
 
-            console.log(updated);
             return updated;
         });
+        console.log("All", combinationData);
     };
 
     const combinations = generateCombinations(categories);
@@ -1000,11 +1014,11 @@ const AddProduct = () => {
         const productDetails = convertCategoriesToDetails(categories, combinationData);
         const totalQuantity = productDetails.reduce((sum, detail) => sum + detail.Quantity, 0);
 
-        // console.log("Classifications:", productClassifications);
-        // console.log("Details:", productDetails);
+        console.log("Classifications:", productClassifications);
+        console.log("Details:", productDetails);
 
         const sampleProduct = {
-            SellerID: localStorage.getItem('user_accountId'),
+            SellerID: 1,
             Name: productName,
             Description: productDescription,
             Categories: selectedCategoryPath.map(category => category.CategoryID),
@@ -1022,12 +1036,15 @@ const AddProduct = () => {
             details: productDetails
         };
 
+        console.log("final Product:", sampleProduct);
+
+
         try {
             const response = await axios.post(`${EnvValue.API_GATEWAY_URL}/api/product`, sampleProduct);
             console.log('Product added:', response.data);
             toast.success("Thêm sản phẩm thành công!", {
                 onClose: () => {
-                    window.location.reload();
+                    // window.location.reload();
                 },
                 autoClose: 1000 // 2 seconds delay before auto-closing
             });
@@ -1859,13 +1876,21 @@ const AddProduct = () => {
                                                                                             type="text"
                                                                                             className="border rounded p-2 w-32 bg-white text-black"
                                                                                             placeholder="Nhập vào"
-                                                                                            pattern="[0-9]*"
-                                                                                            value={data.weight[0] || ''}
-                                                                                            onChange={(e) => updateCombinationData(
-                                                                                                variantId,
-                                                                                                'weight',
-                                                                                                [parseFloat(e.target.value) || 0]
-                                                                                            )}
+                                                                                            value={data.weight[0] !== undefined ? data.weight[0] : ''}
+                                                                                            onChange={(e) => {
+                                                                                                let value = e.target.value;
+
+                                                                                                // Cho phép nhập số và dấu chấm thập phân
+                                                                                                if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                                                                                                    if (value !== '') {
+                                                                                                        updateCombinationData(
+                                                                                                            variantId,
+                                                                                                            'weight',
+                                                                                                            [parseFloat(value)]
+                                                                                                        )
+                                                                                                    }
+                                                                                                }
+                                                                                            }}
                                                                                         />
                                                                                         <span className="ml-2 text-gray-600">gr</span>
                                                                                     </div>
@@ -1876,13 +1901,20 @@ const AddProduct = () => {
                                                                                             type="text"
                                                                                             className="border rounded p-2 w-16 bg-white text-black"
                                                                                             placeholder="R"
-                                                                                            pattern="[0-9]*"
-                                                                                            value={data.dimensions.length[0] || ''}
-                                                                                            onChange={(e) => updateCombinationData(
-                                                                                                variantId,
-                                                                                                'dimensions.length',
-                                                                                                [parseFloat(e.target.value) || 0]
-                                                                                            )}
+                                                                                            value={data.dimensions.length[0] !== undefined ? data.dimensions.length[0] : ''}
+                                                                                            onChange={(e) => {
+                                                                                                let value = e.target.value;
+
+                                                                                                if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                                                                                                    if (value !== '') {
+                                                                                                        updateCombinationData(
+                                                                                                            variantId,
+                                                                                                            'dimensions.length',
+                                                                                                            [parseFloat(value)]
+                                                                                                        )
+                                                                                                    }
+                                                                                                }
+                                                                                            }}
                                                                                         />
                                                                                         <span className="text-gray-600 whitespace-nowrap">cm</span>
 
@@ -1892,13 +1924,20 @@ const AddProduct = () => {
                                                                                             type="text"
                                                                                             className="border rounded p-2 w-16 bg-white text-black"
                                                                                             placeholder="D"
-                                                                                            pattern="[0-9]*"
-                                                                                            value={data.dimensions.width[0] || ''}
-                                                                                            onChange={(e) => updateCombinationData(
-                                                                                                variantId,
-                                                                                                'dimensions.width',
-                                                                                                [parseFloat(e.target.value) || 0]
-                                                                                            )}
+                                                                                            value={data.dimensions.width[0] !== undefined ? data.dimensions.width[0] : ''}
+                                                                                            onChange={(e) => {
+                                                                                                let value = e.target.value;
+
+                                                                                                if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                                                                                                    if (value !== '') {
+                                                                                                        updateCombinationData(
+                                                                                                            variantId,
+                                                                                                            'dimensions.width',
+                                                                                                            [parseFloat(value)]
+                                                                                                        )
+                                                                                                    }
+                                                                                                }
+                                                                                            }}
                                                                                         />
                                                                                         <span className="text-gray-600 whitespace-nowrap">cm</span>
 
@@ -1908,13 +1947,20 @@ const AddProduct = () => {
                                                                                             type="text"
                                                                                             className="border rounded p-2 w-16 bg-white text-black"
                                                                                             placeholder="C"
-                                                                                            pattern="[0-9]*"
-                                                                                            value={data.dimensions.height[0] || ''}
-                                                                                            onChange={(e) => updateCombinationData(
-                                                                                                variantId,
-                                                                                                'dimensions.height',
-                                                                                                [parseFloat(e.target.value) || 0]
-                                                                                            )}
+                                                                                            value={data.dimensions.height[0] !== undefined ? data.dimensions.height[0] : ''}
+                                                                                            onChange={(e) => {
+                                                                                                let value = e.target.value;
+
+                                                                                                if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                                                                                                    if (value !== '') {
+                                                                                                        updateCombinationData(
+                                                                                                            variantId,
+                                                                                                            'dimensions.height',
+                                                                                                            [parseFloat(value)]
+                                                                                                        )
+                                                                                                    }
+                                                                                                }
+                                                                                            }}
                                                                                         />
                                                                                         <span className="text-gray-600 whitespace-nowrap">cm</span>
                                                                                     </div>
@@ -1993,7 +2039,7 @@ const AddProduct = () => {
                                                     className="border rounded p-2 w-20 bg-white text-black"
                                                     placeholder="R"
                                                     onChange={(e) => {
-                                                        updateAllOptions({ field: 'dimensions.length', value: parseFloat(e.target.value) || 0 });
+                                                        updateAllOptions({ field: 'dimensions.length', value: [parseFloat(e.target.value) || 0] });
                                                     }}
                                                 />
                                                 <span className="text-gray-600">cm</span>
@@ -2005,7 +2051,7 @@ const AddProduct = () => {
                                                     className="border rounded p-2 w-20 bg-white text-black"
                                                     placeholder="D"
                                                     onChange={(e) => {
-                                                        updateAllOptions({ field: 'dimensions.width', value: parseFloat(e.target.value) || 0 });
+                                                        updateAllOptions({ field: 'dimensions.width', value: [parseFloat(e.target.value) || 0] });
                                                     }}
                                                 />
                                                 <span className="text-gray-600">cm</span>
@@ -2017,7 +2063,7 @@ const AddProduct = () => {
                                                     className="border rounded p-2 w-20 bg-white text-black"
                                                     placeholder="C"
                                                     onChange={(e) => {
-                                                        updateAllOptions({ field: 'dimensions.height', value: parseFloat(e.target.value) || 0 });
+                                                        updateAllOptions({ field: 'dimensions.height', value: [parseFloat(e.target.value) || 0] });
                                                     }}
                                                 />
                                                 <span className="text-gray-600">cm</span>
