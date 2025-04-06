@@ -982,31 +982,35 @@ const AddProduct = () => {
         console.log("Categories:", categories);
         console.log("Combination Data:", combinationData);
 
-        // Determine the required combination length based on categories count
-        const requiredLength = categories.length > 1 ? categories.length : 1;
-
         return combinations
-            // Filter combinations based on the number of categories
-            .filter(variantId => combinationData[variantId].combination.length === requiredLength)
             .map(variantId => {
                 const combination = combinationData[variantId];
-                const option1 = categories[0]?.options.find(option => option.name === combination.combination[0]);
-                const option2 = categories.length > 1 ? categories[1]?.options.find(option => option.name === combination.combination[1]) : null;
+                // Tìm kiếm tùy chọn từ categories khớp với các phần tử trong combination
+                const option1 = categories[0]?.options.find(option =>
+                    option.name.trim() === combination.combination[0]?.trim());
+
+                // Chỉ tìm kiếm option2 nếu combination có phần tử thứ hai
+                const option2 = combination.combination.length > 1 ?
+                    categories[1]?.options.find(option =>
+                        option.name.trim() === combination.combination[1]?.trim()) : null;
 
                 return {
                     Type_1: combination.combination[0] || "",
-                    Type_2: combination.combination[1] || "",
+                    // Chỉ thiết lập Type_2 nếu có phần tử thứ hai trong combination
+                    Type_2: combination.combination.length > 1 ? (combination.combination[1] || "") : "",
                     Image: option1?.image || option2?.image || combination.image || "",
                     Price: option1?.price || option2?.price || combination.price || 0,
                     Quantity: option1?.stock || option2?.stock || combination.stock || 0,
                     Dimension: {
-                        Weight: option1?.weight[0] || option2?.weight[0] || combination.weight[0] || 0, // Assuming you want the first element of the weight array
-                        Length: option1?.dimensions.length[0] || option2?.dimensions.length[0] || combination.dimensions.length[0] || 0, // Assuming you want the first element of the length array
-                        Width: option1?.dimensions.width[0] || option2?.dimensions.width[0] || combination.dimensions.width[0] || 0, // Assuming you want the first element of the width array
-                        Height: option1?.dimensions.height[0] || option2?.dimensions.height[0] || combination.dimensions.height[0] || 0 // Assuming you want the first element of the height array
+                        Weight: option1?.weight?.[0] || option2?.weight?.[0] || combination.weight?.[0] || 0,
+                        Length: option1?.dimensions?.length?.[0] || option2?.dimensions?.length?.[0] || combination.dimensions?.length?.[0] || 0,
+                        Width: option1?.dimensions?.width?.[0] || option2?.dimensions?.width?.[0] || combination.dimensions?.width?.[0] || 0,
+                        Height: option1?.dimensions?.height?.[0] || option2?.dimensions?.height?.[0] || combination.dimensions?.height?.[0] || 0
                     }
                 };
-            }).filter(detail => detail.Type_1.trim() !== "" || detail.Type_2.trim() !== "");
+            })
+            // Lọc ra các chi tiết có ít nhất Type_1 không trống
+            .filter(detail => detail.Type_1.trim() !== "");
     };
 
     const sendProduct = async () => {
@@ -1039,18 +1043,18 @@ const AddProduct = () => {
         console.log("final Product:", sampleProduct);
 
 
-        try {
-            const response = await axios.post(`${EnvValue.API_GATEWAY_URL}/api/product`, sampleProduct);
-            console.log('Product added:', response.data);
-            toast.success("Thêm sản phẩm thành công!", {
-                onClose: () => {
-                    // window.location.reload();
-                },
-                autoClose: 1000 // 2 seconds delay before auto-closing
-            });
-        } catch (error) {
-            console.error('Error adding product:', error);
-        }
+        // try {
+        //     const response = await axios.post(`${EnvValue.API_GATEWAY_URL}/api/product`, sampleProduct);
+        //     console.log('Product added:', response.data);
+        //     toast.success("Thêm sản phẩm thành công!", {
+        //         onClose: () => {
+        //             // window.location.reload();
+        //         },
+        //         autoClose: 1000 // 2 seconds delay before auto-closing
+        //     });
+        // } catch (error) {
+        //     console.error('Error adding product:', error);
+        // }
     };
 
     const fetchCategories = async () => {
