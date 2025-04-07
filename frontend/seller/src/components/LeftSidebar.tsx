@@ -104,7 +104,9 @@ const LeftSidebar = () => {
               <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">Live & Video</li>
               <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">Khuyến mãi của Shop</li>
               <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">Flash Sale của Shop</li>
-              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">Mã giảm giá của Shop</li>
+              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
+               <Link to="/portal/marketing/vouchers"> Mã giảm giá của Shop</Link>
+              </li>
               <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">Chương trình Shopee</li>
             </ul>
           )}

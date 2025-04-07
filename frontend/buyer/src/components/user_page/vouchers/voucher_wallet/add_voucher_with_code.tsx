@@ -1,8 +1,8 @@
 import { toast } from "react-toastify";
-import "../../../css/user/vouchers.css";
+import "../../../../css/user/vouchers.css";
 import { useState } from "react";
 import axios from "axios";
-import { EnvValue } from '../../../env-value/envValue';
+import { EnvValue } from '../../../../env-value/envValue';
 
 export const VoucherAdd: React.FC<{ userId: number }> = ({ userId }) => {
     const [voucherCode, setVoucherCode] = useState("");
@@ -48,6 +48,7 @@ export const VoucherAdd: React.FC<{ userId: number }> = ({ userId }) => {
         <button
           className="voucher-add-btn"
           onClick={() => handleAddVoucherWithCode()}
+          disabled={voucherCode.length === 0}
         >
           Lưu
         </button>

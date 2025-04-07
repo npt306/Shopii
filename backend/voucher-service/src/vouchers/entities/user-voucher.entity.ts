@@ -22,6 +22,9 @@ export class UserVoucher {
   @Column()
   UsingTimeLeft: number;
 
+  @Column()
+  isfromshop: boolean;
+
   @CreateDateColumn({ name: 'CreatedAt' }) 
   CreatedAt: Date;
 
