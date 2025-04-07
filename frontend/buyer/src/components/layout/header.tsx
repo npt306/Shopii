@@ -17,7 +17,6 @@ export const Header = () => {
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [language, setLanguage] = useState("Tiếng Việt");
   const auth = useSelector((state: RootState) => state.auth);
-
   const handleLanguageChange = (lang: string) => {
     setLanguage(lang);
     setIsLanguageOpen(false);
@@ -100,7 +99,7 @@ export const Header = () => {
                   onClick={() => setIsOpen(!isOpen)}
                 >
                   <img
-                    src={avatarDefault}
+                    src={JSON.parse(localStorage.getItem("userProfile")).avatar || avatarDefault}
                     alt="Avatar"
                     className="w-7 h-7 rounded-full"
                   />

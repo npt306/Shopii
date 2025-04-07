@@ -22,8 +22,8 @@ import { NotificationSettings } from "../components/user_page/my_account/notific
 import { PrivacySettings } from "../components/user_page/my_account/privacy_settings.tsx";
 
 // Vouchers
-import { VoucherWallet } from "../components/user_page/vouchers/voucher_wallet.tsx";
-import { VoucherManagement } from "../components/user_page/vouchers/voucher_management.tsx";
+import { VoucherWallet } from "../components/user_page/vouchers/voucher_wallet/voucher_wallet.tsx";
+import { VoucherManagement } from "../components/user_page/vouchers/voucher_management/voucher_management.tsx";
 
 // Others
 import { Purchase } from "../components/user_page/purchase.tsx";
@@ -75,10 +75,6 @@ export const UserPage = () => {
     fetchUserDetail();
   }, []);
 
-  // ✅ This ensures Profile updates with the latest userData
-  useEffect(() => {
-    // setActiveComponent(<Profile userId={userData.AccountId} />);
-  }, [userData]); // Runs whenever userData updates
 
   const [isOpen, setIsOpen] = useState<number | null>(1);
   const toggleDropdown = (index: number) => {

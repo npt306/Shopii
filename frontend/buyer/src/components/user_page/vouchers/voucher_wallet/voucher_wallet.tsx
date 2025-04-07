@@ -1,13 +1,18 @@
 // Component
 // = My voucher
-import "../../../css/user/vouchers.css";
+import "../../../../css/user/vouchers.css";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { EnvValue } from '../../../env-value/envValue';
+import { EnvValue } from "../../../../env-value/envValue";
 
 import { VoucherItem } from "./voucher_wallet_item";
-import {VoucherWalletProps, Voucher} from "./vouchers_interfaces"
+import {
+  VoucherWalletProps,
+  Voucher,
+  SellerVoucher,
+} from "../vouchers_interfaces";
 import { VoucherAdd } from "./add_voucher_with_code";
+import { SellerVoucherItem } from "./seller_voucher_wallet_item";
 
 export const VoucherWallet: React.FC<VoucherWalletProps> = ({ userId }) => {
   const [selectedTab, setSelectedTab] = useState("Tất Cả ");
@@ -25,10 +30,12 @@ export const VoucherWallet: React.FC<VoucherWalletProps> = ({ userId }) => {
   };
 
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [sellerVouchers, setSellerVouchers] = useState<SellerVoucher[]>([]);
   useEffect(() => {
     const fetchVouchers = async () => {
       try {
-        const response = await axios.get(`${EnvValue.API_GATEWAY_URL}/api/vouchers/all/${userId}`
+        const response = await axios.get(
+          `${EnvValue.API_GATEWAY_URL}/api/vouchers/all/${userId}`
           // ,{params: { userId: String(userId) }}
         );
         console.log(response.data);
@@ -38,11 +45,26 @@ export const VoucherWallet: React.FC<VoucherWalletProps> = ({ userId }) => {
       }
       // console.log("Fetching vouchers...");
     };
-
-    if (userId) fetchVouchers();
+    const fetchSellerVouchers = async () => {
+      try {
+        const response = await axios.get(
+          `${EnvValue.API_GATEWAY_URL}/api/vouchers/user-sellervouchers/${userId}`
+          // ,{params: { userId: String(userId) }}
+        );
+        console.log(response.data);
+        setSellerVouchers(response.data);
+      } catch (error) {
+        console.error("Error fetching vouchers:", error);
+      }
+      // console.log("Fetching vouchers...");
+    };
+    if (userId) {
+      fetchVouchers();
+      fetchSellerVouchers();
+    }
   }, [userId]);
   return (
-    <div style={{ display: "contents" }}>      
+    <div style={{ display: "contents" }}>
       <div className="voucher-container">
         <div className="items-center flex justify-between">
           <div className="text-xl font-medium capitalize">Kho Voucher</div>
@@ -90,7 +112,13 @@ export const VoucherWallet: React.FC<VoucherWalletProps> = ({ userId }) => {
                   >
                     <div className="flex flex-grow">
                       <div className="flex flex-grow items-center justify-center">
-                        {tab}
+                        {tab} {"("}
+                        {tab === "Tất Cả " &&
+                          vouchers.length + sellerVouchers.length}
+                        {tab === "Shopee " && vouchers.length}
+                        {tab === "Shop " && sellerVouchers.length}
+                        {!["Tất Cả ", "Shopee ", "Shop "].includes(tab) && 0}
+                        {")"}
                       </div>
                       <hr className="menu-divider" />
                     </div>
@@ -104,12 +132,27 @@ export const VoucherWallet: React.FC<VoucherWalletProps> = ({ userId }) => {
         {/* VOUCHER LIST */}
         <div className="mt-4 relative z-0">
           <div className=" grid grid-cols-2 gap-4">
-            {vouchers.length > 0 && vouchers.map((voucher) => (
-              <VoucherItem key={voucher.id} voucher={voucher} userId={userId} />
-            ))}
+            {(selectedTab === "Tất Cả " || selectedTab === "Shopee ") &&
+              vouchers.length > 0 &&
+              vouchers.map((voucher) => (
+                <VoucherItem
+                  key={voucher.id}
+                  voucher={voucher}
+                  userId={userId}
+                />
+              ))}
+            {(selectedTab === "Tất Cả " || selectedTab === "Shop ") &&
+              sellerVouchers.length > 0 &&
+              sellerVouchers.map((voucher) => (
+                <SellerVoucherItem
+                  key={voucher.id}
+                  voucher={voucher}
+                  userId={userId}
+                />
+              ))}
           </div>
           {/* NO VOUCHER DIV */}
-          {vouchers.length < 1 && (
+          {vouchers.length < 1 && sellerVouchers.length < 1 && (
             <div className="flex flex-col items-center py-[5.625rem]">
               <div className="flex flex-col items-center mb-4">
                 <img

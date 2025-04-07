@@ -119,29 +119,32 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
     if (checkValidForm()) {
       try {
         // Send profile update request
-        if(changeForm) {
+        if (changeForm) {
           const response = await axios.post(
             `${EnvValue.API_GATEWAY_URL}/api/users/update-profile`,
             formData
           );
-          if(response) setChangeForm(false);
+          if (response && response.data) {
+            // Update localStorage with the new user data
+            setChangeForm(false);
+            const updatedUserProfile = {
+              ...JSON.parse(localStorage.getItem("userProfile") || "{}"), // Get current profile
+              accountId: formData.AccountId,
+              email: formData.Email,
+              username: formData.Username,
+              avatar: formData.Avatar,
+              dateOfBirth: formData.DoB,
+              phoneNumber: formData.PhoneNumber,
+              sex: formData.Sex,
+              updatedAt: new Date().toISOString(),
+            };
+
+            localStorage.setItem(
+              "userProfile",
+              JSON.stringify(updatedUserProfile)
+            );
+          }
         }
-
-        // if (response && response.data) {
-        //   // Update localStorage with the new user data
-        //   const updatedUserProfile = {
-        //     ...JSON.parse(localStorage.getItem("userProfile") || "{}"), // Get current profile
-        //     accountId: formData.AccountId,
-        //     email: formData.Email,
-        //     username: formData.Username,
-        //     avatar: formData.Avatar,
-        //     dateOfBirth: formData.DoB,
-        //     phoneNumber: formData.PhoneNumber,
-        //     sex: formData.Sex,
-        //     updatedAt: new Date().toISOString(),
-        //   };
-
-        //   localStorage.setItem("userProfile", JSON.stringify(updatedUserProfile));
 
         if (changeAvatar && avtFile) {
           const avatarFormData = new FormData();
@@ -209,7 +212,7 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
                       type="email"
                       name="Email"
                       pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$"
-                      className="form-input-enable text-base"
+                      className="form-input-enable bg-gray-200 text-base cursor-not-allowed"
                       value={formData.Email || ""}
                       onChange={handleInputChange}
                       disabled
@@ -279,7 +282,9 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
                     <button
                       type="button"
                       className={`btn btn-solid-primary inline-flex ${
-                        (changeForm || changeAvatar) ? "" : "!bg-gray-400 !cursor-not-allowed"
+                        changeForm || changeAvatar
+                          ? ""
+                          : "!bg-gray-400 !cursor-not-allowed"
                       }`}
                       onClick={() => handleSubmit()}
                       disabled={!(changeForm || changeAvatar)}
@@ -315,7 +320,7 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
                     />
                   </label>
                   <div className="block mt-3 text-neutral-400 text-sm leading-5">
-                    <div>Dung lượng file tối đa 1 MB</div>
+                    <div>Dung lượng file tối đa 50 MB</div>
                     <div>Định dạng: .JPEG, .PNG</div>
                   </div>
                 </div>
