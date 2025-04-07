@@ -152,22 +152,28 @@ export const VoucherWallet: React.FC<VoucherWalletProps> = ({ userId }) => {
               ))}
           </div>
           {/* NO VOUCHER DIV */}
-          {vouchers.length < 1 && sellerVouchers.length < 1 && (
-            <div className="flex flex-col items-center py-[5.625rem]">
-              <div className="flex flex-col items-center mb-4">
-                <img
-                  src="https://deo.shopeemobile.com/shopee/shopee-pcmall-live-sg/voucher/0e8c07c8449d8d509f72.png"
-                  className="w-7/10"
-                />
-                <div className="text-black/65 text-base font-medium leading-5 mb-1.5 mt-[-8px]">
-                  <span>Không tìm thấy voucher</span>
-                </div>
-                <div className="text-black/54 text-sm leading-4 text-center">
-                  <span>Không có voucher nào trong mục này</span>
+          {(vouchers.length < 1 && sellerVouchers.length < 1) ||
+            ([
+              "Nạp thẻ & Dịch vụ",
+              "Scan & Pay",
+              "Dịch vụ Tài chính",
+              "Từ đối tác",
+            ].includes(selectedTab.trim()) && (
+              <div className="flex flex-col items-center py-[5.625rem]">
+                <div className="flex flex-col items-center mb-4">
+                  <img
+                    src="https://deo.shopeemobile.com/shopee/shopee-pcmall-live-sg/voucher/0e8c07c8449d8d509f72.png"
+                    className="w-7/10"
+                  />
+                  <div className="text-black/65 text-base font-medium leading-5 mb-1.5 mt-[-8px]">
+                    <span>Không tìm thấy voucher</span>
+                  </div>
+                  <div className="text-black/54 text-sm leading-4 text-center">
+                    <span>Không có voucher nào trong mục này</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            ))}
           <div></div>
         </div>
       </div>

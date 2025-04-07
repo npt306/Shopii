@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { SellerProductsModalProps } from "./Interfaces"; // Adjust the import path as necessary
+import "../../../../css/sellerVoucher.css";
 
 export const SellerProductsModal: React.FC<SellerProductsModalProps> = ({
   isOpen,
@@ -44,6 +45,7 @@ export const SellerProductsModal: React.FC<SellerProductsModalProps> = ({
               <tr>
                 <th className="border border-gray-300 p-2 text-center">
                   <input
+                    className="product-checkbox"
                     type="checkbox"
                     onChange={(e) => {
                       if (e.target.checked) {
@@ -69,6 +71,7 @@ export const SellerProductsModal: React.FC<SellerProductsModalProps> = ({
                   <td className="border border-gray-300 p-2 text-center">
                     <input
                       type="checkbox"
+                      className="product-checkbox"
                       value={product.productID}
                       onChange={() => handleCheckboxChange(product.productID)}
                       checked={selectedProductIds.includes(product.productID)}

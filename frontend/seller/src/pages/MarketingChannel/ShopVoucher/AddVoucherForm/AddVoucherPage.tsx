@@ -13,7 +13,7 @@ import { Product } from "../Shared/Interfaces";
 import {toast} from "react-toastify";
 
 export const AddVoucherPage = () => {
-  const user_accountId = Number(localStorage.getItem('user_accountId')) || 1;
+  const sellerid = Number(localStorage.getItem('user_accountId')) || 1;;
   const [formData, setFormData] = useState<SellerVoucher>({
     name: "",
     code: "",
@@ -26,14 +26,13 @@ export const AddVoucherPage = () => {
     starts_at: "",
     ends_at: "",
     is_public: true,
-    sellerid: user_accountId,
+    sellerid: sellerid,
     product_id: [],
     used: 0,
   });
   const [isModalOpen, setModalOpen] = useState(false);
   // const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const sellerid = Number(localStorage.getItem('user_accountId')) || 1;;
   const fetchProducts = async () => {
     try {
       const response = await axios.get(
@@ -400,26 +399,26 @@ export const AddVoucherPage = () => {
         </div>
 
         {/* Hiển thị mã giảm giá */}
-        <div className="input-body col-span-7 flex gap-1">
-          <label className="flex items-center">
+        <div className="input-body col-span-7 flex gap-1 ">
+          <label className="flex items-center radio-label mr-2">
             <input
               type="radio"
               name="is_public"
               value={"true"}
               checked={formData.is_public}
               onChange={handleChange}
-              className="mr-1"
+              className="mr-1 radio-input"
             />
             Hiển thị nhiều nơi
           </label>
-          <label className="flex items-center">
+          <label className="flex items-center radio-label">
             <input
               type="radio"
               name="is_public"
               value={"false"}
               checked={!formData.is_public}
               onChange={handleChange}
-              className="mr-1"
+              className="mr-1 radio-input"
             />
             Không công khai
           </label>

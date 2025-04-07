@@ -10,7 +10,7 @@ import ConfirmModal from "../Shared/ConfirmModal";
 import { toast } from "react-toastify";
 import { SellerProductsModal } from "../Shared/SellerProductsModal";
 import { Product } from "../Shared/Interfaces";
-
+import "../../../../css/sellerVoucher.css";
 export const EditVoucherModal: React.FC<EditVoucherModalProps> = ({
   isOpen,
   onClose,
@@ -25,8 +25,8 @@ export const EditVoucherModal: React.FC<EditVoucherModalProps> = ({
   const fetchProducts = async () => {
     try {
       const response = await axios.get(
-        // `${EnvValue.API_GATEWAY_URL}/api/product/seller/${sellerid}`
-        `http://localhost:3001/product/seller/${voucherData.sellerid}`
+        `${EnvValue.API_GATEWAY_URL}/api/product/seller/${voucherData.sellerid}`
+        // `http://localhost:3001/product/seller/${voucherData.sellerid}`
       );
       setProducts(response.data);
     } catch (error) {
@@ -211,7 +211,7 @@ export const EditVoucherModal: React.FC<EditVoucherModalProps> = ({
               </label>
 
               {/* Private Card */}
-              {prevFormData.voucher_type === "product_specific" && (
+              {(prevFormData.voucher_type === "product_specific" || !started) && (
                 <label
                   className={`relative cursor-pointer p-4 border shadow-md w-1/2 text-center transition ${
                     formData.voucher_type === "product_specific"
@@ -442,30 +442,30 @@ export const EditVoucherModal: React.FC<EditVoucherModalProps> = ({
           </div>
 
           {/* Hiển thị mã giảm giá */}
-          <div className="input-body col-span-7">
+          <div className="input-body col-span-7 flex flex-row ">
             {prevFormData.is_public === true ? (
               <label className="flex items-center">Hiển thị nhiều nơi</label>
             ) : (
               <>
-                <label className="flex items-center">
+                <label className="flex items-center radio-label mr-2">
                   <input
                     type="radio"
                     name="is_public"
                     value={"true"}
                     checked={formData.is_public}
                     onChange={handleChange}
-                    className="mr-1"
+                    className="mr-1 radio-input"
                   />
                   Hiển thị nhiều nơi
                 </label>
-                <label className="flex items-center">
+                <label className="flex items-center radio-label">
                   <input
                     type="radio"
                     name="is_public"
                     value={"false"}
                     checked={!formData.is_public}
                     onChange={handleChange}
-                    className="mr-1"
+                    className="mr-1 radio-input"
                   />
                   Không công khai
                 </label>

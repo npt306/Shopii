@@ -20,7 +20,7 @@ export const SellerVoucherItem: React.FC<{ voucher: SellerVoucher; userId: numbe
         100
     );
     const handleClaimVoucher = async () => {
-          toast.success("Đã nhận voucher, không thể nhận lại");
+      toast.info("Đã nhận voucher, không thể nhận lại");
       
     };
     return (
@@ -55,7 +55,7 @@ export const SellerVoucherItem: React.FC<{ voucher: SellerVoucher; userId: numbe
         </div>
         <button
           className="border border-orange-600 !text-orange-600 leading-[0.875rem] mr-4 w-14 px-2 py-0.75 !text-xs rounded-xs shadow"
-          onClick={() => handleClaimVoucher}
+          onClick={() => handleClaimVoucher()}
         >
           Dùng Sau
         </button>

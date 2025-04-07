@@ -140,7 +140,6 @@
 .radio-input:checked {
   /* background-color: #ee4d2d;  */
   border-color: #ee4d2d;
-  color: aquamarine;
 }
 
 .radio-input:checked::before {

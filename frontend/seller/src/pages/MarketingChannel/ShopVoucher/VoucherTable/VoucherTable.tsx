@@ -204,13 +204,13 @@ export const VoucherTable = () => {
               </div>
               <div className="flex justify-center items-center space-x-2">
                 <button
-                  className="text-blue-600 hover:text-blue-800"
+                  className="text-blue-600 hover:text-blue-800 bg-white"
                   onClick={handleEdit(voucher.id ? voucher.id : 0)}
                 >
                   <FaPencilAlt />
                 </button>
                 <button
-                  className="text-red-600 hover:text-red-800"
+                  className="text-red-600 hover:text-red-800 bg-white hover:border-red-600"
                   onClick={onConfirmDelete(voucher.id ? voucher.id : 0)}
                 >
                   <FaTrash />

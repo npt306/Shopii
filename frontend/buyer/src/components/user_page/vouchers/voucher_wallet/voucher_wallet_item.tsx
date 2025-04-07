@@ -4,7 +4,7 @@ import axios from "axios";
 import { CiClock2 } from "react-icons/ci";
 import { format, parseISO } from "date-fns";
 import { toast } from "react-toastify";
-import {Voucher} from "./vouchers_interfaces"
+import {Voucher} from "../vouchers_interfaces"
 import { EnvValue } from "../../../../env-value/envValue";
 
 export const VoucherItem: React.FC<{ voucher: Voucher; userId: number }> = ({
