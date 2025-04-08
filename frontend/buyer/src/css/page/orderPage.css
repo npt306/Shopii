@@ -754,7 +754,7 @@ stardust-checkbox__input {
 
 .voucher-img {
   /* flex: 0 0 30%; Make it responsive */
-  height: 100px;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;

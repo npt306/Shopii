@@ -25,6 +25,7 @@ import { Voucher } from './entities/voucher.entity';
 import { UserVoucher } from './entities/user-voucher.entity';
 import { VoucherHistory } from './entities/voucher-history.entity';
 import { SellerVoucher } from './entities/seller-voucher.entity';
+
 @Injectable()
 export class VouchersService {
   constructor(
@@ -173,6 +174,7 @@ export class VouchersService {
       throw new NotFoundException(`Voucher with ID ${id} not found`);
     }
   }
+
 
   // USER VOUCHERS
   async getActiveVouchers(userId: number): Promise<Voucher[]> {
@@ -365,31 +367,44 @@ export class VouchersService {
   }
 
   async userUseVoucher(dto: CreateVoucherHistoryDto): Promise<VoucherHistory> {
-    const seller_voucher = await this.sellerVoucherRepository.findOne({
-      where: {
-        id: dto.VoucherID,
-      },
-    });
-    if (!seller_voucher || seller_voucher.used >= seller_voucher.max_usage) {
-      throw new NotFoundException(`Can not find voucher`);
+    if (dto.isfromshop) {
+      // 🔹 Handle shop-owned voucher
+      const seller_voucher = await this.sellerVoucherRepository.findOne({
+        where: { id: dto.VoucherID },
+      });
+
+      if (!seller_voucher || seller_voucher.used >= seller_voucher.max_usage) {
+        throw new NotFoundException('Cannot find or use shop voucher');
+      }
+
+      seller_voucher.used += 1;
+      await this.sellerVoucherRepository.save(seller_voucher);
+    } else {
+      // 🔹 Handle platform-wide voucher
+      const voucher = await this.vouchersRepository.findOne({
+        where: {
+          id: dto.VoucherID,
+          total_uses_left: MoreThan(0),
+        },
+      });
+
+      if (!voucher) {
+        throw new NotFoundException('Cannot find or use platform voucher');
+      }
+      if (voucher.total_uses_left) {
+        voucher.total_uses_left -= 1;
+        await this.vouchersRepository.save(voucher);
+      }
     }
-    const voucher = await this.vouchersRepository.findOne({
-      where: {
-        id: dto.VoucherID,
-        total_uses_left: MoreThan(0),
-      },
-    });
-    if (!voucher) {
-      throw new NotFoundException(`Can not find voucher`);
-    }
+
+    // 🔸 Create usage history
     const newHistory = this.voucherHistoryRepository.create({
       VoucherID: dto.VoucherID,
       UserID: dto.UserID,
       UseDate: dto.UseDate ? new Date(dto.UseDate) : new Date(),
       isfromshop: dto.isfromshop,
     });
-    seller_voucher.used += 1;
-    voucher.total_uses_left -= 1;
+
     return this.voucherHistoryRepository.save(newHistory);
   }
 

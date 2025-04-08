@@ -59,6 +59,7 @@ export class VouchersController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.vouchersService.remove(id);
   }
+
   // USER VOUCHERS
   @Get('/all/:userId')
   async getAllVouchers(@Param('userId', ParseIntPipe) userId: number) {
@@ -83,7 +84,7 @@ export class VouchersController {
   async useVoucher(@Body() createVoucherHistoryDto: CreateVoucherHistoryDto) {
     return this.vouchersService.userUseVoucher(createVoucherHistoryDto);
   }
-  
+
   @Post('/claim')
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   async addVoucherToUser(@Body() createUserVoucherDto: CreateUserVoucherDto) {
@@ -92,11 +93,12 @@ export class VouchersController {
 
   // SELLER VOUCHERS
   @Get('/seller-vouchers/all/:shopId')
-  async findAllSellerVoucher(@Param('id') id: number): Promise<any[]> {
+  async findAllSellerVoucher(@Param('shopId') id: number): Promise<any[]> {
+    console.log(id);
     return this.vouchersService.findAllSellerVoucher(id);
   }
   @Get('/seller-vouchers/active/:shopId')
-  async findActiveSellerVoucher(@Param('id') id: number): Promise<any[]> {
+  async findActiveSellerVoucher(@Param('shopId') id: number): Promise<any[]> {
     return this.vouchersService.findAllActiveSellerVoucher(id);
   }
   @Get('/seller-vouchers/:id')

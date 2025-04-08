@@ -91,9 +91,7 @@ export class VouchersController {
   }
 
   @Get('/seller-vouchers/all/:shopId')
-  async findAllSellerVoucher(
-    @Param('shopId', ParseIntPipe) shopId: number,
-  ): Promise<any> {
+  async findAllSellerVoucher(@Param('shopId') shopId: number): Promise<any> {
     console.log('shopId', shopId);
     // return true;
     return this.vouchersService.findAllSellerVouchers(shopId);
