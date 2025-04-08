@@ -110,6 +110,8 @@ export const VoucherTable = () => {
     if (voucher) {
       if (new Date(voucher.ends_at) < currentDate)
         return toast.info("Không thể xóa voucher đã kết thúc");
+      if(new Date(voucher.starts_at) < currentDate)
+        return toast.info("Không thể xóa voucher đang diễn ra");
       setConfirmModalOpen(true);
     } else toast.error("Không tìm thấy voucher");
   };

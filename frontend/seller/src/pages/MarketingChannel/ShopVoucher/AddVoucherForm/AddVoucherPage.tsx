@@ -36,12 +36,12 @@ export const AddVoucherPage = () => {
   const fetchProducts = async () => {
     try {
       const response = await axios.get(
-        // `${EnvValue.API_GATEWAY_URL}/api/product/seller/${sellerid}`
-        `http://localhost:3001/product/seller/${sellerid}`
+        `${EnvValue.API_GATEWAY_URL}/api/product/seller/${sellerid}`
+        // `http://localhost:3001/product/seller/${sellerid}`
       );
       setProducts(response.data);
     } catch (error) {
-      console.error("Error fetching vouchers:", error);
+      console.error("Error fetching products:", error);
     }
   };
   useEffect(() => {
@@ -74,6 +74,11 @@ export const AddVoucherPage = () => {
   };
 
   const checkFormValidation = (): string => {
+    if(formData.voucher_type === "shop_wide")
+      setFormData((prevData) => ({
+        ...prevData,
+        product_id: [],
+      }));
     // Check required string fields
     if (!formData.name.trim()) return "Tên không được để trống.";
     if (!formData.code.trim()) return "Mã không được để trống.";
@@ -121,8 +126,10 @@ export const AddVoucherPage = () => {
         formData
       );
       console.log("Voucher created:", response.data);
+      toast.success("Tạo voucher thành công");
     } catch (error) {
       console.error("Error creating voucher:", error);
+      toast.error("Không thể tạo voucher");
     }
   };
 

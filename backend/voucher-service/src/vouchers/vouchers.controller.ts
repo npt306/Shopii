@@ -63,46 +63,58 @@ export class VouchersController {
   // USER VOUCHERS
   @Get('/all/:userId')
   async getAllVouchers(@Param('userId', ParseIntPipe) userId: number) {
+    console.log('[GET] /all/:userId ->', userId);
     return this.vouchersService.getActiveVouchers(userId);
   }
 
   @Get('/user-vouchers/:userId')
   async getUserVouchers(@Param('userId', ParseIntPipe) userId: number) {
+    console.log('[GET] /user-vouchers/:userId ->', userId);
     return this.vouchersService.getUserVouchers(userId);
   }
+
   @Get('/user-sellervouchers/:userId')
   async getUserSellerVouchers(@Param('userId', ParseIntPipe) userId: number) {
+    console.log('[GET] /user-sellervouchers/:userId ->', userId);
     return this.vouchersService.getUserSellerVouchers(userId);
   }
+
   @Get('/history/:userId')
   async getVoucherHistory(@Param('userId', ParseIntPipe) userId: number) {
+    console.log('[GET] /history/:userId ->', userId);
     return this.vouchersService.getUserVoucherHistory(userId);
   }
 
   @Post('/use')
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   async useVoucher(@Body() createVoucherHistoryDto: CreateVoucherHistoryDto) {
+    console.log('[POST] /use ->', createVoucherHistoryDto);
     return this.vouchersService.userUseVoucher(createVoucherHistoryDto);
   }
 
   @Post('/claim')
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   async addVoucherToUser(@Body() createUserVoucherDto: CreateUserVoucherDto) {
+    console.log('[POST] /claim ->', createUserVoucherDto);
     return this.vouchersService.userClaimVoucher(createUserVoucherDto);
   }
 
   // SELLER VOUCHERS
   @Get('/seller-vouchers/all/:shopId')
   async findAllSellerVoucher(@Param('shopId') id: number): Promise<any[]> {
-    console.log(id);
+    console.log('[GET] /seller-vouchers/all/:shopId ->', id);
     return this.vouchersService.findAllSellerVoucher(id);
   }
+
   @Get('/seller-vouchers/active/:shopId')
   async findActiveSellerVoucher(@Param('shopId') id: number): Promise<any[]> {
+    console.log('[GET] /seller-vouchers/active/:shopId ->', id);
     return this.vouchersService.findAllActiveSellerVoucher(id);
   }
+
   @Get('/seller-vouchers/:id')
   async findOneSellerVoucher(@Param('id') id: number): Promise<any> {
+    console.log('[GET] /seller-vouchers/:id ->', id);
     return this.vouchersService.findOneSellerVoucher(id);
   }
 
@@ -110,8 +122,7 @@ export class VouchersController {
   async createSellerVoucher(
     @Body() voucherDto: SellerVoucherDto,
   ): Promise<any> {
-    console.log('voucherDto', voucherDto);
-    // return true;
+    console.log('[POST] /seller-vouchers ->', voucherDto);
     return this.vouchersService.createSellerVoucher(voucherDto);
   }
 
@@ -120,15 +131,13 @@ export class VouchersController {
     @Param('id') id: number,
     @Body() voucherDto: SellerVoucherDto,
   ): Promise<any> {
-    console.log('voucherDto', voucherDto);
-    console.log('id', id);
-    // return true;
+    console.log('[PUT] /seller-vouchers/:id ->', { id, voucherDto });
     return this.vouchersService.updateSellerVoucher(id, voucherDto);
   }
 
-  // Delete a seller voucher by ID
   @Delete('/seller-vouchers/:id')
   async removeSellerVoucher(@Param('id') id: number): Promise<void> {
+    console.log('[DELETE] /seller-vouchers/:id ->', id);
     return this.vouchersService.removeSellerVoucher(id);
   }
 }
