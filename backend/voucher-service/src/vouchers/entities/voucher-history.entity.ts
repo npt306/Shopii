@@ -14,6 +14,9 @@ export class VoucherHistory {
   @Column({ name: 'UseDate', type: 'timestamptz', nullable: true })
   UseDate: Date;
 
+  @Column()
+  isfromshop: boolean;
+
   @CreateDateColumn({ name: 'CreatedAt' }) 
   CreatedAt: Date;
 

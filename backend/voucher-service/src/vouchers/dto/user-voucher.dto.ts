@@ -1,8 +1,7 @@
-import { IsInt, IsISO8601, IsPositive, IsString, IsOptional } from 'class-validator';
-import { Voucher } from '../entities/voucher.entity';
-
+import { IsInt, IsISO8601, IsPositive, IsString, IsOptional, IsBoolean } from 'class-validator';
 export class CreateUserVoucherDto {
   @IsInt()
+  @IsOptional()
   VoucherId: number;
 
   @IsInt()
@@ -20,4 +19,8 @@ export class CreateUserVoucherDto {
   @IsString()
   @IsOptional()
   VoucherCode: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isfromshop: boolean;
 }

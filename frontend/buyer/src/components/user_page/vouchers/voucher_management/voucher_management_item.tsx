@@ -1,6 +1,6 @@
-import "../../../css/user/vouchers.css";
+import "../../../../css/user/vouchers.css";
 import { format, parseISO } from "date-fns";
-import { Voucher } from "./vouchers_interfaces";
+import { Voucher } from "../vouchers_interfaces";
 
 export const VoucherItem: React.FC<{ voucher: Voucher; state: string }> = ({
   voucher,

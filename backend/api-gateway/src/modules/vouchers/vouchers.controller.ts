@@ -8,6 +8,7 @@ import {
   Delete,
   ParseIntPipe,
   Query,
+  Put,
 } from '@nestjs/common';
 import { VouchersService } from './vouchers.service';
 
@@ -20,15 +21,19 @@ export class VouchersController {
     return this.vouchersService.createVoucher(createVoucherDto);
   }
 
-  @Get() 
+  @Get()
   async getAllVouchersPaginated(
-    @Query('page') page?: string, 
+    @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
     @Query('status') status?: string,
   ): Promise<any> {
-
-    return this.vouchersService.getAllVouchersPaginated(page, limit, search, status);
+    return this.vouchersService.getAllVouchersPaginated(
+      page,
+      limit,
+      search,
+      status,
+    );
   }
 
   @Get(':id')
@@ -50,23 +55,85 @@ export class VouchersController {
   }
 
   @Get('/all/:userId')
-  getAllVouchers(@Param('userId', ParseIntPipe) userId: number) {
+  async getAllVouchers(
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<any> {
+    console.log('[GET] /all/:userId ->', userId);
     return this.vouchersService.getActiveVouchers(userId);
   }
 
   @Get('/user-vouchers/:userId')
-  getUserVouchers(@Param('userId', ParseIntPipe) userId: number) {
+  async getUserVouchers(
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<any> {
+    console.log('[GET] /user-vouchers/:userId ->', userId);
     return this.vouchersService.getUserVouchers(userId);
   }
 
+  @Get('/user-sellervouchers/:userId')
+  async getUserSellerVouchers(
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<any> {
+    console.log('[GET] /user-sellervouchers/:userId ->', userId);
+    return this.vouchersService.getUserSellerVouchers(userId);
+  }
+
   @Get('/history/:userId')
-  getVoucherHistory(@Param('userId', ParseIntPipe) userId: number) {
+  async getVoucherHistory(
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<any> {
+    console.log('[GET] /history/:userId ->', userId);
     return this.vouchersService.getUserVoucherHistory(userId);
   }
 
+  @Post('/use')
+  async useVoucher(@Body() createVoucherHistoryDto: any): Promise<any> {
+    console.log('[POST] /use ->', createVoucherHistoryDto);
+    return this.vouchersService.userUseVoucher(createVoucherHistoryDto);
+  }
 
   @Post('/claim')
   async addVoucherToUser(@Body() createUserVoucherDto: any): Promise<any> {
+    console.log('[POST] /claim ->', createUserVoucherDto);
     return this.vouchersService.userClaimVoucher(createUserVoucherDto);
+  }
+
+  @Get('/seller-vouchers/all/:shopId')
+  async findAllSellerVoucher(@Param('shopId') shopId: number): Promise<any> {
+    console.log('[GET] /seller-vouchers/all/:shopId ->', shopId);
+    return this.vouchersService.findAllSellerVouchers(shopId);
+  }
+
+  @Get('/seller-vouchers/active/:shopId')
+  async findActiveSellerVoucher(@Param('shopId') id: number): Promise<any> {
+    console.log('[GET] /seller-vouchers/active/:shopId ->', id);
+    return this.vouchersService.findActiveSellerVoucher(id);
+  }
+
+  @Get('/seller-vouchers/:id')
+  async findOneSellerVoucher(@Param('id') id: number): Promise<any> {
+    console.log('[GET] /seller-vouchers/:id ->', id);
+    return this.vouchersService.findOneSellerVoucher(id);
+  }
+
+  @Post('/seller-vouchers')
+  async createSellerVoucher(@Body() voucherDto: any): Promise<any> {
+    console.log('[POST] /seller-vouchers ->', voucherDto);
+    return this.vouchersService.createSellerVoucher(voucherDto);
+  }
+
+  @Put('/seller-vouchers/:id')
+  async updateSellerVoucher(
+    @Param('id') id: number,
+    @Body() voucherDto: any,
+  ): Promise<any> {
+    console.log('[PUT] /seller-vouchers/:id ->', { id, voucherDto });
+    return this.vouchersService.updateSellerVoucher(id, voucherDto);
+  }
+
+  @Delete('/seller-vouchers/:id')
+  async removeSellerVoucher(@Param('id') id: number): Promise<any> {
+    console.log('[DELETE] /seller-vouchers/:id ->', id);
+    return this.vouchersService.deleteSellerVoucher(id);
   }
 }

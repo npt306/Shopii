@@ -1,75 +1,77 @@
 // Component
 // = My voucher
-import "../../../css/user/vouchers.css";
+import "../../../../css/user/vouchers.css";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import {VoucherWalletProps, Voucher, VoucherHistory} from "./vouchers_interfaces"
+import {
+  VoucherWalletProps,
+  Voucher,
+  VoucherHistory,
+  SellerVoucher,
+} from "../vouchers_interfaces";
 import { VoucherItem } from "./voucher_management_item";
-import { EnvValue } from "../../../env-value/envValue";
-
+import { EnvValue } from "../../../../env-value/envValue";
+import { SellerVoucherItem } from "./seller_voucher_management_item";
 
 export const VoucherManagement: React.FC<VoucherWalletProps> = ({ userId }) => {
+  // TAB
   const [selectedTab, setSelectedTab] = useState("Đã Nhận");
-  const [vouchers, setVouchers] = useState<Voucher[]>([]);
-  const [showVouchers, setShowVouchers] = useState<Voucher[]>([]);
-  const [voucherHistory, setVoucherHistory] = useState<VoucherHistory[]>([]);
   const tabs = ["Đã Nhận", "Đã Sử Dụng", "Hết Hiệu Lực"];
-
   const handleTabClick = (tabName: string) => {
     if (selectedTab !== tabName) {
       setSelectedTab(tabName);
-      setShowVouchers([]);
     }
   };
 
-  useEffect(() => {
-    const changeShowVouchers = () => {
-      if (selectedTab === "Đã Nhận") {
-        setShowVouchers(
-          vouchers.filter((voucher) => new Date(voucher.ends_at) > new Date())
-        );
-      }
+  // VOUCHERS
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [showVouchers, setShowVouchers] = useState<Voucher[]>([]);
 
-      if (selectedTab === "Đã Sử Dụng") {
-        const usedVouchers = voucherHistory.map((history) => ({
-          ...history.voucher,
-          UseDate: history.UseDate,
-        }));
-        setShowVouchers(usedVouchers);
-      }
+  const [sellerVouchers, setSellerVouchers] = useState<SellerVoucher[]>([]);
+  const [showSellerVouchers, setShowSellerVouchers] = useState<SellerVoucher[]>(
+    []
+  );
 
-      if (selectedTab === "Hết Hiệu Lực") {
-        setShowVouchers(
-          vouchers.filter((voucher) => new Date(voucher.ends_at) < new Date())
-        );
-      }
-    };
-    changeShowVouchers();
-  }, [selectedTab, vouchers, voucherHistory]);
+  const [voucherHistory, setVoucherHistory] = useState<VoucherHistory[]>([]);
 
+  // FETCH VOUCHERS
   useEffect(() => {
     const fetchVouchers = async () => {
       try {
-        const [voucherRes, historyRes] = await Promise.all([
-          axios.get(`${EnvValue.API_GATEWAY_URL}/api/vouchers/user-vouchers/${userId}`
-            // , {params: { userId }}
+        const [voucherRes, historyRes, sellerVouchersRes] = await Promise.all([
+          axios.get(
+            `${EnvValue.API_GATEWAY_URL}/api/vouchers/user-vouchers/${userId}`
           ), //Claimed & Expired vouchers
-          axios.get(`${EnvValue.API_GATEWAY_URL}/api/vouchers/history/${userId}`
+          axios.get(
+            `${EnvValue.API_GATEWAY_URL}/api/vouchers/history/${userId}`
           ),
+          axios.get(
+            `${EnvValue.API_GATEWAY_URL}/api/vouchers/user-sellervouchers/${userId}`
+          ), //Claimed & Expired seller vouchers
         ]);
         const updatedHistory = historyRes.data.map(
-          (history: VoucherHistory) => ({
-            ...history,
-            voucher: {
+          (history: VoucherHistory) => {
+            const isFromShop = history.isfromshop;
+            const voucherData = {
               ...history.voucher,
-              UseDate: history.UseDate, // Assign UseDate from history to voucher
-            },
-          })
+              UseDate: history.UseDate,
+            };
+
+            return {
+              ...history,
+              voucher: isFromShop
+                ? (voucherData as SellerVoucher)
+                : (voucherData as Voucher),
+            };
+          }
         );
 
         console.log(voucherRes.data);
+        console.log(sellerVouchersRes.data);
         console.log(historyRes.data);
+
         setVouchers(voucherRes.data);
+        setSellerVouchers(sellerVouchersRes.data);
         setVoucherHistory(updatedHistory);
       } catch (error) {
         console.error("Error fetching vouchers:", error);
@@ -81,9 +83,65 @@ export const VoucherManagement: React.FC<VoucherWalletProps> = ({ userId }) => {
       setShowVouchers(
         vouchers.filter((voucher) => new Date(voucher.ends_at) > new Date())
       );
+      setShowSellerVouchers(
+        sellerVouchers.filter(
+          (voucher) => new Date(voucher.ends_at) > new Date()
+        )
+      );
     }
-
   }, [userId]);
+
+  // CHANGE WITH SELECTED TAB
+  useEffect(() => {
+    const changeShowVouchers = () => {
+      if (selectedTab === "Đã Nhận") {
+        setShowVouchers(
+          vouchers.filter((voucher) => new Date(voucher.ends_at) > new Date())
+        );
+        setShowSellerVouchers(
+          sellerVouchers.filter(
+            (voucher) => new Date(voucher.ends_at) > new Date()
+          )
+        );
+        console.log(sellerVouchers, "CLAIMED");
+
+      }
+
+      if (selectedTab === "Đã Sử Dụng") {
+        const usedShopVouchers = voucherHistory
+          .filter((history) => history.isfromshop)
+          .map((history) => ({
+            ...history.voucher,
+            UseDate: history.UseDate,
+          }));
+
+        const usedShopeeVouchers = voucherHistory
+          .filter((history) => !history.isfromshop)
+          .map((history) => ({
+            ...history.voucher,
+            UseDate: history.UseDate,
+          }));
+
+        setShowVouchers(usedShopeeVouchers as Voucher[]); // Explicit cast to Voucher[]
+        setShowSellerVouchers(usedShopVouchers as SellerVoucher[]); // Explicit cast to SellerVoucher[]
+        console.log(sellerVouchers, "HISTORY");
+      }
+
+      if (selectedTab === "Hết Hiệu Lực") {
+        setShowVouchers(
+          vouchers.filter((voucher) => new Date(voucher.ends_at) < new Date())
+        );
+        setShowSellerVouchers(
+          sellerVouchers.filter(
+            (voucher) => new Date(voucher.ends_at) < new Date()
+          )
+        );
+        console.log(sellerVouchers, "EXPIRED");
+
+      }
+    };
+    changeShowVouchers();
+  }, [selectedTab, vouchers, voucherHistory, sellerVouchers]);
 
   return (
     <div style={{ display: "contents" }}>
@@ -135,9 +193,16 @@ export const VoucherManagement: React.FC<VoucherWalletProps> = ({ userId }) => {
                 state={selectedTab}
               />
             ))}
+            {showSellerVouchers.map((voucher) => (
+              <SellerVoucherItem
+                key={voucher.id}
+                voucher={voucher}
+                state={selectedTab}
+              />
+            ))}
           </div>
           {/* NO VOUCHER */}
-          {showVouchers.length === 0 && (
+          {showVouchers.length === 0 && showSellerVouchers.length === 0 && (
             <div className="flex flex-col items-center py-[5.625rem]">
               <div className="flex flex-col items-center mb-4">
                 <img
@@ -153,8 +218,7 @@ export const VoucherManagement: React.FC<VoucherWalletProps> = ({ userId }) => {
               </div>
             </div>
           )}
-          <div>
-          </div>
+          <div></div>
         </div>
       </div>
     </div>
