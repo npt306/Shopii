@@ -4,27 +4,48 @@ import { Footer } from "../components/layout/footer";
 import { FilterSidebar } from "../components/filter_sidebar";
 import { FilterTop } from "../components/filter_top";
 
-interface SearchProductLayoutProps {
-  children: ReactNode;
+interface PriceRange {
+  min: number | null;
+  max: number | null;
+}
+interface FilterSidebarFilters {
+  categories: string[];
+  priceRange: PriceRange;
 }
 
-export const SearchProductLayout = ({ children }: SearchProductLayoutProps) => {
+interface SearchProductLayoutProps {
+  children: ReactNode;
+  onFilterChange: (filters: FilterSidebarFilters) => void;
+  
+}
+export const SearchProductLayout = ({ children, onFilterChange  }: SearchProductLayoutProps) => {
+
+
+  const availableCategories: string[] = [
+      'Electronics',
+      'Audio',
+      'Category 3'
+  ];
+
   return (
-    <div className="flex flex-col h-screen w-full">
-      <Header />
+      <div className="flex flex-col h-screen w-full">
+          <Header />
 
-      <div className="flex flex-1 w-full max-w-[1500px] mx-auto my-5">
-        <div className="w-1/5 bg-gray-100 pl-30">
-          <FilterSidebar />
-        </div>
+          <div className="flex flex-1 w-full mx-auto my-5">
+              <div className="w-1/5 bg-gray-100 pl-30">
+                  <FilterSidebar 
+                      onFilterChange={onFilterChange}
+                      availableCategories={availableCategories}
+                  />
+              </div>
 
-        <div className="w-4/5 bg-gray-100 overflow-auto px-20">
-          <FilterTop></FilterTop>
-          {children}
-        </div>
+              <div className="w-4/5 bg-gray-100 overflow-auto px-20">
+                  <FilterTop></FilterTop>
+                  {children}
+              </div>
+          </div>
+
+          <Footer />
       </div>
-
-      <Footer />
-    </div>
   );
 };

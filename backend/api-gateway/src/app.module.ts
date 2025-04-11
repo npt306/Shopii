@@ -14,6 +14,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { PermissionsGuard } from './guard/permission.guard';
 import { AccountsModule } from './modules/accounts/accounts.module';
 import { AddressModule } from './modules/address/address.module';
+import {SearchModule} from './modules/search/search.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -36,7 +37,9 @@ import { AddressModule } from './modules/address/address.module';
     AccountsModule,
     PaymentModule,
     CategoryModule,
-    AddressModule
+    AddressModule,
+    SearchModule
+
   ],
   controllers: [AppController],
   providers: [

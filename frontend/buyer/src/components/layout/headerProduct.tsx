@@ -1,5 +1,5 @@
 // import classNames from "classnames";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { FaShoppingCart, FaSearch } from "react-icons/fa";
 
@@ -14,10 +14,18 @@ import { useCart } from "../../context/cartContext";
 
 import { BasicItem } from "../../types/basicCart";
 
+import { mockProducts } from "./mockdata/product_data";
+
 export const HeaderProduct = () => {
   const [isVisible, setIsVisible] = useState(false);
-  let navigate = useNavigate();
   const { cartData, numberItem, loading, res, updateCart } = useCart();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [suggestions, setSuggestions] = useState<Array<{ id: number; Name: string }>>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionRef = useRef<HTMLDivElement>(null);
+  let navigate = useNavigate();
+
+
 
   useEffect(() => {
     updateCart(); // Khi component mount, lấy dữ liệu giỏ hàng
@@ -34,6 +42,65 @@ export const HeaderProduct = () => {
   //     "items-start": numberItem < 5, // Nếu number < 5 thì thêm class "items-start"
   //   }
   // );
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+        if (suggestionRef.current && !suggestionRef.current.contains(event.target as Node)) {
+            setShowSuggestions(false);
+        }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSearch = async (value: string , selectedCategory?: string) => {
+    setSearchTerm(value);
+    if (value.trim()) {
+        try {
+            console.log("Fetching search results from backend...");
+            let url = `${import.meta.env.VITE_SEARCH_SERVICE_URL}/search?q=${encodeURIComponent(value)}`;
+            if (selectedCategory) {
+                url += `&category=${encodeURIComponent(selectedCategory)}`;
+            }
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            // Transform the Elasticsearch response into an array similar to mockProducts
+            const transformedResults = data.$.map((item: any) => ({
+                id: item._source.id,
+                Name: item._source.Name,
+            }));
+            setSuggestions(transformedResults.slice(0, 10));
+        } catch (error) {
+            console.error("Error fetching search results:", error);
+            setSuggestions([]);
+        }
+    } else {
+        console.log("Attempting to fetch search results from Elasticsearch...");
+
+        setSuggestions(mockProducts.slice(0, 10)); // Show top 10 products when search term is empty
+    }
+    setShowSuggestions(true);
+  };
+
+  const navigateToSearchPage = (searchTerm: string) => {
+    navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setSearchTerm(suggestion);
+    setShowSuggestions(false);
+    navigateToSearchPage(suggestion);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+        navigateToSearchPage(searchTerm);
+    }
+};
 
   return (
     <>
@@ -53,13 +120,37 @@ export const HeaderProduct = () => {
 
         <div className="relative w-[1024px] text-black">
           <input
+            // type="text"
+            // placeholder="Tìm kiếm sản phẩm"
             type="text"
-            placeholder="Tìm kiếm sản phẩm"
+            value={searchTerm}
+            onChange={(e) => handleSearch(e.target.value)}
+            onFocus={() => handleSearch(searchTerm)}
+            onKeyDown={handleKeyDown}
+            placeholder="Tìm kiếm"
             className="w-[95%] h-[2.8rem] px-4 py-2 bg-white border border-white rounded-md focus:border-black focus:outline-hidden"
           />
-          <button className="absolute w-[4rem] h-[2.3rem] right-14 top-1/2 -translate-y-1/2 bg-[#ee4d2d] px-3 py-2 cursor-pointer flex justify-center items-center rounded-md">
+          <button 
+            className="absolute w-[4rem] h-[2.3rem] right-14 top-1/2 -translate-y-1/2 bg-[#ee4d2d] px-3 py-2 cursor-pointer flex justify-center items-center rounded-md"
+            onClick={() => navigateToSearchPage(searchTerm)}
+          >
             <FaSearch className="text-white text-[1.1rem]" />
           </button>
+
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute w-full bg-white border border-gray-300 mt-1 rounded-md shadow-lg z-50">
+                {suggestions.map((product) => (
+                    <div
+                        key={product.id}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => handleSuggestionClick(product.Name)}
+                    >
+                        {product.Name}
+                    </div>
+                ))}
+            </div>
+          )}
+
         </div>
 
         <div
