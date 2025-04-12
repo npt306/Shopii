@@ -27,9 +27,9 @@ import {
     async search(
       @Query('q') query: string,
       @Query('Categories') Categories?: string,
-      @Query('page', ParseIntPipe) page: number = 1,
-      @Query('minPrice', ParseIntPipe) minPrice?: number,
-      @Query('maxPrice', ParseIntPipe) maxPrice?: number,
+      @Query('page') page?: number,
+      @Query('minPrice') minPrice?: number,
+      @Query('maxPrice') maxPrice?: number,
     ) {
       return await this.searchService.search(query, Categories, page, minPrice, maxPrice);
     }

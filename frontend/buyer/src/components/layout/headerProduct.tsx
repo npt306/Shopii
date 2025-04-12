@@ -15,7 +15,7 @@ import { useCart } from "../../context/cartContext";
 import { BasicItem } from "../../types/basicCart";
 
 import { mockProducts } from "./mockdata/product_data";
-
+import { EnvValue } from "../../env-value/envValue";
 export const HeaderProduct = () => {
   const [isVisible, setIsVisible] = useState(false);
   const { cartData, numberItem, loading, res, updateCart } = useCart();
@@ -59,7 +59,7 @@ export const HeaderProduct = () => {
     if (value.trim()) {
         try {
             console.log("Fetching search results from backend...");
-            let url = `${import.meta.env.VITE_SEARCH_SERVICE_URL}/search?q=${encodeURIComponent(value)}`;
+            let url = `${EnvValue.API_GATEWAY_URL}/api/search?q=${encodeURIComponent(value)}`;
             if (selectedCategory) {
                 url += `&category=${encodeURIComponent(selectedCategory)}`;
             }
@@ -87,7 +87,7 @@ export const HeaderProduct = () => {
   };
 
   const navigateToSearchPage = (searchTerm: string) => {
-    navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
+    navigate(`api/search?q=${encodeURIComponent(searchTerm)}`);
   };
 
   const handleSuggestionClick = (suggestion: string) => {
