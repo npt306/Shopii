@@ -87,7 +87,7 @@ export const HeaderProduct = () => {
   };
 
   const navigateToSearchPage = (searchTerm: string) => {
-    navigate(`api/search?q=${encodeURIComponent(searchTerm)}`);
+    navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
   };
 
   const handleSuggestionClick = (suggestion: string) => {

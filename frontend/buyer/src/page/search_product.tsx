@@ -40,7 +40,7 @@ export const SearchProductPage = () => {
     const fetchProducts = async (filterParams: FilterParams) => {
         try {
             setProducts([]);
-            const baseUrl = `${import.meta.env.VITE_SEARCH_SERVICE_URL}/search`;
+            const baseUrl = `${import.meta.env.VITE_API_GATEWAY_URL}/api/search`;
             const params = new URLSearchParams({
                 q: searchKeyword,
                 Categories: filterParams.categories.join(','),

@@ -58,4 +58,5 @@ jobs:
             -e USERS_SERVICE_URL=http://34.58.241.34:3005 \
             -e PAYMENT_SERVICE_URL=http://34.58.241.34:3007 \
             -e ACCOUNTS_SERVICE_URL=http://34.58.241.34:3008 \
+            -e SEARCH_SERVICE_URL=http://34.58.241.34:3009 \
             ${{ secrets.DOCKERHUB_USERNAME }}/backend-api-gateway:latest
