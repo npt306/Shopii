@@ -6,8 +6,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 @Module({
   imports: [
     HttpModule.register({
-      //baseURL: process.env.SEARCH_SERVICE_URL, 
-      baseURL: 'http://localhost:3009', // Default value, can be overridden by ConfigService
+      baseURL: process.env.SEARCH_SERVICE_URL, 
+      //baseURL: 'http://localhost:3009', // Default value, can be overridden by ConfigService
     }),
   ],
   controllers: [SearchController],
