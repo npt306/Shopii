@@ -292,17 +292,8 @@ export const CartPage = () => {
     quantity: number
   ) => {
     try {
-      console.log(
-        "user id:",
-        id,
-        "update product id:",
-        productTypeId,
-        "quantity: ",
-        quantity
-      );
       const res = await axios.post(
-        // `${EnvValue.API_GATEWAY_URL}/order/carts/update-cart`,
-        `http://localhost:3004/carts/update-cart`,
+        `${EnvValue.API_GATEWAY_URL}/order/carts/update-cart`,
         {
           id,
           productTypeId,
