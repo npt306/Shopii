@@ -343,16 +343,27 @@ export const UpdateAdressInOrderModal: React.FC<
 
                   {updateAddress?.isDefault ? (
                     <>
-                      <div className="flex flex-row gap-2">
+                      <div className="relative group flex flex-row gap-2">
                         <input
                           type="checkbox"
-                          checked={formData.isDefault}
+                          checked={true}
                           onChange={() => {}}
-                          className="w-4 h-4 appearance-none border border-black checked:bg-orange-500 checked:border-orange-500 relative
-             before:content-['✔'] before:absolute before:inset-0 before:flex before:items-center before:justify-center
-             before:text-white before:opacity-0 checked:before:opacity-100"
+                          className="opacity-35  w-4 h-4 appearance-none border border-black checked:bg-orange-500 checked:border-orange-500 relative
+      before:content-['✔'] before:absolute before:inset-0 before:flex before:items-center before:justify-center
+      before:text-white before:opacity-0 checked:before:opacity-100"
                         />
-                        <div>Đặt làm địa chỉ mặc định</div>
+                        <div className="opacity-35">
+                          Đặt làm địa chỉ mặc định
+                        </div>
+
+                        {/* Tooltip khi hover */}
+                        <div
+                          className="absolute top-[1.5rem] left-0 p-2 border border-gray-300 text-black bg-white shadow-lg w-[12rem]
+      text-center flex items-center justify-center z-30 
+      opacity-0 invisible group-hover:opacity-100 group-hover:visible transition"
+                        >
+                          Bạn không thể xóa nhãn địa chỉ mặc định.
+                        </div>
                       </div>
                     </>
                   ) : (

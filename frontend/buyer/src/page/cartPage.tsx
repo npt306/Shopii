@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FaCommentDots, FaChevronDown, FaTicketAlt } from "react-icons/fa";
+import { FaCommentDots, FaTicketAlt } from "react-icons/fa";
 
 import { HeaderCart } from "../components/layout/headerCart";
 import { Footer } from "../components/layout/footer";
@@ -17,21 +17,6 @@ import { useCart } from "../context/cartContext";
 import { formatPrice } from "../helpers/utility/formatPrice";
 
 import { EnvValue } from "../env-value/envValue";
-
-const products = [
-  {
-    type: "Ghế văn phòng 1",
-    img: "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lp09rsokn9e6e7@resize_w450_nl.webp",
-  },
-  {
-    type: "Ghế văn phòng 2",
-    img: "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lowegop2zgb2be@resize_w450_nl.webp",
-  },
-  {
-    type: "Ghế văn phòng 3",
-    img: "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lowegop2zgb2be@resize_w450_nl.webp",
-  },
-];
 
 export const CartPage = () => {
   let navigate = useNavigate();
@@ -74,8 +59,6 @@ export const CartPage = () => {
   const [overQuantityProductId, setOverQuantityProductId] = useState<
     number | null
   >(null);
-  const [selectedProduct, setSelectedProduct] = useState(products[0]);
-
   const [quantities, setQuantities] = useState<{
     [productTypeId: number]: number;
   }>({});
@@ -121,11 +104,6 @@ export const CartPage = () => {
         [productId]: newQuantity,
       };
     });
-  };
-
-  const [isDnTypeProductOpen, setIsDnTypeProductOpen] = useState(false);
-  const handleConfirmSelection = () => {
-    setIsDnTypeProductOpen(false); // Đóng dropdown
   };
 
   const [totalPrice, setTotalPrice] = useState(0);
@@ -522,85 +500,24 @@ export const CartPage = () => {
                               >
                                 {item.productName}
                               </p>
-                              <div className="relative">
-                                <div
-                                  className="flex items-center gap-1 cursor-pointer"
-                                  onClick={() =>
-                                    setIsDnTypeProductOpen(!isDnTypeProductOpen)
-                                  }
-                                >
-                                  <div className="flex flex-col">
-                                    <div className="flex flex-row items-center gap-x-3">
-                                      <p>Phân loại hàng:</p>
-                                      <FaChevronDown
-                                        size={12}
-                                        className={`transition-transform duration-300 ${
-                                          isDnTypeProductOpen
-                                            ? "rotate-180"
-                                            : ""
-                                        }`}
-                                      />
-                                    </div>
-                                    <div>
-                                      {item.type1 ? `${item.type1}` : null}
-                                      {item.type2 ? `, ${item.type2}` : null}
+
+                              {item.type1 ? (
+                                <div className="relative">
+                                  <div className="flex items-center gap-1 cursor-pointer">
+                                    <div className="flex flex-col">
+                                      <div className="flex flex-row items-center gap-x-3">
+                                        <p>Phân loại hàng:</p>
+                                      </div>
+                                      <div>
+                                        {item.type1 ? `${item.type1}` : null}
+                                        {item.type2 ? `, ${item.type2}` : null}
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
-
-                                {isDnTypeProductOpen && (
-                                  <div className="absolute  gap-3 border w-100 bg-white p-2 shadow-md z-10">
-                                    <div className="flex flex-wrap justify-start items-center gap-3">
-                                      <div>Type 1:</div>
-                                      {products.map((product) => (
-                                        <div
-                                          key={product.type}
-                                          className={`p-2 border border-gray-300 rounded cursor-pointer hover:bg-gray-100 transition ${
-                                            selectedProduct.type ===
-                                            product.type
-                                              ? "bg-gray-100"
-                                              : ""
-                                          }`}
-                                          onClick={() =>
-                                            setSelectedProduct(product)
-                                          }
-                                        >
-                                          {product.type}
-                                        </div>
-                                      ))}
-                                    </div>
-                                    <div className="my-3 flex flex-wrap justify-start items-center gap-3">
-                                      <div>Type 2:</div>
-                                      {products.map((product) => (
-                                        <div
-                                          key={product.type}
-                                          className={`p-2 border border-gray-300 rounded cursor-pointer hover:bg-gray-100 transition ${
-                                            selectedProduct.type ===
-                                            product.type
-                                              ? "bg-gray-100"
-                                              : ""
-                                          }`}
-                                          onClick={() =>
-                                            setSelectedProduct(product)
-                                          }
-                                        >
-                                          {product.type}
-                                        </div>
-                                      ))}
-                                    </div>
-                                    <div className="flex justify-end">
-                                      <button
-                                        className="p-2 bg-blue-500 hover:bg-blue-600 w-[5rem]"
-                                        onClick={handleConfirmSelection}
-                                      >
-                                        <div className="text-white font-bold">
-                                          Confirm
-                                        </div>
-                                      </button>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
+                              ) : (
+                                <></>
+                              )}
                             </div>
                             <div className="flex items-center justify-center">
                               <div className="flex flex-row justify-center items-center gap-2">
@@ -709,15 +626,6 @@ export const CartPage = () => {
                                 >
                                   Xoá
                                 </p>
-                                <div className="text-orange-500 flex flex-row justify-center items-center w-30 text-center">
-                                  Tìm sản phẩm tương tự
-                                  <FaChevronDown
-                                    size={12}
-                                    className={`transition-transform duration-300 ${
-                                      isDnTypeProductOpen ? "rotate-180" : ""
-                                    }`}
-                                  />
-                                </div>
                               </div>
                             </div>
                           </div>
@@ -776,7 +684,7 @@ export const CartPage = () => {
                           <div className="w-1/3">
                             <div className="flex justify-center items-center">
                               <div className="text-[0.8rem]">Tiết kiệm: </div>
-                              <div className="mketV8 ml-3">₫37k</div>
+                              <div className="mketV8 ml-3">₫0k</div>
                             </div>
                           </div>
                         </div>
