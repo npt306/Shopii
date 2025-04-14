@@ -1,5 +1,5 @@
 import { FaFilter, FaStar, FaRegStar } from 'react-icons/fa';
-
+import { useState } from 'react';
 const ratings = [
     { stars: 5, label: "" },
     { stars: 4, label: "trở lên" },
@@ -7,8 +7,60 @@ const ratings = [
     { stars: 2, label: "trở lên" },
     { stars: 1, label: "trở lên" }
 ];
+interface PriceRange {
+    min: number | null;
+    max: number | null;
+}
+interface FilterSidebarFilters {
+    categories: string[];
+    priceRange: PriceRange;
+}
+interface FilterSidebarProps {
+    onFilterChange: (filters: FilterSidebarFilters) => void;
+    availableCategories: string[];
+  }
 
-export const FilterSidebar = () => {
+
+
+export const FilterSidebar = ({ onFilterChange, availableCategories }: FilterSidebarProps) => {
+
+    
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+    const [minPrice, setMinPrice] = useState('');
+    const [maxPrice, setMaxPrice] = useState('');
+
+    const getPriceRange = (): PriceRange => ({
+        min: minPrice.trim() ? parseFloat(minPrice) : null,
+        max: maxPrice.trim() ? parseFloat(maxPrice) : null
+    });
+
+    const updateFilters = (newCategories: string[] = selectedCategories) => {
+        onFilterChange({ categories: newCategories, priceRange: getPriceRange() });
+    };
+
+    const handleCategoryChange = (category: string) => {
+        const newCategories = selectedCategories.includes(category)
+        ? selectedCategories.filter(c => c !== category)
+        : [...selectedCategories, category];
+        console.log(category);
+        
+        setSelectedCategories(newCategories);
+        updateFilters(newCategories);
+    };
+    const handlePriceApply = () => {
+        // onFilterChange is called with the current selected categories plus the new price range
+        updateFilters();
+    };
+  
+    const handleClearAll = () => {
+        setSelectedCategories([]);
+        setMinPrice('');
+        setMaxPrice('');
+        onFilterChange({ categories: [], priceRange: { min: null, max: null } });
+    };
+
+
+
     return (
         <>
             <div className="flex flex-col items-start justify-center">
@@ -20,10 +72,15 @@ export const FilterSidebar = () => {
                 <div className="mt-3">
                     <p>Theo Danh Mục</p>
                     <div className="flex flex-col mt-1">
-                        {["Nội thất ngoài trời", "Nội thất ngoài trời", "Nội thất ngoài trời"].map((item, index) => (
+                        {availableCategories.map((category, index) => (
                             <label key={index} className="flex items-center space-x-2 cursor-pointer">
-                                <input type="checkbox" className="w-4 h-4 accent-white text-orange-500" />
-                                <span>{item}</span>
+                            <input
+                                type="checkbox"
+                                className="w-4 h-4 accent-white text-orange-500"
+                                checked={selectedCategories.includes(category)}
+                                onChange={() => handleCategoryChange(category)}
+                            />
+                            <span>{category}</span>
                             </label>
                         ))}
                     </div>
@@ -75,16 +132,23 @@ export const FilterSidebar = () => {
                         <input
                             type="text"
                             placeholder="TỪ"
+                            value={minPrice}
+                            onChange={(e) => setMinPrice(e.target.value)}
                             className="w-1/2 h-9 px-4 py-2 bg-white border border-gray-300 focus:outline"
                         />
                         <p className='mx-3 text-3xl'>-</p>
                         <input
                             type="text"
                             placeholder="ĐẾN"
+                            value={maxPrice}
+                            onChange={(e) => setMaxPrice(e.target.value)}
                             className="w-1/2 h-9 px-4 py-2 bg-white border border-gray-300 focus:outline"
                         />
                     </div>
-                    <button className="mt-2 flex justify-center items-center bg-orange-500 w-full mx-auto my-5 py-2 border border-gray-300 text-white hover:bg-orange-300 transition duration-300 cursor-pointer">
+                    <button 
+                        className="mt-2 flex justify-center items-center bg-orange-500 w-full mx-auto my-5 py-2 border border-gray-300 text-white hover:bg-orange-300 transition duration-300 cursor-pointer"
+                        onClick={handlePriceApply}
+                    >
                         ÁP DỤNG
                     </button>
                     <div className="w-[218px] border-b-1 border-gray-300 mt-3"></div>
@@ -161,7 +225,10 @@ export const FilterSidebar = () => {
                     <div className="w-[218px] border-b-1 border-gray-300 mt-3"></div>
                 </div>
 
-                <button className="mt-3 flex justify-center items-center bg-orange-500 w-full mx-auto my-5 py-2 border border-gray-300 text-white hover:bg-orange-300 transition duration-300 cursor-pointer">
+                <button 
+                    className="mt-3 flex justify-center items-center bg-orange-500 w-full mx-auto my-5 py-2 border border-gray-300 text-white hover:bg-orange-300 transition duration-300 cursor-pointer"
+                    onClick={handleClearAll}
+                >
                     XÓA TẤT CẢ
                 </button>
             </div>

@@ -13,15 +13,18 @@ import {
   MoreThanOrEqual,
   LessThanOrEqual,
   FindManyOptions,
-  ILike
+  ILike,
 } from 'typeorm';
 import { QueryVoucherDto, VoucherStatusQuery } from './dto/query-voucher.dto';
 import { CreateVoucherDto } from './dto/create-voucher.dto';
 import { UpdateVoucherDto } from './dto/update-voucher.dto';
 import { CreateUserVoucherDto } from './dto/user-voucher.dto';
+import { SellerVoucherDto } from './dto/seller-voucher.dto';
+import { CreateVoucherHistoryDto } from './dto/voucher-history.dto';
 import { Voucher } from './entities/voucher.entity';
 import { UserVoucher } from './entities/user-voucher.entity';
 import { VoucherHistory } from './entities/voucher-history.entity';
+import { SellerVoucher } from './entities/seller-voucher.entity';
 
 @Injectable()
 export class VouchersService {
@@ -34,6 +37,9 @@ export class VouchersService {
 
     @InjectRepository(UserVoucher)
     private userVoucherRepository: Repository<UserVoucher>,
+
+    @InjectRepository(SellerVoucher)
+    private sellerVoucherRepository: Repository<SellerVoucher>,
   ) {}
 
   async create(createVoucherDto: CreateVoucherDto): Promise<Voucher> {
@@ -49,7 +55,9 @@ export class VouchersService {
     return this.vouchersRepository.save(voucher);
   }
 
-  async findAll(queryDto: QueryVoucherDto): Promise<{ data: Voucher[], total: number }> {
+  async findAll(
+    queryDto: QueryVoucherDto,
+  ): Promise<{ data: Voucher[]; total: number }> {
     const { page = 1, limit = 10, search, status } = queryDto;
     const skip = (page - 1) * limit;
     const currentDate = new Date();
@@ -67,7 +75,7 @@ export class VouchersService {
     if (search) {
       whereConditions.push(
         { name: ILike(`%${search}%`) },
-        { code: ILike(`%${search}%`) }
+        { code: ILike(`%${search}%`) },
       );
       queryOptions.where = whereConditions;
     }
@@ -95,25 +103,28 @@ export class VouchersService {
       }
     }
 
-     // --- Combine Search and Status ---
-     if (whereConditions.length > 0 && Object.keys(statusWhereClause).length > 0) {
-        // If both search and status filters are present, apply status filters to each search condition
-        queryOptions.where = whereConditions.map(condition => ({
-            ...condition,
-            ...statusWhereClause,
-        }));
-     } else if (Object.keys(statusWhereClause).length > 0) {
-        // If only status filter is present
-        queryOptions.where = statusWhereClause;
-     }
-     // If only search is present, queryOptions.where is already set
-     // If neither is present, queryOptions.where remains empty {}
+    // --- Combine Search and Status ---
+    if (
+      whereConditions.length > 0 &&
+      Object.keys(statusWhereClause).length > 0
+    ) {
+      // If both search and status filters are present, apply status filters to each search condition
+      queryOptions.where = whereConditions.map((condition) => ({
+        ...condition,
+        ...statusWhereClause,
+      }));
+    } else if (Object.keys(statusWhereClause).length > 0) {
+      // If only status filter is present
+      queryOptions.where = statusWhereClause;
+    }
+    // If only search is present, queryOptions.where is already set
+    // If neither is present, queryOptions.where remains empty {}
 
-    const [data, total] = await this.vouchersRepository.findAndCount(queryOptions);
+    const [data, total] =
+      await this.vouchersRepository.findAndCount(queryOptions);
 
     return { data, total };
   }
-
 
   async findOne(id: number): Promise<Voucher> {
     const voucher = await this.vouchersRepository.findOneBy({ id });
@@ -134,22 +145,22 @@ export class VouchersService {
 
     let codeToCheck: string | undefined = undefined;
     if (updateVoucherDto.code) {
-        codeToCheck = updateVoucherDto.code.toUpperCase();
-        updateVoucherDto.code = codeToCheck;
+      codeToCheck = updateVoucherDto.code.toUpperCase();
+      updateVoucherDto.code = codeToCheck;
     }
-    
+
     if (codeToCheck && codeToCheck !== voucher.code) {
-        const existingVoucher = await this.vouchersRepository.findOne({
-            where: {
-                code: codeToCheck,
-                id: Not(id)
-            },
-        });
-        if (existingVoucher) {
-            throw new BadRequestException(
-            'A voucher with this code already exists.',
-            );
-        }
+      const existingVoucher = await this.vouchersRepository.findOne({
+        where: {
+          code: codeToCheck,
+          id: Not(id),
+        },
+      });
+      if (existingVoucher) {
+        throw new BadRequestException(
+          'A voucher with this code already exists.',
+        );
+      }
     }
 
     // Merge and save (updateVoucherDto now has uppercase code if it was provided)
@@ -164,10 +175,12 @@ export class VouchersService {
     }
   }
 
+
+  // USER VOUCHERS
   async getActiveVouchers(userId: number): Promise<Voucher[]> {
     const currentDate = new Date();
     const userVouchers = await this.userVoucherRepository.find({
-      where: { OwnerId: userId },
+      where: { OwnerId: userId, isfromshop: false },
     });
 
     // Extract voucher IDs from userVouchers
@@ -177,6 +190,7 @@ export class VouchersService {
       where: {
         id: Not(In(userVoucherIds)),
         ends_at: MoreThan(currentDate),
+        total_uses_left: MoreThan(0),
       },
     });
 
@@ -185,7 +199,7 @@ export class VouchersService {
 
   async getUserVouchers(userId: number): Promise<Voucher[]> {
     const userVouchers = await this.userVoucherRepository.find({
-      where: { OwnerId: userId },
+      where: { OwnerId: userId, isfromshop: false },
     });
 
     // Extract voucher IDs from userVouchers
@@ -206,58 +220,262 @@ export class VouchersService {
     });
   }
 
+  async getUserSellerVouchers(userId: number): Promise<SellerVoucher[]> {
+    const userVouchers = await this.userVoucherRepository.find({
+      where: { OwnerId: userId, isfromshop: true }, // Only SellerVoucher
+    });
+
+    const userVoucherIds = userVouchers.map((uv) => uv.VoucherId);
+
+    return this.sellerVoucherRepository.find({
+      where: {
+        id: In(userVoucherIds),
+      },
+    });
+  }
+
   async getUserVoucherHistory(userId: number): Promise<any[]> {
     const histories = await this.voucherHistoryRepository.find({
       where: { UserID: userId },
     });
 
-    const voucherIds = histories.map((history) => history.VoucherID);
+    const voucherIds = histories
+      .filter((history) => !history.isfromshop)
+      .map((history) => history.VoucherID);
+    const sellerVoucherIds = histories
+      .filter((history) => history.isfromshop)
+      .map((history) => history.VoucherID);
 
-    const vouchers = await this.vouchersRepository.find({
-      where: {
-        id: In(voucherIds),
-      },
-    });
+    const [vouchers, sellerVouchers] = await Promise.all([
+      this.vouchersRepository.find({
+        where: { id: In(voucherIds) },
+      }),
+      this.sellerVoucherRepository.find({
+        where: { id: In(sellerVoucherIds) },
+      }),
+    ]);
+
     return histories.map((history) => ({
       ...history,
-      voucher: vouchers.find((v) => v.id === history.VoucherID),
+      voucher: history.isfromshop
+        ? sellerVouchers.find((v) => v.id === history.VoucherID)
+        : vouchers.find((v) => v.id === history.VoucherID),
     }));
   }
 
   async userClaimVoucher(dto: CreateUserVoucherDto): Promise<boolean> {
-    // console.log("OUTTTTTTTT", dto);
-    let voucher; // Declare outside the block to maintain scope
+    const { VoucherCode, VoucherId, OwnerId, isfromshop } = dto;
 
-    if (dto.VoucherCode) {
-      voucher = await this.vouchersRepository.findOne({
-        where: { code: dto.VoucherCode },
-      });
-    } else {
-      voucher = await this.vouchersRepository.findOne({
-        where: { id: dto.VoucherId },
-      });
+    if (VoucherCode && VoucherId) {
+      console.log(
+        'Error: Both VoucherCode and VoucherId provided. Please provide only one.',
+      );
+      return false;
     }
 
-    console.log('Found Voucher:', voucher);
+    let voucher: Voucher | null = null;
+    let seller_voucher: SellerVoucher | null = null;
 
-    if (voucher) {
-      const exist_voucher = await this.userVoucherRepository.findOne({
-        where: { VoucherId: voucher.id },
+    // Fetch voucher(s)
+    if (VoucherCode) {
+      voucher = await this.vouchersRepository.findOne({
+        where: { code: VoucherCode },
       });
-      if (exist_voucher) {
+      seller_voucher = await this.sellerVoucherRepository.findOne({
+        where: { code: VoucherCode },
+      });
+    } else if (VoucherId) {
+      if (isfromshop) {
+        seller_voucher = await this.sellerVoucherRepository.findOne({
+          where: { id: VoucherId },
+        });
+      } else {
+        voucher = await this.vouchersRepository.findOne({
+          where: { id: VoucherId },
+        });
+      }
+    }
+
+    // Not found
+    if (!voucher && !seller_voucher) {
+      console.log(
+        `Voucher not found with ${VoucherCode ? 'code' : 'id'}:`,
+        VoucherCode || VoucherId,
+      );
+      return false;
+    }
+
+    // Handle public voucher
+    if (voucher) {
+      const existingVoucher = await this.userVoucherRepository.findOne({
+        where: { VoucherId: voucher.id, OwnerId, isfromshop: false },
+      });
+
+      if (existingVoucher) {
+        console.log(
+          `User ${OwnerId} has already claimed voucher ${voucher.id}.`,
+        );
         return false;
       }
-      const newVoucher = await this.userVoucherRepository.create({
+
+      const newVoucher = this.userVoucherRepository.create({
         VoucherId: voucher.id,
-        OwnerId: dto.OwnerId,
+        OwnerId,
         ExpDate: voucher.ends_at,
+        isfromshop: false,
         UsingTimeLeft: voucher.per_customer_limit,
       });
-      // console.log("ppoopopo",newVoucher);
+
       await this.userVoucherRepository.save(newVoucher);
+
+      console.log(
+        `User ${OwnerId} successfully claimed voucher ${voucher.id}.`,
+      );
       return true;
     }
 
-    return false;
+    // Handle seller voucher
+    if (seller_voucher) {
+      const existingVoucher = await this.userVoucherRepository.findOne({
+        where: { VoucherId: seller_voucher.id, OwnerId, isfromshop: true },
+      });
+
+      if (existingVoucher) {
+        console.log(
+          `User ${OwnerId} has already claimed seller voucher ${seller_voucher.id}.`,
+        );
+        return false;
+      }
+
+      const newVoucher = this.userVoucherRepository.create({
+        VoucherId: seller_voucher.id,
+        OwnerId,
+        ExpDate: seller_voucher.ends_at,
+        isfromshop: true,
+        UsingTimeLeft: seller_voucher.usage_per_user,
+      });
+
+      await this.userVoucherRepository.save(newVoucher);
+
+      console.log(
+        `User ${OwnerId} successfully claimed seller voucher ${seller_voucher.id}.`,
+      );
+      return true;
+    }
+
+    return false; // fallback, should never reach here
+  }
+
+  async userUseVoucher(dto: CreateVoucherHistoryDto): Promise<VoucherHistory> {
+    if (dto.isfromshop) {
+      // 🔹 Handle shop-owned voucher
+      const seller_voucher = await this.sellerVoucherRepository.findOne({
+        where: { id: dto.VoucherID },
+      });
+
+      if (!seller_voucher || seller_voucher.used >= seller_voucher.max_usage) {
+        throw new NotFoundException('Cannot find or use shop voucher');
+      }
+
+      seller_voucher.used += 1;
+      await this.sellerVoucherRepository.save(seller_voucher);
+    } else {
+      // 🔹 Handle platform-wide voucher
+      const voucher = await this.vouchersRepository.findOne({
+        where: {
+          id: dto.VoucherID,
+          total_uses_left: MoreThan(0),
+        },
+      });
+
+      if (!voucher) {
+        throw new NotFoundException('Cannot find or use platform voucher');
+      }
+      if (voucher.total_uses_left) {
+        voucher.total_uses_left -= 1;
+        await this.vouchersRepository.save(voucher);
+      }
+    }
+
+    // 🔸 Create usage history
+    const newHistory = this.voucherHistoryRepository.create({
+      VoucherID: dto.VoucherID,
+      UserID: dto.UserID,
+      UseDate: dto.UseDate ? new Date(dto.UseDate) : new Date(),
+      isfromshop: dto.isfromshop,
+    });
+
+    return this.voucherHistoryRepository.save(newHistory);
+  }
+
+  // SELLER VOUCHERS
+
+  async findAllSellerVoucher(id: number): Promise<SellerVoucher[]> {
+    return this.sellerVoucherRepository.find({
+      where: { sellerid: id },
+    });
+  }
+  async findAllActiveSellerVoucher(id: number): Promise<SellerVoucher[]> {
+    const currentDate = new Date();
+    const vouchers = await this.sellerVoucherRepository.find({
+      where: { sellerid: id, ends_at: MoreThan(currentDate) },
+    });
+    return vouchers.filter((voucher) => voucher.used < voucher.max_usage);
+  }
+
+  // Find a seller voucher by ID
+  async findOneSellerVoucher(id: number): Promise<SellerVoucher> {
+    const sellerVoucher = await this.sellerVoucherRepository.findOneBy({ id });
+    if (!sellerVoucher) {
+      throw new NotFoundException(`SellerVoucher with ID ${id} not found`);
+    }
+    return sellerVoucher;
+  }
+
+  // Create a new seller voucher
+  async createSellerVoucher(sellerVoucherDto: SellerVoucherDto): Promise<any> {
+    console.log('sellerVoucherDto', sellerVoucherDto);
+    const existingVoucher = await this.sellerVoucherRepository.findOne({
+      where: { code: sellerVoucherDto.code },
+    });
+    if (existingVoucher) {
+      throw new BadRequestException('A voucher with this code already exists.');
+    }
+    if (sellerVoucherDto.voucher_type === 'shop_wide') {
+      sellerVoucherDto.product_id = [];
+    }
+    if (sellerVoucherDto.voucher_type === 'product_specific') {
+      if (
+        !sellerVoucherDto.product_id ||
+        sellerVoucherDto.product_id.length === 0
+      ) {
+        throw new BadRequestException(
+          'Product IDs must be provided for product-specific vouchers.',
+        );
+      }
+    }
+    const sellerVoucher = this.sellerVoucherRepository.create(sellerVoucherDto);
+    return this.sellerVoucherRepository.save(sellerVoucher);
+  }
+
+  // Update an existing seller voucher
+  async updateSellerVoucher(
+    id: number,
+    sellerVoucherDto: SellerVoucherDto,
+  ): Promise<SellerVoucher> {
+    const sellerVoucher = await this.sellerVoucherRepository.preload({
+      id,
+      ...sellerVoucherDto,
+    });
+    if (!sellerVoucher) {
+      throw new NotFoundException(`SellerVoucher with ID ${id} not found`);
+    }
+    return this.sellerVoucherRepository.save(sellerVoucher);
+  }
+
+  // Remove a seller voucher
+  async removeSellerVoucher(id: number): Promise<void> {
+    const sellerVoucher = await this.findOneSellerVoucher(id);
+    await this.sellerVoucherRepository.remove(sellerVoucher);
   }
 }

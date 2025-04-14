@@ -16,6 +16,7 @@ import MediaStorage from './pages/DecorationShop/MediaStorage/MediaStorage';
 import DeliverySetting from "./pages/OrderManagement/DeliverySetting/DeliverySettingMain";
 import ShopRegister from './pages/RegisterShop/Register';
 import ProtectedRoute from './components/hook/protectedRoute';
+import { ShopVoucherPage } from './pages/MarketingChannel/ShopVoucher/ShopVoucher';
 import { ToastContainer } from "react-toastify";
 import { useEffect, useState } from 'react';
 import { EnvValue } from './env-value/envValue';
@@ -138,6 +139,7 @@ function App() {
           <Route path="/portal/product/list/:type/:param?" element={<AllProduct />} />
           <Route path="/portal/product/new" element={<AddProduct />} />
           <Route path="/portal/product/new/:from" element={<AddProduct />} />
+          <Route path="/portal/marketing/vouchers" element={<ShopVoucherPage />} />
         </Routes>
         <ToastContainer position="bottom-right" autoClose={3000} />
       </MainLayout>

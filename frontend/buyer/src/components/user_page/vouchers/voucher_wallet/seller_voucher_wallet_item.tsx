@@ -1,13 +1,11 @@
-import "../../../css/user/vouchers.css";
-import { useState } from "react";
-import axios from "axios";
+import "../../../../css/user/vouchers.css";
+// import { useState } from "react";
 import { CiClock2 } from "react-icons/ci";
 import { format, parseISO } from "date-fns";
 import { toast } from "react-toastify";
-import {Voucher} from "./vouchers_interfaces"
-import { EnvValue } from "../../../env-value/envValue";
+import {SellerVoucher} from "../vouchers_interfaces"
 
-export const VoucherItem: React.FC<{ voucher: Voucher; userId: number }> = ({
+export const SellerVoucherItem: React.FC<{ voucher: SellerVoucher; userId: number }> = ({
     voucher,
     userId,
   }) => {
@@ -17,32 +15,17 @@ export const VoucherItem: React.FC<{ voucher: Voucher; userId: number }> = ({
       "dd/MM/yyyy HH:mm"
     );
     const usedPercentage = Math.floor(
-      ((voucher.total_usage_limit - voucher.total_uses_left) /
-        voucher.total_usage_limit) *
+      (voucher.used /
+        voucher.max_usage) *
         100
     );
-    const [claimed, setClaimed] = useState(false);
-    const handleClaimVoucher = async (voucherId: number) => {
-      try {
-        const response = await axios.post(
-          `${EnvValue.API_GATEWAY_URL}/api/vouchers/claim`,
-          { OwnerId: userId, VoucherId: voucherId }
-        );
-        console.log(response.data);
-        if (response.data === true) {
-          toast.success("Đã nhận đươc voucher");
-          setClaimed(true);
-        } else {
-          toast.error("Chưa nhận được voucher");
-          setClaimed(true);
-        }
-      } catch (error) {
-        console.error("Cant claim voucher", error);
-      }
+    const handleClaimVoucher = async () => {
+      toast.info("Đã nhận voucher, không thể nhận lại");
+      
     };
     return (
-      <div className={`voucher-item w-full ${claimed && "!hidden"} pr-1`}>
-        <div className="voucher-badge">x{voucher.per_customer_limit}</div>
+      <div className={`voucher-item w-full pr-1`}>
+        <div className="voucher-badge">x{voucher.usage_per_user}</div>
         <div className="voucher-img w-[120px] flex flex-col">
           <img
             width={56}
@@ -50,12 +33,12 @@ export const VoucherItem: React.FC<{ voucher: Voucher; userId: number }> = ({
             src="https://down-vn.img.susercontent.com/file/e6a3b7beffa95ca492926978d5235f79"
             alt="Voucher"
           />
-          <div className="text-xs text-white">SHOPEE</div>
+          <div className="text-xs text-white">TÊN SHOP</div>
         </div>
         <div className="voucher-content">
-          <div className="text-lg font-medium">{voucher.name}</div>
-          <div className="text-base font-normal">{voucher.code}</div>
-          <div className="text-sm font-normal">{voucher.description}</div>
+          <div className="text-lg font-medium"> Giảm {voucher.discount_value}{voucher.discount_type === 'percentage' ? "%" : "₫"}</div>
+          <div className="text-base font-normal">Đơn tối thiểu {voucher.min_order}₫</div>
+          <div className="text-sm font-normal">{voucher.voucher_type === 'shop_wide' ? "Tất cả sản phẩm" : "Sản phẩm nhát định"}</div>
           <div className="progress-bar border border-orange-300 rounded-2xl">
             <div
               className="progress-fill text-center !text-xs text-white items-center "
@@ -72,7 +55,7 @@ export const VoucherItem: React.FC<{ voucher: Voucher; userId: number }> = ({
         </div>
         <button
           className="border border-orange-600 !text-orange-600 leading-[0.875rem] mr-4 w-14 px-2 py-0.75 !text-xs rounded-xs shadow"
-          onClick={() => handleClaimVoucher(voucher.id)}
+          onClick={() => handleClaimVoucher()}
         >
           Dùng Sau
         </button>

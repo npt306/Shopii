@@ -1,0 +1,146 @@
+button {
+  /* background-color: aqua; */
+}
+input,
+select,
+option {
+  background-color: white;
+  color: #000;
+  /* border: 1px solid gray; */
+}
+input:focus {
+  outline: 1px solid #ee4d2d;
+}
+.selected-voucher {
+  border: 1px solid #ee4d2d;
+  background-color: white;
+}
+.not-selected-voucher {
+  background-color: white;
+}
+.triangle-bg {
+  width: 1.5rem; /* Adjust size */
+  height: 1.5rem; /* Keep it a square */
+  background-color: #ee4d2d; /* Change color */
+  clip-path: polygon(0% 0%, 100% 0%, 100% 100%);
+}
+
+.voucher-manage-menu {
+  margin-top: 14px;
+}
+
+.voucher-manage-menu .stardust-tabs-header {
+  border-bottom: 1px solid #efefef;
+  height: 46px;
+}
+
+.voucher-manage-menu .stardust-tabs-header__tab--active {
+  color: #ee4d2d;
+}
+
+.voucher-manage-menu .stardust-tabs-header__tab {
+  color: #555;
+  flex-grow: 0;
+  font-size: 1rem;
+  padding: 0 2.75rem;
+}
+
+.stardust-tabs-header__tab {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  flex: 1 0 auto;
+  font-family: -apple-system, Helvetica Neue, Helvetica, Roboto, Droid Sans,
+    Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  justify-content: center;
+  user-select: none;
+}
+
+.stardust-tabs-header__tab-indicator {
+  background: #ee4d2d;
+  bottom: 0;
+  height: 2px;
+  position: absolute;
+  display: block;
+  width: 150px;
+  /* transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); */
+}
+
+
+
+.radio-group,
+.radio-label {
+  display: flex;
+  align-items: center;
+}
+
+.radio-group {
+  gap: 15px;
+}
+
+.radio-label {
+  cursor: pointer;
+  font-size: 16px;
+  color: #333;
+}
+
+.radio-input {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ee4d2d;
+  border-radius: 50%;
+  display: inline-block;
+  position: relative;
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.radio-input:checked {
+  /* background-color: #ee4d2d;  */
+  border-color: #ee4d2d;
+}
+
+.radio-input:checked::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background-color: #ee4d2d;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.product-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background-color: white;
+  border: 1px solid #ee4d2d; 
+  border-radius: 2px;
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+  transition: all 0.2s ease-in-out;
+}
+
+.product-checkbox:checked {
+  background-color: #ee4d2d;
+}
+
+.product-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
