@@ -7,7 +7,6 @@ import { AppService } from './app.service';
 import { CartsModule } from './carts/carts.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { join } from 'path';
 import { Cart } from './carts/entities/cart.entity';
 
 @Module({
@@ -25,7 +24,7 @@ import { Cart } from './carts/entities/cart.entity';
         database: configService.get('DB_NAME'),
         entities: [Cart],
         synchronize: false,
-        logging: process.env.NODE_ENV !== 'production',
+        // logging: process.env.NODE_ENV !== 'production',
       }),
     }),
     CartsModule,

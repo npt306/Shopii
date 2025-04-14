@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { EnvValue } from "../../env-value/envValue";
+import { formatPrice } from "../../helpers/utility/formatPrice";
 
 type Product = {
   id: number;
@@ -31,10 +32,6 @@ export const ProductDisplay = () => {
   useEffect(() => {
     fetchProductData(setProductList);
   }, []);
-
-  // useEffect(() => {
-  //     console.log(product_list);
-  // }, [product_list]);
 
   return (
     <div className="relative my-5 flex flex-col items-center">
@@ -70,7 +67,7 @@ export const ProductDisplay = () => {
                 <div className="flex flex-row justify-between items-center">
                   <div className="flex flex-row justify-items-center items-center text-orange-500">
                     <p className="text-xs">đ: </p>
-                    <p className="text-xl">{product.price}</p>
+                    <p className="text-xl">{formatPrice(product.price)}</p>
                   </div>
                   <div className="text-xs">Đã bán: {product.soldQuantity}</div>
                 </div>

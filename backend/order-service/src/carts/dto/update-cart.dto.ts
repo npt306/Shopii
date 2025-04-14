@@ -1,7 +1,7 @@
 import { Min } from 'class-validator';
 
 export class UpdateCartDto {
-  customerId: number;
+  id: number;
   productId: number;
   productTypeId: number;
 
