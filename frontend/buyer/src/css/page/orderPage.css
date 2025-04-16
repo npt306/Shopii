@@ -129,7 +129,6 @@ select::after {
 .order-list-bg {
   border-radius: 3px;
   background: #fff;
-  box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.09);
   height: 50px;
   padding: 24px 30px 0;
 }

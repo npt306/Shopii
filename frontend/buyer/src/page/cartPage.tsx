@@ -2,16 +2,20 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { FaCommentDots, FaTicketAlt } from "react-icons/fa";
 
 import { HeaderCart } from "../components/layout/headerCart";
 import { Footer } from "../components/layout/footer";
-import OverQuantityNotification from "../components/features/overQuatityNotification";
 
 import "../css/common/inputField.css";
 import "../css/page/cartPage.css";
 
+import OverQuantityNotification from "../components/features/overQuatityNotification";
+
 import { Cart } from "../types/cart";
+import { OrderData, ProductOrderData } from "../types/orderData";
 
 import { useCart } from "../context/cartContext";
 import { formatPrice } from "../helpers/utility/formatPrice";
@@ -27,6 +31,17 @@ export const CartPage = () => {
 
   const { id } = useParams<{ id: string }>();
 
+  const [orderData, setOrderData] = useState<OrderData[]>([]);
+
+  useEffect(() => {
+    // console.log("Shop data: ", orderData);
+    localStorage.setItem("order_data", JSON.stringify(orderData));
+  }, [orderData]);
+
+  useEffect(() => {
+    document.title = "Giỏ hàng";
+  }, []);
+
   useEffect(() => {
     const fetchCart = async () => {
       try {
@@ -34,7 +49,6 @@ export const CartPage = () => {
         const response = await axios.get(
           `${EnvValue.API_GATEWAY_URL}/order/carts/${id}`
         );
-        console.log(response.data);
         setData(response.data);
       } catch (error) {
         console.error("Error fetching product detail:", error);
@@ -116,10 +130,66 @@ export const CartPage = () => {
 
   const [totalItems, setTotalItems] = useState(0);
   useEffect(() => {
-    // Tính tổng số items mỗi khi mockProduct thay đổi
+    // Tính tổng số items mỗi khi thay đổi
     const total = data.reduce((total, shop) => total + shop.items.length, 0);
     setTotalItems(total);
   }, [data]);
+
+  // order data handle
+  useEffect(() => {
+    // Only proceed if we have data and selections
+    if (data.length > 0) {
+      // Create new orderData array
+      const newOrderData: OrderData[] = [];
+      let totalOrderPrice = 0; // Tổng giá trị của toàn bộ đơn hàng
+
+      // Iterate through each shop
+      data.forEach((shop, shopIndex) => {
+        // Check if shop is selected or any products in the shop are selected
+        const isShopSelected = selectedShops[shopIndex];
+        const shopProducts: ProductOrderData[] = [];
+        let shopTotalPrice = 0; // Biến để tính tổng giá trị của shop
+
+        // Check each product in the shop
+        shop.items.forEach((item) => {
+          // If the product is selected (either individually or via shop selection)
+          if (selectedCheckboxes[item.productTypeId]?.checked) {
+            const quantity = quantities[item.productTypeId] || 1;
+            const productPrice = item.price * quantity;
+
+            // Cộng dồn giá sản phẩm vào tổng của shop
+            shopTotalPrice += productPrice;
+
+            // Add product to shopProducts array
+            shopProducts.push({
+              productTypeId: item.productTypeId.toString(),
+              image: item.image,
+              name: item.productName,
+              type_1: item.type1 || undefined,
+              type_2: item.type2 || undefined,
+              quantity: quantity,
+              price: item.price,
+            });
+          }
+        });
+
+        // If any products in the shop are selected, add the shop to orderData
+        if (shopProducts.length > 0) {
+          newOrderData.push({
+            shopId: shop.sellerId.toString(),
+            shopName: shop.shopName,
+            message: "",
+            totalPrice: shopTotalPrice,
+            isPaid: false,
+            products: shopProducts,
+          });
+        }
+      });
+
+      // Update orderData state
+      setOrderData(newOrderData);
+    }
+  }, [data, selectedShops, selectedCheckboxes, quantities]);
 
   useEffect(() => {
     let price = 0;
@@ -211,22 +281,56 @@ export const CartPage = () => {
     sellerId: number,
     productTypeId: number
   ) => {
-    setData(
-      (prevData) =>
-        prevData
-          .map((shop) => {
-            if (shop.sellerId === sellerId) {
-              return {
-                ...shop,
-                items: shop.items.filter(
-                  (item) => item.productTypeId !== productTypeId
-                ),
-              };
-            }
-            return shop;
-          })
-          .filter((shop) => shop.items.length > 0) // Xóa shop nếu không còn sản phẩm
-    );
+    // Lưu lại số lượng shop trước khi xóa
+    const previousShopCount = data.length;
+
+    setData((prevData) => {
+      const newData = prevData
+        .map((shop) => {
+          if (shop.sellerId === sellerId) {
+            return {
+              ...shop,
+              items: shop.items.filter(
+                (item) => item.productTypeId !== productTypeId
+              ),
+            };
+          }
+          return shop;
+        })
+        .filter((shop) => shop.items.length > 0); // Xóa shop nếu không còn sản phẩm
+
+      // Nếu số lượng shop giảm đi (một shop bị xóa)
+      if (newData.length < previousShopCount) {
+        // Cập nhật lại selectedShops để loại bỏ các index không hợp lệ và cập nhật lại index
+        const updatedSelectedShops: { [key: number]: boolean } = {};
+
+        newData.forEach((shop, index) => {
+          // Tìm index cũ của shop trong prevData
+          const oldIndex = prevData.findIndex(
+            (s) => s.sellerId === shop.sellerId
+          );
+          // Chỉ giữ lại trạng thái những shop còn tồn tại
+          if (selectedShops[oldIndex]) {
+            updatedSelectedShops[index] = true;
+          }
+        });
+
+        // Cập nhật lại state
+        setTimeout(() => {
+          setSelectedShops(updatedSelectedShops);
+          // Cập nhật lại toggleAll dựa trên shop còn lại
+          if (Object.keys(updatedSelectedShops).length === 0) {
+            setToggleAll(false);
+          } else {
+            setToggleAll(
+              Object.keys(updatedSelectedShops).length === newData.length
+            );
+          }
+        }, 0);
+      }
+
+      return newData;
+    });
 
     try {
       const res = await axios.post(
@@ -250,6 +354,9 @@ export const CartPage = () => {
   }, [selectedCheckboxes]);
 
   const handleDeleteSelectedProduct = () => {
+    // Lưu lại số lượng shop trước khi xóa
+    const previousShopCount = data.length;
+
     const selectedKeys = Object.keys(selectedCheckboxes).filter(
       (key) => selectedCheckboxes[Number(key)].checked
     );
@@ -267,21 +374,30 @@ export const CartPage = () => {
       updateCart();
     });
 
-    setData(
-      (prevData) =>
-        prevData
-          .map((shop) => {
-            const newItems = shop.items.filter(
-              (item) => !selectedCheckboxes[item.productTypeId]?.checked
-            );
+    setData((prevData) => {
+      const newData = prevData
+        .map((shop) => {
+          const newItems = shop.items.filter(
+            (item) => !selectedCheckboxes[item.productTypeId]?.checked
+          );
 
-            return {
-              ...shop,
-              items: newItems,
-            };
-          })
-          .filter((shop) => shop.items.length > 0) // Xóa shop nếu không còn sản phẩm
-    );
+          return {
+            ...shop,
+            items: newItems,
+          };
+        })
+        .filter((shop) => shop.items.length > 0); // Xóa shop nếu không còn sản phẩm
+
+      // Reset các toggle nếu có shop bị xóa
+      if (newData.length < previousShopCount) {
+        setTimeout(() => {
+          setSelectedShops({});
+          setToggleAll(false);
+        }, 0);
+      }
+
+      return newData;
+    });
 
     // Reset lại state của checkbox đã chọn
     setSelectedCheckboxes({});
@@ -317,6 +433,7 @@ export const CartPage = () => {
   return (
     <>
       <HeaderCart />
+      <ToastContainer />
       {confirmDeleteAll && (
         <div className="fixed inset-0 flex justify-center items-center z-50">
           <div className="absolute inset-0 bg-black opacity-50"></div>
@@ -503,7 +620,7 @@ export const CartPage = () => {
 
                               {item.type1 ? (
                                 <div className="relative">
-                                  <div className="flex items-center gap-1 cursor-pointer">
+                                  <div className="flex items-center gap-1">
                                     <div className="flex flex-col">
                                       <div className="flex flex-row items-center gap-x-3">
                                         <p>Phân loại hàng:</p>
@@ -684,13 +801,16 @@ export const CartPage = () => {
                           <div className="w-1/3">
                             <div className="flex justify-center items-center">
                               <div className="text-[0.8rem]">Tiết kiệm: </div>
-                              <div className="mketV8 ml-3">₫0k</div>
+                              <div className="mketV8 ml-3">₫0</div>
                             </div>
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center justify-center text-white">
-                        <button className="w-full h-[2.5rem] bg-[#ee4d2d] hover:bg-orange-600">
+                        <button
+                          onClick={() => navigate(`/order/${id}`)}
+                          className="w-full h-[2.5rem] bg-[#ee4d2d] hover:bg-orange-600"
+                        >
                           <div className="text-[0.9rem] text-center">
                             Mua Hàng
                           </div>
@@ -706,7 +826,19 @@ export const CartPage = () => {
                         </div>
                       </div>
                       <div className="flex items-center justify-center text-white">
-                        <button className="w-full h-[2.5rem] bg-[#ee4d2d] hover:bg-orange-600">
+                        <button
+                          onClick={() => {
+                            toast.warning(
+                              "Vui lòng chọn sản phẩm trước khi thanh toán!",
+                              {
+                                position: "top-right",
+                                autoClose: 1500,
+                              }
+                            );
+                            return;
+                          }}
+                          className="w-full h-[2.5rem] bg-[#ee4d2d] hover:bg-orange-600"
+                        >
                           <div className="text-[0.9rem] text-center">
                             Mua Hàng
                           </div>

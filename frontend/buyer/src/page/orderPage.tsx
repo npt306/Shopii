@@ -1,15 +1,22 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 import { EnvValue } from "../env-value/envValue";
+
 import "../css/page/orderPage.css";
 
 import { HeaderOrder } from "../components/layout/headerOrder";
 import { Footer } from "../components/layout/footer";
 
 import { formatPrice } from "../helpers/utility/formatPrice";
-import { Address } from "../types/address";
 import { FormatPhoneNumber } from "../helpers/utility/phoneFormat";
+import { useCart } from "../context/cartContext";
+
+import { Address } from "../types/address";
+import { OrderData } from "../types/orderData";
 
 import { VoucherShopeeModal } from "../components/features/voucherShopeeModal";
 import { AddressListInOrderModal } from "../components/features/addressListInOrder";
@@ -18,13 +25,12 @@ import { UpdateAdressInOrderModal } from "../components/features/updateAddresInO
 import { AddDefaultAdressInOrderModal } from "../components/features/addDefaultAddressInOrder";
 
 export const OrderPage = () => {
+  let navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
   const [openAddressModal, setOpenAddressModal] = useState(false);
   const [openAddAddressModal, setOpenAddAddressModal] = useState(false);
   const [openUpdateAddressModal, setOpenUpdateAddressModal] = useState(false);
-  const [openAddDefaultAddressModal, setOpenAddDefaultAddressModal] =
-    useState(false); // add address default if not have any address
 
   const [openDeliveryModal, setOpenDeliveryModal] = useState(false);
 
@@ -36,8 +42,33 @@ export const OrderPage = () => {
   );
   const [paymentChoiceModal, setPaymentChoiceModal] = useState(false);
 
+  const [orderData, setOrderData] = useState<OrderData[]>([]);
+  const [totalOrderPrice, setTotalOrderPrice] = useState(0);
+  const { updateCart } = useCart();
+
+  // auto-scroll to top
+  // useEffect(() => {
+  //   window.scrollTo({ top: 0, behavior: "smooth" });
+  // }, []);
+
+  useEffect(() => {
+    // console.log("Order data: ", orderData);
+    let orderPrice = orderData.reduce((acc, shop) => {
+      const shopTotal = shop.products.reduce((shopAcc, product) => {
+        return shopAcc + product.price * product.quantity;
+      }, 0);
+      return acc + shopTotal;
+    }, 0);
+    setTotalOrderPrice(orderPrice);
+  }, [orderData]);
+
   useEffect(() => {
     document.title = "Thanh toán";
+    const localStorageOrderData = localStorage.getItem("order_data");
+    if (localStorageOrderData) {
+      const data = JSON.parse(localStorageOrderData);
+      setOrderData(data);
+    }
   }, []);
 
   const [selectedAddress, setSelectedAddress] = useState<Address>();
@@ -80,35 +111,89 @@ export const OrderPage = () => {
 
   // check if no address default
   const [isAddressDefault, setIsAddressDefault] = useState(false);
+  const [isLoadingAddress, setIsLoadingAddress] = useState(true);
 
   const handleAddressDefault = () => {
     setIsAddressDefault((prev) => !prev); // Toggle để kích hoạt useEffect
   };
 
   useEffect(() => {
-    const storedAddress = sessionStorage.getItem("selectedAddress");
-    if (storedAddress) {
-      const selectedAddressInSession = JSON.parse(storedAddress);
-      setSelectedAddress(selectedAddressInSession);
-    } else {
-      fetchDefaultAddress();
-    }
+    const fetchAddress = async () => {
+      setIsLoadingAddress(true);
+      const storedAddress = sessionStorage.getItem("selectedAddress");
+      if (storedAddress) {
+        const selectedAddressInSession = JSON.parse(storedAddress);
+        setSelectedAddress(selectedAddressInSession);
+      } else {
+        await fetchDefaultAddress();
+      }
+      setIsLoadingAddress(false);
+    };
+
+    fetchAddress();
   }, [id, isAddressDefault]);
+
+  const handleCheckOut = async () => {
+    let shippingAddress = `${selectedAddress?.SpecificAddress}, ${selectedAddress?.Ward}, ${selectedAddress?.District}, ${selectedAddress?.Province}`;
+    console.log("User ID: ", id);
+    console.log("Check out: ", orderData);
+    console.log("Selected address: ", shippingAddress);
+
+    try {
+      const res = await axios.post(
+        // `http://localhost:3000/order/checkout/create-order`,
+        `${EnvValue.API_GATEWAY_URL}/order/checkout/create-order`,
+        { id, orderData, shippingAddress }
+      );
+      // Xóa các sản phẩm đã checkout khỏi giỏ hàng
+      const deletePromises = [];
+      for (const shop of orderData) {
+        for (const product of shop.products) {
+          const productTypeId = product.productTypeId;
+          // Tạo promise để xóa sản phẩm
+          const deletePromise = axios.post(
+            `${EnvValue.API_GATEWAY_URL}/order/carts/delete-from-cart`,
+            { id, productTypeId }
+          );
+          deletePromises.push(deletePromise);
+        }
+      }
+      // Chờ tất cả các yêu cầu xóa sản phẩm hoàn thành
+      await Promise.all(deletePromises);
+      updateCart(); // update basic cart
+
+      localStorage.removeItem("order_data");
+      toast.success("Đặt hàng thành công!", {
+        position: "top-right",
+        autoClose: 1500,
+      });
+      setTimeout(() => {
+        navigate("/home");
+      }, 1500);
+    } catch (error) {
+      console.error("Error processing order:", error);
+      toast.error("Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại!", {
+        position: "top-right",
+        autoClose: 1500,
+      });
+    }
+  };
 
   return (
     <div className="App">
+      <ToastContainer />
       <VoucherShopeeModal
         open={openVoucherModal}
         setOpen={setOpenVoucherModal}
       />
-      {/* {!selectedAddress && (
+      {!isLoadingAddress && !selectedAddress && (
         <>
           <AddDefaultAdressInOrderModal
             open={true}
             handleAddressDefault={handleAddressDefault}
           />
         </>
-      )} */}
+      )}
       <AddressListInOrderModal
         open={openAddressModal}
         setOpen={setOpenAddressModal}
@@ -199,317 +284,344 @@ export const OrderPage = () => {
               <div />
             </div>
           </div>
+
           {/* ORDER-ITEMS */}
           <div className="order-list">
-            <div className="order-list-bg">
-              <div className="order-list-tag grid grid-cols-6">
-                <div className=" col-span-3">
-                  <h2 className="items-center text-xl">Sản phẩm</h2>
-                </div>
-                <div className="text-end">Đơn giá</div>
-                <div className="text-end">Số lượng</div>
-                <div className="text-end">Thành tiền</div>
-              </div>
-            </div>
             <div>
-              {/* SHOP-ITEMS */}
-              <div className="shop-items">
-                <div className="shop-title">
-                  <div className="mall-icon">
-                    <svg viewBox="0 0 24 11" height={11} width={24}>
-                      <g fill="#fff" fillRule="evenodd">
-                        <path d="M19.615 7.143V1.805a.805.805 0 0 0-1.611 0v5.377H18c0 1.438.634 2.36 1.902 2.77V9.95c.09.032.19.05.293.05.444 0 .805-.334.805-.746a.748.748 0 0 0-.498-.69v-.002c-.59-.22-.885-.694-.885-1.42h-.002zm3 0V1.805a.805.805 0 0 0-1.611 0v5.377H21c0 1.438.634 2.36 1.902 2.77V9.95c.09.032.19.05.293.05.444 0 .805-.334.805-.746a.748.748 0 0 0-.498-.69v-.002c-.59-.22-.885-.694-.885-1.42h-.002zm-7.491-2.985c.01-.366.37-.726.813-.726.45 0 .814.37.814.742v5.058c0 .37-.364.73-.813.73-.395 0-.725-.278-.798-.598a3.166 3.166 0 0 1-1.964.68c-1.77 0-3.268-1.456-3.268-3.254 0-1.797 1.497-3.328 3.268-3.328a3.1 3.1 0 0 1 1.948.696zm-.146 2.594a1.8 1.8 0 1 0-3.6 0 1.8 1.8 0 1 0 3.6 0z" />
-                        <path
-                          d="M.078 1.563A.733.733 0 0 1 .565.89c.423-.15.832.16 1.008.52.512 1.056 1.57 1.88 2.99 1.9s2.158-.85 2.71-1.882c.19-.356.626-.74 1.13-.537.342.138.477.4.472.65a.68.68 0 0 1 .004.08v7.63a.75.75 0 0 1-1.5 0V3.67c-.763.72-1.677 1.18-2.842 1.16a4.856 4.856 0 0 1-2.965-1.096V9.25a.75.75 0 0 1-1.5 0V1.648c0-.03.002-.057.005-.085z"
-                          fillRule="nonzero"
-                        />
-                      </g>
-                    </svg>
-                  </div>
-                  <h3 className="pl-2">Guzado Official</h3>
-                  <button className="chat-button">
-                    <svg
-                      viewBox="0 0 16 16"
-                      height={15}
-                      width={20}
-                      className="shopee-svg-icon ml-3 mr-1"
-                    >
-                      <g className="text-[#00bfa5]" fillRule="evenodd">
-                        <path d="M15 4a1 1 0 01.993.883L16 5v9.932a.5.5 0 01-.82.385l-2.061-1.718-8.199.001a1 1 0 01-.98-.8l-.016-.117-.108-1.284 8.058.001a2 2 0 001.976-1.692l.018-.155L14.293 4H15zm-2.48-4a1 1 0 011 1l-.003.077-.646 8.4a1 1 0 01-.997.923l-8.994-.001-2.06 1.718a.5.5 0 01-.233.108l-.087.007a.5.5 0 01-.492-.41L0 11.732V1a1 1 0 011-1h11.52zM3.646 4.246a.5.5 0 000 .708c.305.304.694.526 1.146.682A4.936 4.936 0 006.4 5.9c.464 0 1.02-.062 1.608-.264.452-.156.841-.378 1.146-.682a.5.5 0 10-.708-.708c-.185.186-.445.335-.764.444a4.004 4.004 0 01-2.564 0c-.319-.11-.579-.258-.764-.444a.5.5 0 00-.708 0z" />
-                      </g>
-                    </svg>
-                    Chat ngay
-                  </button>
-                </div>
-                <div className="border-b border-black/10 pb-5">
-                  {/* ONE ITEM CONTAINER */}
-                  <div className="item-container grid grid-cols-6">
-                    <div className="col-span-2 item-container-col">
-                      <picture className="contents">
-                        <source
-                          srcSet="https://down-vn.img.susercontent.com/file/vn-11134207-7qukw-lk7xq5jxlgac94@resize_w40_nl.webp 1x, https://down-vn.img.susercontent.com/file/vn-11134207-7qukw-lk7xq5jxlgac94@resize_w80_nl.webp 2x"
-                          type="image/webp"
-                          className="contents"
-                        />
-                        <img
-                          width={40}
-                          loading="lazy"
-                          className="align-bottom"
-                          srcSet="https://down-vn.img.susercontent.com/file/vn-11134207-7qukw-lk7xq5jxlgac94@resize_w40_nl 1x, https://down-vn.img.susercontent.com/file/vn-11134207-7qukw-lk7xq5jxlgac94@resize_w80_nl 2x"
-                          src="https://down-vn.img.susercontent.com/file/vn-11134207-7qukw-lk7xq5jxlgac94"
-                          height={40}
-                          alt="product image"
-                          style={{}}
-                        />
-                      </picture>
-                      <span className="item-name">
-                        <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">
-                          Áo thể thao nam Guzado Vải Coolmax dệt lỗ kim thoáng
-                          khí mau khô Co Giãn Vận Động Thoải Mái GTS04
-                        </span>
-                      </span>
+              {/* Render shops using map */}
+              {orderData.map((shop, shopIndex) => (
+                <div className="shop-items" key={`shop-${shopIndex}`}>
+                  <div className="order-list-bg">
+                    <div className="order-list-tag grid grid-cols-6">
+                      <div className=" col-span-3">
+                        <h2 className="items-center text-xl">Sản phẩm</h2>
+                      </div>
+                      <div className="text-end">Đơn giá</div>
+                      <div className="text-end">Số lượng</div>
+                      <div className="text-end">Thành tiền</div>
                     </div>
-                    <div className="flex justify-end items-center">
-                      <span className="overflow-hidden overflow-ellipsis whitespace-nowrap text-gray-500">
-                        Loại: GTS04 Đen,L
-                      </span>
-                    </div>
-                    <div className="item-container-col ">₫500.000</div>
-                    <div className="item-container-col">1</div>
-                    <div className="item-container-col">₫500.000</div>
                   </div>
-                </div>
-                {/* SHOP VOUCHER  */}
-                <div className="border-b border-black/10 grid grid-cols-10 p-7 ml-8 items-center">
-                  <div className="col-span-4 bg-red-200"></div>
-                  <div className="whitespace-nowrap col-span-5">
-                    <div className="text-2xl items-center flex">
+                  <div className="shop-title">
+                    <div className="mall-icon">
+                      <svg viewBox="0 0 24 11" height={11} width={24}>
+                        <g fill="#fff" fillRule="evenodd">
+                          <path d="M19.615 7.143V1.805a.805.805 0 0 0-1.611 0v5.377H18c0 1.438.634 2.36 1.902 2.77V9.95c.09.032.19.05.293.05.444 0 .805-.334.805-.746a.748.748 0 0 0-.498-.69v-.002c-.59-.22-.885-.694-.885-1.42h-.002zm3 0V1.805a.805.805 0 0 0-1.611 0v5.377H21c0 1.438.634 2.36 1.902 2.77V9.95c.09.032.19.05.293.05.444 0 .805-.334.805-.746a.748.748 0 0 0-.498-.69v-.002c-.59-.22-.885-.694-.885-1.42h-.002zm-7.491-2.985c.01-.366.37-.726.813-.726.45 0 .814.37.814.742v5.058c0 .37-.364.73-.813.73-.395 0-.725-.278-.798-.598a3.166 3.166 0 0 1-1.964.68c-1.77 0-3.268-1.456-3.268-3.254 0-1.797 1.497-3.328 3.268-3.328a3.1 3.1 0 0 1 1.948.696zm-.146 2.594a1.8 1.8 0 1 0-3.6 0 1.8 1.8 0 1 0 3.6 0z" />
+                          <path
+                            d="M.078 1.563A.733.733 0 0 1 .565.89c.423-.15.832.16 1.008.52.512 1.056 1.57 1.88 2.99 1.9s2.158-.85 2.71-1.882c.19-.356.626-.74 1.13-.537.342.138.477.4.472.65a.68.68 0 0 1 .004.08v7.63a.75.75 0 0 1-1.5 0V3.67c-.763.72-1.677 1.18-2.842 1.16a4.856 4.856 0 0 1-2.965-1.096V9.25a.75.75 0 0 1-1.5 0V1.648c0-.03.002-.057.005-.085z"
+                            fillRule="nonzero"
+                          />
+                        </g>
+                      </svg>
+                    </div>
+                    <h3 className="pl-2">{shop.shopName}</h3>
+                    <button className="chat-button">
                       <svg
-                        fill="none"
-                        viewBox="0 0 23 22"
-                        width={10}
-                        height={10}
-                        className="shopee-svg-icon icon-voucher-applied-line"
+                        viewBox="0 0 16 16"
+                        height={15}
+                        width={20}
+                        className="shopee-svg-icon ml-3 mr-1"
                       >
-                        <rect
-                          x={13}
-                          y={9}
+                        <g className="text-[#00bfa5]" fillRule="evenodd">
+                          <path d="M15 4a1 1 0 01.993.883L16 5v9.932a.5.5 0 01-.82.385l-2.061-1.718-8.199.001a1 1 0 01-.98-.8l-.016-.117-.108-1.284 8.058.001a2 2 0 001.976-1.692l.018-.155L14.293 4H15zm-2.48-4a1 1 0 011 1l-.003.077-.646 8.4a1 1 0 01-.997.923l-8.994-.001-2.06 1.718a.5.5 0 01-.233.108l-.087.007a.5.5 0 01-.492-.41L0 11.732V1a1 1 0 011-1h11.52zM3.646 4.246a.5.5 0 000 .708c.305.304.694.526 1.146.682A4.936 4.936 0 006.4 5.9c.464 0 1.02-.062 1.608-.264.452-.156.841-.378 1.146-.682a.5.5 0 10-.708-.708c-.185.186-.445.335-.764.444a4.004 4.004 0 01-2.564 0c-.319-.11-.579-.258-.764-.444a.5.5 0 00-.708 0z" />
+                        </g>
+                      </svg>
+                      Chat ngay
+                    </button>
+                  </div>
+                  <div className="border-black/10 flex flex-col gap-5">
+                    {/* Render products using map */}
+                    {shop.products.map((product, productIndex) => (
+                      <div
+                        className="item-container grid grid-cols-6"
+                        key={`product-${product.productTypeId}`}
+                      >
+                        <div className="col-span-2 item-container-col">
+                          <picture className="contents">
+                            <img
+                              loading="lazy"
+                              className="align-bottom object-contain w-[7rem] h-[7rem]"
+                              src={product.image}
+                              alt={product.name}
+                            />
+                          </picture>
+                          <span className="item-name">
+                            <span
+                              className="overflow-hidden overflow-ellipsis whitespace-nowrap"
+                              title={product.name}
+                            >
+                              {product.name}
+                            </span>
+                          </span>
+                        </div>
+                        <div className="flex justify-start items-center ml-7">
+                          <span
+                            className="overflow-hidden overflow-ellipsis whitespace-nowrap text-gray-500"
+                            title={
+                              product.type_1 && product.type_2
+                                ? `Loại: ${product.type_1}, ${product.type_2}`
+                                : product.type_1
+                                ? `Loại: ${product.type_1}`
+                                : ""
+                            }
+                          >
+                            {product.type_1 && product.type_2
+                              ? `Loại: ${product.type_1}, ${product.type_2}`
+                              : product.type_1
+                              ? `Loại: ${product.type_1}`
+                              : ""}
+                          </span>
+                        </div>
+                        <div className="item-container-col">
+                          ₫{formatPrice(product.price)}
+                        </div>
+                        <div className="item-container-col">
+                          {product.quantity}
+                        </div>
+                        <div className="item-container-col">
+                          ₫{formatPrice(product.price * product.quantity)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* SHOP VOUCHER  */}
+                  <div className="border-b border-black/10 grid grid-cols-10 p-7 ml-8 items-center">
+                    <div className="col-span-4 bg-red-200"></div>
+                    <div className="whitespace-nowrap col-span-5">
+                      <div className="text-2xl items-center flex">
+                        <svg
+                          fill="none"
+                          viewBox="0 0 23 22"
                           width={10}
                           height={10}
-                          rx={5}
-                          fill="#EE4D2D"
-                        />
-                        <path
-                          fillRule="evenodd"
-                          clipRule="evenodd"
-                          d="M20.881 11.775a.54.54 0 00-.78.019l-2.509 2.765-1.116-1.033a.542.542 0 00-.74.793l1.5 1.414a.552.552 0 00.844-.106l2.82-3.109a.54.54 0 00-.019-.743z"
-                          fill="#fff"
-                        />
-                        <path
-                          fillRule="evenodd"
-                          clipRule="evenodd"
-                          d="M6.488 16.178h.858V14.57h-.858v1.607zM6.488 13.177h.858v-1.605h-.858v1.605zM6.488 10.178h.858V8.572h-.858v1.606zM6.488 7.178h.858V5.572h-.858v1.606z"
-                          fill="#EE4D2D"
-                        />
-                        <g filter="url(#voucher-filter1_d)">
+                          className="shopee-svg-icon icon-voucher-applied-line"
+                        >
+                          <rect
+                            x={13}
+                            y={9}
+                            width={10}
+                            height={10}
+                            rx={5}
+                            fill="#EE4D2D"
+                          />
                           <path
                             fillRule="evenodd"
                             clipRule="evenodd"
-                            d="M1 4v2.325a1.5 1.5 0 01.407 2.487l-.013.012c-.117.103-.25.188-.394.251v.65c.145.063.277.149.394.252l.013.012a1.496 1.496 0 010 2.223l-.013.012c-.117.103-.25.188-.394.251v.65c.145.063.277.149.394.252l.013.012A1.5 1.5 0 011 15.876V18h12.528a6.018 6.018 0 01-.725-1H2v-.58c.55-.457.9-1.147.9-1.92a2.49 2.49 0 00-.667-1.7 2.49 2.49 0 00.667-1.7 2.49 2.49 0 00-.667-1.7A2.49 2.49 0 002.9 7.7c0-.773-.35-1.463-.9-1.92V5h16v.78a2.494 2.494 0 00-.874 2.283 6.05 6.05 0 011.004-.062A1.505 1.505 0 0119 6.325V4H1z"
-                            fill="#EE4D3D"
+                            d="M20.881 11.775a.54.54 0 00-.78.019l-2.509 2.765-1.116-1.033a.542.542 0 00-.74.793l1.5 1.414a.552.552 0 00.844-.106l2.82-3.109a.54.54 0 00-.019-.743z"
+                            fill="#fff"
                           />
-                        </g>
-                        <defs>
-                          <filter
-                            id="voucher-filter1_d"
-                            x={0}
-                            y={3}
-                            width={20}
-                            height={16}
-                            filterUnits="userSpaceOnUse"
-                            colorInterpolationFilters="sRGB"
-                          >
-                            <feFlood
-                              floodOpacity={0}
-                              result="BackgroundImageFix"
+                          <path
+                            fillRule="evenodd"
+                            clipRule="evenodd"
+                            d="M6.488 16.178h.858V14.57h-.858v1.607zM6.488 13.177h.858v-1.605h-.858v1.605zM6.488 10.178h.858V8.572h-.858v1.606zM6.488 7.178h.858V5.572h-.858v1.606z"
+                            fill="#EE4D2D"
+                          />
+                          <g filter="url(#voucher-filter1_d)">
+                            <path
+                              fillRule="evenodd"
+                              clipRule="evenodd"
+                              d="M1 4v2.325a1.5 1.5 0 01.407 2.487l-.013.012c-.117.103-.25.188-.394.251v.65c.145.063.277.149.394.252l.013.012a1.496 1.496 0 010 2.223l-.013.012c-.117.103-.25.188-.394.251v.65c.145.063.277.149.394.252l.013.012A1.5 1.5 0 011 15.876V18h12.528a6.018 6.018 0 01-.725-1H2v-.58c.55-.457.9-1.147.9-1.92a2.49 2.49 0 00-.667-1.7 2.49 2.49 0 00.667-1.7 2.49 2.49 0 00-.667-1.7A2.49 2.49 0 002.9 7.7c0-.773-.35-1.463-.9-1.92V5h16v.78a2.494 2.494 0 00-.874 2.283 6.05 6.05 0 011.004-.062A1.505 1.505 0 0119 6.325V4H1z"
+                              fill="#EE4D3D"
                             />
-                            <feColorMatrix
-                              in="SourceAlpha"
-                              values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-                            />
-                            <feOffset />
-                            <feGaussianBlur stdDeviation=".5" />
-                            <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.09 0" />
-                            <feBlend
-                              in2="BackgroundImageFix"
-                              result="effect1_dropShadow"
-                            />
-                            <feBlend
-                              in="SourceGraphic"
-                              in2="effect1_dropShadow"
-                              result="shape"
-                            />
-                          </filter>
-                        </defs>
-                      </svg>
-                      <div className="text-base">Voucher của Shop</div>
-                    </div>
-                  </div>
-                  <div className="whitespace-nowrap">
-                    <div className="items-center flex justify-end">
-                      <div className="shop-voucher-sale mr-3">
-                        <span>-₫25k</span>
-                        <div className="sale-svg right-[0] rotate-180">
-                          <svg
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 1 5 35"
-                            style={{ fill: "rgb(238, 77, 45)" }}
-                          >
-                            <path d="M0 0v2.27a2 2 0 010 3.46v2.54a2 2 0 010 3.46v2.54a2 2 0 010 3.46V19h2v-1h-.76A2.99 2.99 0 001 13.76v-1.52a3 3 0 000-4.48V6.24a3 3 0 000-4.48V1h1V0H0z" />
-                          </svg>
-                        </div>
-                        <div className="sale-svg left-0">
-                          <svg
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 1 5 35"
-                            style={{ fill: "rgb(238, 77, 45)" }}
-                          >
-                            <path d="M0 0v2.27a2 2 0 010 3.46v2.54a2 2 0 010 3.46v2.54a2 2 0 010 3.46V19h2v-1h-.76A2.99 2.99 0 001 13.76v-1.52a3 3 0 000-4.48V6.24a3 3 0 000-4.48V1h1V0H0z" />
-                          </svg>
-                        </div>
-                      </div>
-                      <div className="flex justify-center items-center">
-                        <div>
-                          <button className="!text-sky-700 flex justify-center items-center">
-                            <span>Chọn Voucher khác</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <div />
-                  </div>
-                </div>
-
-                <div className="order-shop-settings">
-                  <div className="flex flex-col text-sm p-6">
-                    <div className="flex ">
-                      <span className="pt-2 items-center justify-center">
-                        Lời nhắn:
-                      </span>
-                      <div className="flex-1">
-                        <div className="relative ml-4">
-                          <div className="shop-note-input">
-                            <input
-                              className=" px-3 py-1 w-full"
-                              type="text"
-                              placeholder="Lưu ý cho Người bán..."
-                              defaultValue=""
-                            />
-                          </div>
-                          <div />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-col text-sm">
-                    <div className="shipping-container">
-                      <div className="">Phương thức vận chuyển:</div>
-                      <div className="col-start-2 whitespace-nowrap">
-                        <div>Nhanh</div>
-                      </div>
-                      <div className="col-end-2 col-start-1" />
-                      <div className="col-end-5 col-start-2 text-teal-500">
-                        <div className="content-center flex flex-wrap">
-                          <img src="https://deo.shopeemobile.com/shopee/shopee-pcmall-live-sg/checkout/a714965e439d493ba00c.svg" />
-                          <div className="pl-2">
-                            Đảm bảo nhận hàng từ 11 Tháng 3 - 13 Tháng 3
-                          </div>
-                        </div>
-                        <div className="voucher-note">
-                          <div>
-                            Nhận Voucher trị giá ₫15.000 nếu đơn hàng được giao
-                            đến bạn sau ngày 13 Tháng 3 2025.
-                          </div>
-                          <div>
-                            <svg
-                              enableBackground="new 0 0 15 15"
-                              viewBox="0 0 15 15"
+                          </g>
+                          <defs>
+                            <filter
+                              id="voucher-filter1_d"
                               x={0}
-                              y={0}
-                              className="shopee-svg-icon icon-help"
+                              y={3}
+                              width={20}
+                              height={16}
+                              filterUnits="userSpaceOnUse"
+                              colorInterpolationFilters="sRGB"
                             >
-                              <g>
-                                <circle
-                                  cx="7.5"
-                                  cy="7.5"
-                                  fill="none"
-                                  r="6.5"
-                                  strokeMiterlimit={10}
-                                />
-                                <path
-                                  d="m5.3 5.3c.1-.3.3-.6.5-.8s.4-.4.7-.5.6-.2 1-.2c.3 0 .6 0 .9.1s.5.2.7.4.4.4.5.7.2.6.2.9c0 .2 0 .4-.1.6s-.1.3-.2.5c-.1.1-.2.2-.3.3-.1.2-.2.3-.4.4-.1.1-.2.2-.3.3s-.2.2-.3.4c-.1.1-.1.2-.2.4s-.1.3-.1.5v.4h-.9v-.5c0-.3.1-.6.2-.8s.2-.4.3-.5c.2-.2.3-.3.5-.5.1-.1.3-.3.4-.4.1-.2.2-.3.3-.5s.1-.4.1-.7c0-.4-.2-.7-.4-.9s-.5-.3-.9-.3c-.3 0-.5 0-.7.1-.1.1-.3.2-.4.4-.1.1-.2.3-.3.5 0 .2-.1.5-.1.7h-.9c0-.3.1-.7.2-1zm2.8 5.1v1.2h-1.2v-1.2z"
-                                  stroke="none"
-                                />
-                              </g>
+                              <feFlood
+                                floodOpacity={0}
+                                result="BackgroundImageFix"
+                              />
+                              <feColorMatrix
+                                in="SourceAlpha"
+                                values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                              />
+                              <feOffset />
+                              <feGaussianBlur stdDeviation=".5" />
+                              <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.09 0" />
+                              <feBlend
+                                in2="BackgroundImageFix"
+                                result="effect1_dropShadow"
+                              />
+                              <feBlend
+                                in="SourceGraphic"
+                                in2="effect1_dropShadow"
+                                result="shape"
+                              />
+                            </filter>
+                          </defs>
+                        </svg>
+                        <div className="text-base">Voucher của Shop</div>
+                      </div>
+                    </div>
+                    <div className="whitespace-nowrap">
+                      <div className="items-center flex justify-end">
+                        <div className="shop-voucher-sale mr-3">
+                          <span>-₫0</span>
+                          <div className="sale-svg right-[0] rotate-180">
+                            <svg
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 1 5 35"
+                              style={{ fill: "rgb(238, 77, 45)" }}
+                            >
+                              <path d="M0 0v2.27a2 2 0 010 3.46v2.54a2 2 0 010 3.46v2.54a2 2 0 010 3.46V19h2v-1h-.76A2.99 2.99 0 001 13.76v-1.52a3 3 0 000-4.48V6.24a3 3 0 000-4.48V1h1V0H0z" />
+                            </svg>
+                          </div>
+                          <div className="sale-svg left-0">
+                            <svg
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 1 5 35"
+                              style={{ fill: "rgb(238, 77, 45)" }}
+                            >
+                              <path d="M0 0v2.27a2 2 0 010 3.46v2.54a2 2 0 010 3.46v2.54a2 2 0 010 3.46V19h2v-1h-.76A2.99 2.99 0 001 13.76v-1.52a3 3 0 000-4.48V6.24a3 3 0 000-4.48V1h1V0H0z" />
                             </svg>
                           </div>
                         </div>
+                        <div className="flex justify-center items-center">
+                          <div>
+                            <button className="!text-sky-700 flex justify-center items-center">
+                              <span>Chọn Voucher khác</span>
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => setOpenDeliveryModal(true)}
-                        className="row-end-2 cursor-pointer col-end-4 capitalize !text-sky-700"
-                      >
-                        Thay đổi
-                      </button>
-                      <div className="row-start-1 col-start-4 text-right">
-                        {/* {" "} */}
-                        <span>₫32.700</span>
+                      <div />
+                    </div>
+                  </div>
+
+                  <div className="order-shop-settings">
+                    <div className="flex flex-col text-sm p-6">
+                      <div className="flex ">
+                        <span className="pt-2 items-center justify-center">
+                          Lời nhắn:
+                        </span>
+                        <div className="flex-1">
+                          <div className="relative ml-4">
+                            <div className="shop-note-input">
+                              <input
+                                className="px-3 py-1 w-full"
+                                type="text"
+                                placeholder="Lưu ý cho người bán..."
+                                defaultValue={shop.message}
+                                onBlur={(e) => {
+                                  const updatedOrderData = [...orderData];
+                                  updatedOrderData[shopIndex].message =
+                                    e.target.value;
+                                  setOrderData(updatedOrderData);
+                                }}
+                              />
+                            </div>
+                            <div />
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="border-b border-black/10 pb-5" />
-                    <div className="items-center flex px-7 py-2.5">
-                      <div className="">Được đồng kiểm.</div>
-                      <svg
-                        enableBackground="new 0 0 15 15"
-                        viewBox="0 0 15 15"
-                        x={0}
-                        y={0}
-                        className="shopee-svg-icon cursor-pointer icon-help-1"
-                      >
-                        <g>
-                          <circle
-                            cx="7.5"
-                            cy="7.5"
-                            fill="none"
-                            r="6.5"
-                            strokeMiterlimit={10}
-                          />
-                          <path
-                            d="m5.3 5.3c.1-.3.3-.6.5-.8s.4-.4.7-.5.6-.2 1-.2c.3 0 .6 0 .9.1s.5.2.7.4.4.4.5.7.2.6.2.9c0 .2 0 .4-.1.6s-.1.3-.2.5c-.1.1-.2.2-.3.3-.1.2-.2.3-.4.4-.1.1-.2.2-.3.3s-.2.2-.3.4c-.1.1-.1.2-.2.4s-.1.3-.1.5v.4h-.9v-.5c0-.3.1-.6.2-.8s.2-.4.3-.5c.2-.2.3-.3.5-.5.1-.1.3-.3.4-.4.1-.2.2-.3.3-.5s.1-.4.1-.7c0-.4-.2-.7-.4-.9s-.5-.3-.9-.3c-.3 0-.5 0-.7.1-.1.1-.3.2-.4.4-.1.1-.2.3-.3.5 0 .2-.1.5-.1.7h-.9c0-.3.1-.7.2-1zm2.8 5.1v1.2h-1.2v-1.2z"
-                            stroke="none"
-                          />
-                        </g>
-                      </svg>
+                    <div className="flex flex-col text-sm">
+                      <div className="shipping-container">
+                        <div className="">Phương thức vận chuyển:</div>
+                        <div className="col-start-2 whitespace-nowrap">
+                          <div>Nhanh</div>
+                        </div>
+                        <div className="col-end-2 col-start-1" />
+                        <div className="col-end-5 col-start-2 text-teal-500 mt-5">
+                          <div className="content-center flex flex-wrap">
+                            <img src="https://deo.shopeemobile.com/shopee/shopee-pcmall-live-sg/checkout/a714965e439d493ba00c.svg" />
+                            <div className="pl-2">
+                              Đảm bảo nhận hàng từ 11 Tháng 3 - 13 Tháng 3
+                            </div>
+                          </div>
+                          <div className="voucher-note">
+                            <div>
+                              Nhận Voucher trị giá ₫15.000 nếu đơn hàng được
+                              giao đến bạn sau ngày 13 Tháng 3 2025.
+                            </div>
+                            <div>
+                              <svg
+                                enableBackground="new 0 0 15 15"
+                                viewBox="0 0 15 15"
+                                x={0}
+                                y={0}
+                                className="shopee-svg-icon icon-help"
+                              >
+                                <g>
+                                  <circle
+                                    cx="7.5"
+                                    cy="7.5"
+                                    fill="none"
+                                    r="6.5"
+                                    strokeMiterlimit={10}
+                                  />
+                                  <path
+                                    d="m5.3 5.3c.1-.3.3-.6.5-.8s.4-.4.7-.5.6-.2 1-.2c.3 0 .6 0 .9.1s.5.2.7.4.4.4.5.7.2.6.2.9c0 .2 0 .4-.1.6s-.1.3-.2.5c-.1.1-.2.2-.3.3-.1.2-.2.3-.4.4-.1.1-.2.2-.3.3s-.2.2-.3.4c-.1.1-.1.2-.2.4s-.1.3-.1.5v.4h-.9v-.5c0-.3.1-.6.2-.8s.2-.4.3-.5c.2-.2.3-.3.5-.5.1-.1.3-.3.4-.4.1-.2.2-.3.3-.5s.1-.4.1-.7c0-.4-.2-.7-.4-.9s-.5-.3-.9-.3c-.3 0-.5 0-.7.1-.1.1-.3.2-.4.4-.1.1-.2.3-.3.5 0 .2-.1.5-.1.7h-.9c0-.3.1-.7.2-1zm2.8 5.1v1.2h-1.2v-1.2z"
+                                    stroke="none"
+                                  />
+                                </g>
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setOpenDeliveryModal(true)}
+                          className="row-end-2 cursor-pointer col-end-4 capitalize !text-sky-700"
+                        >
+                          Thay đổi
+                        </button>
+                        <div className="row-start-1 col-start-4 text-right">
+                          {/* {" "} */}
+                          <span>₫0</span>
+                        </div>
+                      </div>
+                      <div className="border-b border-black/10" />
+                      <div className="items-center flex px-7 py-2.5 my-3">
+                        <div className="mr-1">Được đồng kiểm</div>
+                        <svg
+                          enableBackground="new 0 0 15 15"
+                          viewBox="0 0 15 15"
+                          x={0}
+                          y={0}
+                          className="shopee-svg-icon cursor-pointer icon-help-1"
+                        >
+                          <g>
+                            <circle
+                              cx="7.5"
+                              cy="7.5"
+                              fill="none"
+                              r="6.5"
+                              strokeMiterlimit={10}
+                            />
+                            <path
+                              d="m5.3 5.3c.1-.3.3-.6.5-.8s.4-.4.7-.5.6-.2 1-.2c.3 0 .6 0 .9.1s.5.2.7.4.4.4.5.7.2.6.2.9c0 .2 0 .4-.1.6s-.1.3-.2.5c-.1.1-.2.2-.3.3-.1.2-.2.3-.4.4-.1.1-.2.2-.3.3s-.2.2-.3.4c-.1.1-.1.2-.2.4s-.1.3-.1.5v.4h-.9v-.5c0-.3.1-.6.2-.8s.2-.4.3-.5c.2-.2.3-.3.5-.5.1-.1.3-.3.4-.4.1-.2.2-.3.3-.5s.1-.4.1-.7c0-.4-.2-.7-.4-.9s-.5-.3-.9-.3c-.3 0-.5 0-.7.1-.1.1-.3.2-.4.4-.1.1-.2.3-.3.5 0 .2-.1.5-.1.7h-.9c0-.3.1-.7.2-1zm2.8 5.1v1.2h-1.2v-1.2z"
+                              stroke="none"
+                            />
+                          </g>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="shop-total">
+                    <div className="flex items-center">
+                      <h3 className="title-total">
+                        <div className="text-[0.9rem]">
+                          Tổng số tiền ({shop.products.length} sản phẩm):
+                        </div>
+                      </h3>
+                      <div className="title-total text-[1.3rem] pl-2.5 pr-6 font-weight-500 !text-[#ee4d2d]">
+                        ₫{formatPrice(shop.totalPrice || 0)}
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div className="shop-total">
-                  <div className="flex items-center">
-                    <h3 className="title-total">
-                      <div className="text-[0.9rem]">
-                        Tổng số tiền (2 sản phẩm):
-                      </div>
-                    </h3>
-                    <div className="title-total text-[1.3rem] pl-2.5 pr-6  font-weight-500 !text-[#ee4d2d]">
-                      ₫{formatPrice(507700)}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
+
           {/* SHOPEE VOUCHER */}
           <div className="!mt-[20px]">
             <div className="shopee-voucher-container">
@@ -629,19 +741,24 @@ export const OrderPage = () => {
 
             <div className="total-total-bg ">
               <h3 className="title-total">Tổng tiền hàng</h3>
-              <div className="title-total total-total">₫932.000</div>
+              <div className="title-total total-total mt-1.5">
+                ₫{formatPrice(totalOrderPrice)}
+              </div>
               <h3 className="title-total">Tổng tiền phí vận chuyển</h3>
-              <div className="title-total total-total">₫83.800</div>
+              <div className="title-total total-total mt-1.5">₫0</div>
               <h3 className="title-total">Tổng cộng Voucher giảm giá</h3>
-              <div className="title-total total-total">-₫25.000</div>
+              <div className="title-total total-total mt-1.5">₫0</div>
               <h3 className="title-total">Tổng thanh toán</h3>
-              <div className="title-total total-total !text-[#ee4d2d] text-3xl font-medium">
-                ₫990.800
+              <div className="title-total total-total !text-[#ee4d2d] text-3xl font-medium mt-1">
+                ₫{formatPrice(totalOrderPrice)}
               </div>
             </div>
             <div className="total-total-bg px-2">
               <div className="order-button-out">
-                <button className="bg-[#ee4d2d] !text-white">
+                <button
+                  onClick={() => handleCheckOut()}
+                  className="bg-[#ee4d2d] !text-white"
+                >
                   <p className="text-[0.9rem] px-20 ">Đặt hàng</p>
                 </button>
               </div>
