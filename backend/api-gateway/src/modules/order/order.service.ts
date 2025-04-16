@@ -42,67 +42,95 @@ export class OrderService {
 
   async addToCart(addToCartDto: any): Promise<any> {
     try {
-        const response = await firstValueFrom(
-          this.httpService.post('/carts/add-to-cart', addToCartDto),
-        );
-        return response.data;
+      const response = await firstValueFrom(
+        this.httpService.post('/carts/add-to-cart', addToCartDto),
+      );
+      return response.data;
     } catch (error) {
-        this.handleHttpError(error as AxiosError, 'addToCart');
+      this.handleHttpError(error as AxiosError, 'addToCart');
     }
   }
 
   async deleteFromCart(deleteFromCartDto: any): Promise<any> {
-     try {
-        const response = await firstValueFrom(
-          this.httpService.post('/carts/delete-from-cart', deleteFromCartDto),
-        );
-        return response.data;
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post('/carts/delete-from-cart', deleteFromCartDto),
+      );
+      return response.data;
     } catch (error) {
-        this.handleHttpError(error as AxiosError, 'deleteFromCart');
+      this.handleHttpError(error as AxiosError, 'deleteFromCart');
     }
   }
 
   async updateCart(updateCartDto: any): Promise<any> {
-     try {
-        const response = await firstValueFrom(
-          this.httpService.post('/carts/update-cart', updateCartDto),
-        );
-        return response.data;
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post('/carts/update-cart', updateCartDto),
+      );
+      return response.data;
     } catch (error) {
-        this.handleHttpError(error as AxiosError, 'updateCart');
+      this.handleHttpError(error as AxiosError, 'updateCart');
     }
   }
 
-    async getCart(customerId: number): Promise<any> {
-        try {
-            const response = await firstValueFrom(
-                this.httpService.get(`/carts/${customerId}`),
-            );
-            return response.data;
-        } catch (error) {
-            this.handleHttpError(error as AxiosError, `getCart for customer ${customerId}`);
-        }
+  async getCart(customerId: number): Promise<any> {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`/carts/${customerId}`),
+      );
+      return response.data;
+    } catch (error) {
+      this.handleHttpError(
+        error as AxiosError,
+        `getCart for customer ${customerId}`,
+      );
     }
+  }
 
-    async getBasicCart(customerId: number): Promise<any> {
-        try {
-            const response = await firstValueFrom(
-                this.httpService.get(`/carts/basic/${customerId}`),
-            );
-            return response.data;
-        } catch (error) {
-            this.handleHttpError(error as AxiosError, `getBasicCart for customer ${customerId}`);
-        }
+  async getBasicCart(customerId: number): Promise<any> {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`/carts/basic/${customerId}`),
+      );
+      return response.data;
+    } catch (error) {
+      this.handleHttpError(
+        error as AxiosError,
+        `getBasicCart for customer ${customerId}`,
+      );
     }
+  }
 
-    async deleteAllCart(customerId: number): Promise<any> {
-        try {
-            const response = await firstValueFrom(
-                this.httpService.get(`/carts/delete-all-cart/${customerId}`),
-            );
-            return response.data;
-        } catch (error) {
-            this.handleHttpError(error as AxiosError, `deleteAllCart for customer ${customerId}`);
-        }
+  async deleteAllCart(customerId: number): Promise<any> {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(`/carts/delete-all-cart/${customerId}`),
+      );
+      return response.data;
+    } catch (error) {
+      this.handleHttpError(
+        error as AxiosError,
+        `deleteAllCart for customer ${customerId}`,
+      );
     }
+  }
+
+  async createOrder(
+    userId: string,
+    orderData: any,
+    shippingAddress: string,
+  ): Promise<any> {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post('/checkout/create-order', {
+          userId,
+          orderData,
+          shippingAddress,
+        }),
+      );
+      return response.data;
+    } catch (error) {
+      this.handleHttpError(error as AxiosError, 'createOrder');
+    }
+  }
 }

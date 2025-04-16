@@ -73,7 +73,7 @@ export const ProductDisplay = () => {
                 </div>
               </div>
             </div>
-            <button className="absolute bottom-[-10] left-0 w-full py-2 bg-orange-500 text-xs text-white opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer">
+            <button className="z-10 absolute bottom-[-10] left-0 w-full py-2 bg-orange-500 text-xs text-white opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer">
               <div className="text-white">Tìm sản phẩm tương tự</div>
             </button>
           </div>
