@@ -55,7 +55,6 @@ jobs:
             docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/backend-search-service:latest || true
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/backend-search-service:latest
             docker run -d --name backend-search-service -p 3009:3009 \
-
             -e ELASTICSEARCH_NODE="https://34.69.91.173:9200" \
             -e ELASTICSEARCH_USERNAME="elastic" \
             -e ELASTICSEARCH_PASSWORD="123456789" \
