@@ -15,7 +15,7 @@ async function bootstrap() {
     app.enableCors({
 
       // origin: [`http://34.58.241.34:8000`, `http://34.58.241.34:8001`, `http://34.58.241.34:8002`], // frontend URL
-      origin: [EnvValue.USER_URL, EnvValue.SELLER_URL, EnvValue.ADMIN_URL], // frontend URLs
+      origin: [`http://localhost:8000`,`http://localhost:8001`,EnvValue.USER_URL, EnvValue.SELLER_URL, EnvValue.ADMIN_URL], // frontend URLs
 
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],

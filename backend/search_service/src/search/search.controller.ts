@@ -1,17 +1,17 @@
-import { Controller, Get, Post, Body, Query, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Param,Delete } from '@nestjs/common';
 import { SearchService } from './search.service';
-
+import {ProductDocument} from './dto/product.dto';
 @Controller('search')
 export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 
   @Post('index')
-  async indexDocument(@Body() document: any) {
+  async indexDocument(@Body() document: ProductDocument) {
     return await this.searchService.indexDocument(document);
   }
 
   @Post('bulk')
-  async bulkIndex(@Body() documents: any[]) {
+  async bulkIndex(@Body() documents: ProductDocument[]) {
     return await this.searchService.bulkIndex(documents);
   }
 
@@ -24,5 +24,15 @@ export class SearchController {
     @Query('maxPrice') maxPrice?: number,
     ) {
       return await this.searchService.search(query, Categories, page, minPrice, maxPrice);
+  }
+
+  @Delete(':id')
+    async delete(@Param('id') id: string) {
+      return await this.searchService.deleteDocument(id);
+    }
+
+  @Post('delete-by-query')
+  async deleteByQuery(@Body() body: any) {
+    return await this.searchService.deleteByQuery(body.query);
   }
 }

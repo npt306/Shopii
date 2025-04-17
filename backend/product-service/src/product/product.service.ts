@@ -13,7 +13,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { Storage, Bucket } from '@google-cloud/storage';
 import { AdminProductListDto } from './dto/admin-product-list.dto';
 import { ProductStatus } from '../common/productStatus.enum';
-
+import { HttpService } from '@nestjs/axios';
+import { lastValueFrom } from 'rxjs';
 interface CategoryWithChildren extends Categories {
   children?: CategoryWithChildren[];
 }
@@ -258,6 +259,26 @@ export class ProductService {
       );
       await this.productDetailRepository.save(detailEntities);
     }
+    // Use fetch to call the external API
+  try {
+    //const baseUrl = this.configService.get<string>('SEARCH_SERVICE_BASE_URL');
+    const response = await fetch('http://localhost:3000/api/search/index', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(createProductDto),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to index product: ${response.statusText}`);
+    }
+
+    const responseData = await response.json();
+    console.log('Product indexed successfully:', responseData);
+  } catch (error) {
+    console.error('Error indexing product:', error.message);
+  }
 
     return savedProduct;
   }
@@ -531,8 +552,27 @@ export class ProductService {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
 
-    // Soft delete
+    // Step 1: Soft delete
     await this.productRepository.softDelete(id);
     console.log(`Product ${id} deleted. Reason: ${reason}`);
+
+    try {
+      const esResponse = await fetch(`http://localhost:3000/api/search/${id}`, {
+        method: 'DELETE',
+      });
+  
+      if (!esResponse.ok) {
+        throw new Error(`Elasticsearch deletion failed: ${esResponse.statusText}`);
+      }
+  
+      const result = await esResponse.json();
+      console.log(`Product ${id} deleted from Elasticsearch:`, result);
+    } catch (err) {
+      console.error(`Error deleting product from Elasticsearch: ${err.message}`);
+    }
+
+
+
   }
+
 }

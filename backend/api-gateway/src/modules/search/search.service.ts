@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
-
+import { ProductDocument } from './dto/product.dto';
 @Injectable()
 export class SearchService {
   constructor(private readonly httpService: HttpService) {}
 
-  async indexDocument(document: any): Promise<any> {
+  async indexDocument(document: ProductDocument): Promise<any> {
     const response = await lastValueFrom(
       this.httpService.post('/search/index', document)
     );
     return response.data;
   }
 
-  async bulkIndex(documents: any[]): Promise<any> {
+  async bulkIndex(documents: ProductDocument[]): Promise<any> {
     const response = await lastValueFrom(
       this.httpService.post('/search/bulk', documents)
     );

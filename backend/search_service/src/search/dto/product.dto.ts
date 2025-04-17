@@ -1,17 +1,17 @@
-export interface ProductDTO {
-    id: number;
-    Name: string;
-    Description: string;
-    Categories: string[];
-    SellerID: string;
-    Images: string[];
-    Price: number;
-    Address: string;
-    SoldQuantity: number;
-    StockQuantity: number;
-    Review: string;
-    Rating: number;
-    Status: string;
-    CreatedAt: Date;
-    UpdatedAt: Date;
-  }
+export interface ProductDocument {
+  ProductID: number;
+  SellerID: number;
+  Name: string;
+  Description: string;
+  Categories: string[];
+  Images: string[];
+  SoldQuantity: number;
+  Rating: number;
+  Status: string;
+  CreatedAt: Date;
+  UpdatedAt: Date;
+  CoverImage: string;
+  Video?: string;
+  Quantity: number;
+  Reviews: number;
+}

@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { elasticsearchClient } from '../config/app.config';
-import {ProductDTO} from './dto/product.dto';
+import {ProductDocument} from './dto/product.dto';
 @Injectable()
 export class SearchService {
-  private readonly index = 'search';
+  private readonly index = 'search_products';
 
-  async indexDocument(document: any) {
+  async indexDocument(document: ProductDocument) {
     try {
       return await elasticsearchClient.index({
         index: this.index,
@@ -16,7 +16,7 @@ export class SearchService {
     }
   }
 
-  async bulkIndex(documents: any[]) {
+  async bulkIndex(documents: ProductDocument[]) {
     try {
       return await elasticsearchClient.helpers.bulk({
         index: this.index,
@@ -109,4 +109,28 @@ export class SearchService {
         throw new Error(`Search failed: ${error.message}`);
     }
 }
+
+
+  async deleteDocument(id: string) {
+    try {
+      return await elasticsearchClient.delete({
+        index: this.index,
+        id: id,
+      });
+    } catch (error) {
+      throw new Error(`Failed to delete document with id ${id}: ${error.message}`);
+    }
+  }
+
+  async deleteByQuery(query: any) {
+    try {
+      return await elasticsearchClient.deleteByQuery({
+        index: this.index,
+        query,
+      });
+    } catch (error) {
+      throw new Error(`Failed to delete documents by query: ${error.message}`);
+    }
+  }
+
 }
