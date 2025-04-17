@@ -1,0 +1,11 @@
+.image-thumbnail {
+  width: 82px;
+  height: 82px;
+  object-fit: cover;
+  border: 1px solid transparent;
+  cursor: pointer;
+  margin: 0 4px;
+}
+.image-thumbnail:hover {
+  border: 2px solid #ee4d2d;
+}

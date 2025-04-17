@@ -24,6 +24,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     : null;
 
   const updateCart = async () => {
+    console.log("update basic cart.");
     try {
       setLoading(true);
       const response = await axios.get<BasicCart>(

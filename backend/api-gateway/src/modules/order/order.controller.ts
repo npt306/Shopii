@@ -74,4 +74,37 @@ export class OrderController {
       throw error;
     }
   }
+
+  @Post('/checkout/create-order')
+  async createOrder(
+    @Body()
+    payload: {
+      id: string;
+      orderData: any;
+      shippingAddress: string;
+    },
+  ): Promise<any> {
+    return this.orderService.createOrder(
+      payload.id,
+      payload.orderData,
+      payload.shippingAddress,
+    );
+  }
+
+  @Get('/checkout/user-orders/:userId')
+  async getUserOrder(@Param('userId') id: number) {
+    try {
+      const response = await this.httpService
+        .get(`${process.env.ORDER_SERVICE_URL}/checkout/user-orders/${id}`)
+        .toPromise();
+      if (response && response.data) {
+        return response.data;
+      } else {
+        throw new Error('No response from the server');
+      }
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
 }

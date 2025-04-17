@@ -10,6 +10,8 @@ import {
   FaHeart,
 } from "react-icons/fa";
 
+import "../css/page/productDetailPage.css";
+
 import { ProductDetail } from "../types/productDetail";
 import { HomeLayout } from "../layout/home";
 import AddToCartNotification from "../components/features/addToCartNotification";
@@ -247,14 +249,14 @@ export const ProductDetailPage = () => {
                           key={currentIndex + index}
                           src={media}
                           alt={`Thumbnail ${currentIndex + index}`}
-                          className="w-auto h-[82px] cursor-pointer mx-1"
+                          className="object-cover w-[82px] h-[82px] cursor-pointer mx-1 image-thumbnail"
                           onMouseEnter={() => setSelectedMedia(media)}
                         />
                       ) : (
                         <video
                           key={currentIndex + index}
                           src={media}
-                          className="w-auto h-[82px] cursor-pointer mx-1"
+                          className="object-cover w-[82px] h-[82px] cursor-pointer mx-1 border hover:border-2 hover:border-[#ee4d2d]"
                           onMouseEnter={() => setSelectedMedia(media)}
                         />
                       );
@@ -691,7 +693,7 @@ export const ProductDetailPage = () => {
                   className="bg-[#ee4d2d] text-white px-4 py-2 rounded hover:bg-red-600 transition"
                   onClick={() => setStateVoucherShopDialog(false)}
                 >
-                  Đóng
+                  <span className="text-white">Đóng</span>
                 </button>
               </div>
             </div>

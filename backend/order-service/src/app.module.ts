@@ -7,8 +7,10 @@ import { AppService } from './app.service';
 import { CartsModule } from './carts/carts.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { join } from 'path';
 import { Cart } from './carts/entities/cart.entity';
+import { OrderModule } from './order/order.module';
+import { OrderEntity } from './order/entities/order.entity';
+import { OrderItemEntity } from './order/entities/orderItem.entity';
 
 @Module({
   imports: [
@@ -23,12 +25,14 @@ import { Cart } from './carts/entities/cart.entity';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
-        entities: [Cart],
+        entities: [Cart, OrderEntity, OrderItemEntity],
+        autoLoadEntities: true,
         synchronize: false,
-        logging: process.env.NODE_ENV !== 'production',
+        // logging: process.env.NODE_ENV !== 'production',
       }),
     }),
     CartsModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [AppService],

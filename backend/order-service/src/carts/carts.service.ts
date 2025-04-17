@@ -132,7 +132,7 @@ export class CartsService {
   async updateCart(updateCartDto: UpdateCartDto) {
     const cart = await this.cartRepository.findOne({
       where: {
-        customerId: updateCartDto.customerId,
+        customerId: updateCartDto.id,
         productTypeId: updateCartDto.productTypeId,
       },
     });
@@ -141,26 +141,30 @@ export class CartsService {
       `SELECT "ProductTypeID"
        FROM "Carts"
        WHERE "ProductID" = $1
-       AND "ProductTypeID" != $2`,
-      [cart?.productId, cart?.productTypeId],
+       AND "ProductTypeID" != $2
+       AND "CustomerID" = $3`,
+      [cart?.productId, cart?.productTypeId, cart?.customerId],
     );
 
     if (cart) {
       cart.quantity = updateCartDto.quantity;
       cart.updatedAt = new Date();
       await this.cartRepository.save(cart);
-      relatedProduct.map(async (item) => {
-        let res = await this.cartRepository.findOne({
+      for (const item of relatedProduct) {
+        const res = await this.cartRepository.findOne({
           where: {
+            customerId: updateCartDto.id,
             productTypeId: item.ProductTypeID,
           },
         });
+
         if (res) {
           res.updatedAt = new Date();
           await this.cartRepository.save(res);
         }
-      });
-      return 'Update cart success';
+      }
+
+      return 'Update success';
     } else {
       return { message: 'Item not found in cart' };
     }
