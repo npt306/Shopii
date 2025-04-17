@@ -47,4 +47,18 @@ export class SearchService {
     );
     return response.data;
   }
+
+  async deleteDocument(id: string): Promise<any> {
+    try {
+      const response = await lastValueFrom(
+        this.httpService.delete(`/search/${id}`)  // Replace with your Elasticsearch URL
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to delete document with id ${id}: ${error.message}`);
+    }
+  }
+
+
+
 }

@@ -55,16 +55,8 @@ jobs:
             docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/backend-search-service:latest || true
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/backend-search-service:latest
             docker run -d --name backend-search-service -p 3009:3009 \
-            -e DB_HOST=${{ secrets.DB_HOST }} \
-            -e DB_PORT=${{ secrets.DB_PORT }} \
-            -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
-            -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-            -e DB_NAME=${{ secrets.DB_NAME }} \
+
             -e ELASTICSEARCH_NODE="https://34.69.91.173:9200" \
             -e ELASTICSEARCH_USERNAME="elastic" \
             -e ELASTICSEARCH_PASSWORD="123456789" \
-            -e "GCLOUD_PRIVATE_KEY=${{ secrets.GCLOUD_PRIVATE_KEY }}" \
-            -e GCLOUD_CLIENT_EMAIL=${{ secrets.GCLOUD_CLIENT_EMAIL }} \
-            -e GCLOUD_PROJECT_ID=${{ secrets.GCLOUD_PROJECT_ID }} \
-            -e GCLOUD_BUCKET=${{ secrets.GCLOUD_BUCKET }} \
             ${{ secrets.DOCKERHUB_USERNAME }}/backend-search-service:latest

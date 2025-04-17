@@ -3,7 +3,7 @@ import logoShopee from "../../assets/logo_shopee_1.png";
 interface Product {
     id: number;
     Name: string;
-    image: string;
+    Images: string[];
     Price: number;
 }
 
@@ -23,7 +23,7 @@ export const SearchProductDisplay = ({ products }: SearchProductDisplayProps) =>
                         <div className="flex flex-col justify-start flex-grow">
                             <div className="flex items-center justify-center">
                                 <img
-                                    src={product.image || logoShopee}
+                                    src={product.Images[0] || logoShopee}
                                     alt={product.Name}
                                     className="w-auto h-30 mx-auto object-cover"
                                 />

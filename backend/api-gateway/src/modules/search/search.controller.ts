@@ -4,6 +4,8 @@ import {
     Post,
     Body,
     Query,
+    Delete,
+    Param,
     ParseIntPipe,
     ParseArrayPipe,
   } from '@nestjs/common';
@@ -32,5 +34,9 @@ import {
       @Query('maxPrice') maxPrice?: number,
     ) {
       return await this.searchService.search(query, Categories, page, minPrice, maxPrice);
+    }
+    @Delete(':id')
+    async delete(@Param('id') id: string) {
+      return await this.searchService.deleteDocument(id);
     }
   }

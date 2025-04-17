@@ -1,6 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { elasticsearchClient } from '../config/app.config';
 import {ProductDocument} from './dto/product.dto';
+
+interface SearchHit {
+  _id: string; // Explicitly type _id as string
+  _source: {
+    ProductID: string;
+    [key: string]: any; // Adjust based on your document structure
+  };
+}
+
+interface SearchResponse {
+  hits: {
+    hits: SearchHit[];
+  };
+}
+
 @Injectable()
 export class SearchService {
   private readonly index = 'search_products';
@@ -111,16 +126,50 @@ export class SearchService {
 }
 
 
-  async deleteDocument(id: string) {
-    try {
-      return await elasticsearchClient.delete({
-        index: this.index,
-        id: id,
-      });
-    } catch (error) {
-      throw new Error(`Failed to delete document with id ${id}: ${error.message}`);
-    }
-  }
+// async deleteDocument(id: string) {
+//   try {
+//     // Ensure index is defined
+//     if (!this.index) {
+//       throw new Error("Elasticsearch index is not defined");
+//     }
+
+//     // Step 1: Search for documents with the matching ProductID
+//     const searchResponse = await elasticsearchClient.search({
+//       index: this.index,
+//       body: {
+//         query: {
+//           term: {
+//             ProductID: id,
+//           },
+//         },
+//       },
+//     });
+
+//     // Step 2: Check if any documents were found
+//     const hits = searchResponse.hits.hits;
+//     if (hits.length === 0) {
+//       throw new Error(`No document found with ProductID ${id}`);
+//     }
+
+//     // Step 3: Delete each matching document by its _id
+//     // const deletePromises = hits.map((hit) =>
+//     //   elasticsearchClient.delete({
+//     //     index: this.index, // Now guaranteed to be a string
+//     //     id: hit._id,
+//     //   })
+//     // );
+
+//       // Step 4: Execute all delete operations
+//       await Promise.all(deletePromises);
+
+//       return {
+//         message: `Successfully deleted ${hits.length} document(s) with ProductID ${id}`,
+//         deletedCount: hits.length,
+//       };
+//     } catch (error) {
+//       throw new Error(`Failed to delete document(s) with ProductID ${id}: ${error.message}`);
+//     }
+//   }
 
   async deleteByQuery(query: any) {
     try {

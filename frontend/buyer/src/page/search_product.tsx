@@ -7,7 +7,7 @@ import { EnvValue } from "../env-value/envValue.ts";
 interface Product {
     id: number;
     Name: string;
-    image: string;
+    Images: string[];
     Price: number;
     discount: number;
     sales: number;
@@ -64,7 +64,7 @@ export const SearchProductPage = () => {
             const transformedResults = data.$.map((item: any) => ({
                 id: item._source.id,
                 Name: item._source.Name,
-                image: item._source.image,
+                Images: item._source.Images || [],
                 Price: item._source.Price || 699000,
                 discount: item._source.discount || 7,
                 sales: item._source.sales || 2500
