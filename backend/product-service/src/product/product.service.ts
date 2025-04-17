@@ -145,6 +145,7 @@ export class ProductService {
     const productListDto: ProductListDto = {
       products: products.map((product) => ({
         id: product.ProductID,
+        sellerId: product.SellerID,
         name: product.Name,
         price: priceMap.get(product.ProductID) || 0,
         images: product.CoverImage || '',

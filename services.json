@@ -1,0 +1,95 @@
+{
+    "services": [
+        {
+            "name": "accounts-service",
+            "path": "backend/accounts-service",
+            "install": "npm install",
+            "start": "npm run start:dev",
+            "description": "Handles account management and authentication"
+        },
+        {
+            "name": "auth-service",
+            "path": "backend/auth-service",
+            "install": "npm i --legacy-peer-deps",
+            "start": "npm run start:dev",
+            "description": "Manages authentication and authorization"
+        },
+        {
+            "name": "order-service",
+            "path": "backend/order-service",
+            "install": "npm install",
+            "start": "npm run start:dev",
+            "description": "Handles order processing and cart management"
+        },
+        {
+            "name": "payment-service",
+            "path": "backend/payment-service",
+            "install": "npm install",
+            "start": "npm run start:dev",
+            "description": "Processes payments and transactions"
+        },
+        {
+            "name": "product-service",
+            "path": "backend/product-service",
+            "install": "npm install",
+            "start": "npm run start:dev",
+            "description": "Manages products and categories"
+        },
+        {
+            "name": "search-service",
+            "path": "backend/search-service",
+            "install": "npm install",
+            "start": "npm run start:dev",
+            "description": "Provides search functionality across products"
+        },
+        {
+            "name": "shipping-service",
+            "path": "backend/shipping-service",
+            "install": "npm install",
+            "start": "npm run start:dev",
+            "description": "Handles shipping and delivery logistics"
+        },
+        {
+            "name": "user-service",
+            "path": "backend/user-service",
+            "install": "npm install",
+            "start": "npm run start:dev",
+            "description": "Manages user profiles and information"
+        },
+        {
+            "name": "voucher-service",
+            "path": "backend/voucher-service",
+            "install": "npm install",
+            "start": "npm run start:dev",
+            "description": "Handles voucher and discount management"
+        },
+        {
+            "name": "api-gateway",
+            "path": "backend/api-gateway",
+            "install": "npm install",
+            "start": "npm run start:dev",
+            "description": "API Gateway for routing requests to microservices"
+        },
+        {
+            "name": "admin-frontend",
+            "path": "frontend/admin",
+            "install": "npm install",
+            "start": "npm run dev",
+            "description": "Admin dashboard web application"
+        },
+        {
+            "name": "buyer-frontend",
+            "path": "frontend/buyer",
+            "install": "npm install",
+            "start": "npm run dev",
+            "description": "Customer-facing web application"
+        },
+        {
+            "name": "seller-frontend",
+            "path": "frontend/seller",
+            "install": "npm install",
+            "start": "npm run dev",
+            "description": "Seller portal web application"
+        }
+    ]
+}

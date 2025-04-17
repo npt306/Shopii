@@ -1,27 +1,14 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import {
-  FastifyAdapter,
-  NestFastifyApplication,
-} from '@nestjs/platform-fastify';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import multiPart from '@fastify/multipart';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
-    new FastifyAdapter(),
-  );
-
+  // Sử dụng Express adapter (mặc định)
+  const app = await NestFactory.create(AppModule);
+  
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors();
-
-  await app.register(multiPart, {
-    limits: {
-      fileSize: 50 * 1024 * 1024, // 50 MB
-    },
-  });
   
   const config = new DocumentBuilder()
     .setTitle('API Gateway')
@@ -29,9 +16,9 @@ async function bootstrap() {
     .setVersion('1.0')
     .build();
 
-  const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-document', app, documentFactory);
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api-document', app, document);
 
-  await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
+  await app.listen(process.env.PORT || 3000);
 }
 bootstrap();

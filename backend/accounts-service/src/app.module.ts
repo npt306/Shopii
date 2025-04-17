@@ -6,7 +6,7 @@ import { join } from 'path';
 import { Account } from './entity/Account.entity';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-
+import { SellerModule } from './seller/seller.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -27,6 +27,7 @@ import { AppService } from './app.service';
       inject: [ConfigService],
     }),
     UserManagementModule,
+    SellerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

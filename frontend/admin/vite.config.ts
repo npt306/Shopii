@@ -9,7 +9,7 @@ export default defineConfig({
     tailwindcss()
   ],
   preview: {
-    port: 8000,
+    port: 8002,
     strictPort: true,
   },
   server: {
@@ -19,7 +19,7 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
-    port: 8000,
+    port: 8002,
     strictPort: true,
     host: true,
   },
