@@ -11,6 +11,7 @@ import avatarDefault from "../../assets/avatar_default.png";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/authStore"; // Adjust the path to where your store is defined
 import { userService } from "../../services/userService";
+import { ProtectedExternalLink } from "../protectedRoute/protectedLink";
 
 export const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,12 +27,12 @@ export const Header = () => {
     <div className="flex flex-col bg-[#ee4d2d] text-white">
       <div className="mx-30 py-3 flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <a
-            href={`${import.meta.env.VITE_SELLER_URL}/portal/settings/shop/profile/`}
+          <ProtectedExternalLink
+            to={`${import.meta.env.VITE_SELLER_URL}/portal/settings/shop/profile/`}
             className="cursor-pointer hover:opacity-80"
           >
             Kênh người bán
-          </a>
+          </ProtectedExternalLink>
           <div>Dowload app</div>
           <div className="flex items-center gap-2">
             <p>Kết nối</p>
