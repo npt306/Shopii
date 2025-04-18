@@ -80,8 +80,6 @@ export class UserController {
         []
       );
 
-      console.log(result);
-
       // Assuming result contains your tokens and profile data
       // Set standardAccessToken as an HTTP‑only cookie
       res.cookie('accessToken', result.standardAccessToken, {
@@ -225,6 +223,49 @@ export class UserController {
       };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
+    }
+  }
+
+  
+  @Get('verify-token')
+  async verifyToken(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    try {
+      const accessToken = req.cookies['accessToken'];
+
+      // Check if token exists
+      if (!accessToken) {
+        return {
+          isAuthenticated: false,
+          message: 'No authentication token found'
+        };
+      }
+
+      // Validate the token by decoding and checking expiration
+      try {
+        const tokenParts = accessToken.split('.');
+        if (tokenParts.length !== 3) {
+          return { isAuthenticated: false, message: 'Invalid token format' };
+        }
+
+        const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
+
+        // Check token expiration
+        const currentTime = Math.floor(Date.now() / 1000);
+        if (payload.exp && payload.exp < currentTime) {
+            return { isAuthenticated: false, message: 'Token expired' };
+        }
+
+        // Token exists and is valid
+        return {
+          isAuthenticated: true,
+          message: 'Token is valid',
+        };
+
+      } catch (error) {
+        return { isAuthenticated: false, message: 'Error validating token' };
+      }
+    } catch (error) {
+      throw new HttpException('Token verification failed', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

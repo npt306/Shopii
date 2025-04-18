@@ -103,7 +103,7 @@ const TaxRegister: React.FC<TaxRegisterProps> = ({ onNextStep, onPreviousStep, i
             </label>
 
             {/* Công ty */}
-            <label className="inline-flex items-center cursor-pointer">
+            {/* <label className="inline-flex items-center cursor-pointer">
               <input
                 type="radio"
                 name="businessType"
@@ -122,7 +122,7 @@ const TaxRegister: React.FC<TaxRegisterProps> = ({ onNextStep, onPreviousStep, i
                 )}
               </span>
               <span className="ml-2 text-sm text-gray-700">Công ty</span>
-            </label>
+            </label> */}
           </div>
         </div>
 

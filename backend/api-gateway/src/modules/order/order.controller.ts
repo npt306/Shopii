@@ -1,8 +1,10 @@
-import { Controller, Post, Get, Param, Body } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, UseGuards } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { OrderService } from './order.service';
+import { PermissionsGuard } from 'src/guard/permission.guard';
 
 @Controller('/order')
+@UseGuards(PermissionsGuard)
 export class OrderController {
   constructor(
     private readonly orderService: OrderService,

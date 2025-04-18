@@ -99,7 +99,7 @@ export const Header = () => {
                   onClick={() => setIsOpen(!isOpen)}
                 >
                   <img
-                    src={JSON.parse(localStorage.getItem("userProfile")).avatar || avatarDefault}
+                    src={JSON.parse(localStorage.getItem("userProfile") || "{}").avatar || avatarDefault}
                     alt="Avatar"
                     className="w-7 h-7 rounded-full"
                   />

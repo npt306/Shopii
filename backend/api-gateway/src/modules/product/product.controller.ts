@@ -14,6 +14,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
@@ -21,8 +22,10 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { FastifyRequest } from 'fastify';
 import * as FormData from 'form-data';
 import * as concat from 'concat-stream';
+import { PermissionsGuard } from 'src/guard/permission.guard';
 
 @Controller('api/product')
+@UseGuards(PermissionsGuard)
 export class ProductController {
   constructor(private readonly httpService: HttpService) { }
 

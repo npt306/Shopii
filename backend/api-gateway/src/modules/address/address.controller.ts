@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Delete, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { AddressService } from './address.service';
+import { PermissionsGuard } from 'src/guard/permission.guard';
 
 @Controller('api/address')
+@UseGuards(PermissionsGuard)
 export class AddressController {
   constructor(private readonly addressService: AddressService) {}
   // Get addresses by account ID

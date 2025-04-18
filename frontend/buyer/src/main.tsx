@@ -23,6 +23,9 @@ import { PersistGate } from "redux-persist/integration/react";
 
 import { CartProvider } from "./context/cartContext.tsx";
 
+import { AuthProvider } from './components/protectedRoute/authContext.tsx';
+import { ProtectedRoute } from './components/protectedRoute/protectedRoute.tsx';
+
 const router = createBrowserRouter(
   [
     {
@@ -37,33 +40,46 @@ const router = createBrowserRouter(
       path: "/callback",
       element: <CallbackPage />,
     },
+
     {
       path: "/home",
       element: <HomePage />,
     },
+
     {
       path: "/search",
       element: <SearchProductPage />,
     },
+
+    // {
+    //   path: "/detail-product/:id",
+    //   element: <ProductDetailPage />,
+    // },
+
     {
-      path: "/detail-product/:id",
-      element: <ProductDetailPage />,
-    },
-    {
-      path: "/user",
-      element: <UserPage />,
-    },
-    {
-      path: "/user/:id",
-      element: <UserPage />,
-    },
-    {
-      path: "/cart/:id",
-      element: <CartPage />,
-    },
-    {
-      path: "/order/:id",
-      element: <OrderPage />,
+      element: <ProtectedRoute />,
+      children: [
+        {
+          path: "/detail-product/:id",
+          element: <ProductDetailPage />,
+        },
+        {
+          path: "/user",
+          element: <UserPage />,
+        },
+        {
+          path: "/user/:id",
+          element: <UserPage />,
+        },
+        {
+          path: "/cart/:id",
+          element: <CartPage />,
+        },
+        {
+          path: "/order/:id",
+          element: <OrderPage />,
+        },
+      ]
     },
   ],
   {
@@ -75,12 +91,14 @@ const router = createBrowserRouter(
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
-        <CartProvider>
-          <RouterProvider router={router} />
-        </CartProvider>
-      </PersistGate>
-    </Provider>
+    <AuthProvider>
+      <Provider store={store}>
+        <PersistGate loading={null} persistor={persistor}>
+          <CartProvider>
+            <RouterProvider router={router} />
+          </CartProvider>
+        </PersistGate>
+      </Provider>
+    </AuthProvider>
   </StrictMode>
 );
