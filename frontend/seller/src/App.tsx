@@ -15,11 +15,12 @@ import OrderInteraction from './pages/OrderManagement/OrderInteraction/OrderInte
 import MediaStorage from './pages/DecorationShop/MediaStorage/MediaStorage';
 import DeliverySetting from "./pages/OrderManagement/DeliverySetting/DeliverySettingMain";
 import ShopRegister from './pages/RegisterShop/Register';
-import ProtectedRoute from './components/hook/protectedRoute';
 import { ShopVoucherPage } from './pages/MarketingChannel/ShopVoucher/ShopVoucher';
 import { ToastContainer } from "react-toastify";
 import { useEffect, useState } from 'react';
 import { EnvValue } from './env-value/envValue';
+import { AuthProvider } from './components/protectedRoute/authContext.tsx';
+import { ProtectedRoute } from './components/protectedRoute/protectedRoute.tsx';
 
 function App() {
   // Getting user's profile and saving it in localStorage

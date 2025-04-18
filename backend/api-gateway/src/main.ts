@@ -7,6 +7,9 @@ import {
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import multiPart from '@fastify/multipart';
+import { KeycloakMiddleware } from './middleware/keycloak.middleware';
+import * as cookieParser from 'cookie-parser';
+import fastifyCookie from 'fastify-cookie';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -14,7 +17,13 @@ async function bootstrap() {
     new FastifyAdapter(),
   );
 
+  //decorate the request object to add userInfo so we can access it via fastify in permission guard or other places
+  app.getHttpAdapter().getInstance().decorateRequest('userInfo', null);
+  app.register(fastifyCookie);
+
   app.useGlobalPipes(new ValidationPipe());
+  app.use(cookieParser());
+  app.use(new KeycloakMiddleware().use);
   app.enableCors();
 
   await app.register(multiPart, {

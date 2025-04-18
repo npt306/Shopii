@@ -9,10 +9,13 @@ import {
   ParseIntPipe,
   Query,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { VouchersService } from './vouchers.service';
+import { PermissionsGuard } from 'src/guard/permission.guard';
 
 @Controller('api/vouchers')
+@UseGuards(PermissionsGuard)
 export class VouchersController {
   constructor(private readonly vouchersService: VouchersService) {}
 

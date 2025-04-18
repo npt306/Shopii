@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete, ParseIntPipe, Query, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete, ParseIntPipe, Query, Put, UseGuards } from '@nestjs/common';
 import { AccountsService } from './accounts.service';
+import { PermissionsGuard } from 'src/guard/permission.guard';
 
 @Controller('api/accounts')
+@UseGuards(PermissionsGuard)
 export class AccountsController {
   constructor(private readonly accountsService: AccountsService) {}
 

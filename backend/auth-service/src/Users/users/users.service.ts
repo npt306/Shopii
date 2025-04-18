@@ -214,6 +214,13 @@ export class UsersService {
   }
 
   async loginAndExchange(username: string, password: string, permissions: string[]): Promise<any> {
+    //check for account status first (also check if account exist)
+    if(!await this.checkAccountStatus(username)) {
+      return {
+        status: "banned",
+      }
+    }
+
     // Get the standard access token via login
     const tokenData = await this.login(username, password);
     const standardAccessToken = tokenData.access_token;
@@ -453,11 +460,11 @@ export class UsersService {
       if (data.taxRegister?.businessType) {
         switch (data.taxRegister.businessType) {
           case 'ho-kinh-doanh':
-            sellerType = 'Small Business';
+            sellerType = 'Business';
             break;
-          case 'cong-ty':
-            sellerType = 'Company';
-            break;
+          // case 'cong-ty':
+          //   sellerType = 'Company';
+          //   break;
           default:
             sellerType = 'Individual';
         }
@@ -818,6 +825,31 @@ export class UsersService {
     } catch (error) {
       console.error('Logout error:', error.response?.data || error.message);
       throw new HttpException('Failed to logout', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+  
+  //false if banned and vice versa
+  async checkAccountStatus(email: string): Promise<boolean> {
+    try {
+      const account = await this.accountRepository.findOne({
+        where: { Email: email },
+      })
+
+      if(!account) {
+        throw new HttpException('Account not found', HttpStatus.NOT_FOUND);
+      }
+
+      //Check status
+      //banned
+      if(account.Status !== 'active') {
+        return false;
+      }
+
+      return true;
+    }
+    catch (error) {
+      console.error('Error checking account status:', error);
+      throw new HttpException('Failed to check account status', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

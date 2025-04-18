@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Put, Delete, Patch, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Patch, Body, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { CategoryService } from './category.service';
+import { PermissionsGuard } from 'src/guard/permission.guard';
 
 @Controller('api/categories')
+@UseGuards(PermissionsGuard)
 export class CategoryController {
     constructor(private readonly categoryService: CategoryService) { }
 

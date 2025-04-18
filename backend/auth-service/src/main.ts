@@ -11,11 +11,11 @@ async function bootstrap() {
     const app = await NestFactory.create(AppModule);
     app.use(cookieParser());
     app.useGlobalPipes(new ValidationPipe({ transform: true }));
-    app.use(new KeycloakMiddleware().use);
+    // app.use(new KeycloakMiddleware().use);
     app.enableCors({
 
       // origin: [`http://34.58.241.34:8000`, `http://34.58.241.34:8001`, `http://34.58.241.34:8002`], // frontend URL
-      origin: [`http://localhost:8000`,`http://localhost:8001`,EnvValue.USER_URL, EnvValue.SELLER_URL, EnvValue.ADMIN_URL], // frontend URLs
+      origin: [`http://localhost:8000`,`http://localhost:8001`, EnvValue.USER_URL, EnvValue.SELLER_URL, EnvValue.ADMIN_URL], // frontend URLs
 
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
