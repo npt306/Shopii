@@ -782,20 +782,21 @@ export class UsersService {
 
   async logout(refreshToken: string, res?: any): Promise<any> {
     try {
+      //Not invalidate it because we will remove all of them anyway
       // 1. Invalidate the session at Keycloak
-      const keycloakLogoutUrl = `${this.keycloakBaseUrl}/realms/${this.realm}/protocol/openid-connect/logout`;
-      const params = new URLSearchParams();
-      params.append('client_id', this.clientId);
-      if (this.clientSecret) {
-        params.append('client_secret', this.clientSecret);
-      }
-      params.append('refresh_token', refreshToken);
+      // const keycloakLogoutUrl = `${this.keycloakBaseUrl}/realms/${this.realm}/protocol/openid-connect/logout`;
+      // const params = new URLSearchParams();
+      // params.append('client_id', this.clientId);
+      // if (this.clientSecret) {
+      //   params.append('client_secret', this.clientSecret);
+      // }
+      // params.append('refresh_token', refreshToken);
 
-      await firstValueFrom(
-        this.httpService.post(keycloakLogoutUrl, params.toString(), {
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        })
-      );
+      // await firstValueFrom(
+      //   this.httpService.post(keycloakLogoutUrl, params.toString(), {
+      //     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      //   })
+      // );
 
       // 2. Clear cookies if response object is provided
       if (res) {
