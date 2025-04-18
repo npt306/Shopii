@@ -6,7 +6,6 @@ import { formatPrice } from "../../helpers/utility/formatPrice";
 
 type Product = {
   id: number;
-  sellerId: number;
   name: string;
   price: number;
   images: string;

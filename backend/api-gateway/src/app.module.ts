@@ -9,16 +9,12 @@ import { OrderModule } from './modules/order/order.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { CategoryModule } from './modules/category/category.module';
 import { ConfigModule } from '@nestjs/config';
-import { GraphQLModule } from '@nestjs/graphql';
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { join } from 'path';
 
 import { APP_GUARD } from '@nestjs/core';
 import { PermissionsGuard } from './guard/permission.guard';
 import { AccountsModule } from './modules/accounts/accounts.module';
 import { AddressModule } from './modules/address/address.module';
-import { SearchModule } from './modules/search/search.module';
-import { SellerModule } from './modules/seller/seller.module';
+import {SearchModule} from './modules/search/search.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -34,13 +30,6 @@ import { SellerModule } from './modules/seller/seller.module';
         },
       ],
     }),
-    GraphQLModule.forRoot<ApolloDriverConfig>({
-      driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
-      sortSchema: true,
-      playground: true, // Enable GraphQL Playground in development
-      context: ({ req }) => ({ req }), // Pass request object to GraphQL context
-    }),
     ProductModule,
     VouchersModule,
     UsersModule,
@@ -49,8 +38,8 @@ import { SellerModule } from './modules/seller/seller.module';
     PaymentModule,
     CategoryModule,
     AddressModule,
-    SearchModule,
-    SellerModule,
+    SearchModule
+
   ],
   controllers: [AppController],
   providers: [

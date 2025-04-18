@@ -1,18 +1,10 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Request } from 'express';
 import { PERMISSIONS_MAPPING } from 'src/config/permission.config';
-import { GqlExecutionContext } from '@nestjs/graphql';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
-    // Check if this is a GraphQL context
-    if (context.getType().toString() === 'graphql') {
-      // Skip guard for GraphQL requests
-      return true;
-    }
-
-    // Existing REST API logic
     const request = context.switchToHttp().getRequest<Request>();
     const user = request.user;
 

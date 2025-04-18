@@ -13,11 +13,14 @@ import {
   Put,
   UseInterceptors,
   UploadedFile,
+  Req,
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { FastifyRequest } from 'fastify';
 import * as FormData from 'form-data';
+import * as concat from 'concat-stream';
 
 @Controller('api/product')
 export class ProductController {
@@ -230,22 +233,27 @@ export class ProductController {
     }
   }
 
-  // Upload image - Updated to use Express FileInterceptor
+  // Upload image
   @Post('uploadIMG')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadImage(@UploadedFile() file: Express.Multer.File) {
+  async uploadImage(@Req() req: FastifyRequest) {
     try {
-      if (!file) {
+      // Make sure we're properly getting the multipart data
+      const data = await req.file();
+
+      if (!data) {
         throw new HttpException('No file uploaded', HttpStatus.BAD_REQUEST);
       }
 
-      console.log('Received file data:', file); // Debug the data structure
+      console.log('Received file data:', data); // Debug the data structure
+
+      // Create a buffer from the file stream
+      const buffer = await data.toBuffer(); // This is a simpler way to get the buffer with Fastify
 
       // Create FormData object
       const formData = new FormData();
-      formData.append('file', file.buffer, {
-        filename: file.originalname,
-        contentType: file.mimetype || 'application/octet-stream',
+      formData.append('file', buffer, {
+        filename: data.filename,
+        contentType: data.mimetype || 'application/octet-stream',
       });
 
       // Send to product service
@@ -291,22 +299,27 @@ export class ProductController {
     }
   }
 
-  // Upload video - Updated to use Express FileInterceptor
+  // Upload video
   @Post('uploadVideo')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadVideo(@UploadedFile() file: Express.Multer.File) {
+  async uploadVideo(@Req() req: FastifyRequest) {
     try {
-      if (!file) {
+      // Make sure we're properly getting the multipart data
+      const data = await req.file();
+
+      if (!data) {
         throw new HttpException('No file uploaded', HttpStatus.BAD_REQUEST);
       }
 
-      console.log('Received file data:', file); // Debug the data structure
+      console.log('Received file data:', data); // Debug the data structure
+
+      // Create a buffer from the file stream
+      const buffer = await data.toBuffer(); // This is a simpler way to get the buffer with Fastify
 
       // Create FormData object
       const formData = new FormData();
-      formData.append('file', file.buffer, {
-        filename: file.originalname,
-        contentType: file.mimetype || 'application/octet-stream',
+      formData.append('file', buffer, {
+        filename: data.filename,
+        contentType: data.mimetype || 'application/octet-stream',
       });
 
       // Send to product service

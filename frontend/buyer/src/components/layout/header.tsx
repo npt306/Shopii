@@ -135,7 +135,7 @@ export const Header = () => {
             ) : (
               <div className="flex items-center gap-3">
                 <a
-                  href={`/login`}
+                  href={`${import.meta.env.VITE_BUYER_URL}/login`}
                   className="hover:opacity-80"
                 >
                   Đăng nhập
