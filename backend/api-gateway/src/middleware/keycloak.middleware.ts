@@ -8,20 +8,26 @@ export class KeycloakMiddleware implements NestMiddleware {
       return next();
     }
 
-    const publicRoutes = [
-      '/Users/login',
-      '/Users/register',
-      '/Users/register-shop',
-      '/Users/login-admin',
-      '/Users/verify-otp',
-      '/Users/auth/exchange-token',
-      '/Users/send-verification-email',
-      '/Users/me',
-      '/Users/refresh_token',
-      '/api/product/list',
+    const publicRoutePatterns: RegExp[] = [
+      // static user‑auth routes
+      /^\/Users\/login$/,
+      /^\/Users\/register$/,
+      /^\/Users\/register-shop$/,
+      /^\/Users\/login-admin$/,
+      /^\/Users\/verify-otp$/,
+      /^\/Users\/auth\/exchange-token$/,
+      /^\/Users\/send-verification-email$/,
+      /^\/Users\/me$/,
+      /^\/Users\/refresh_token$/,
+
+      // dynamic routes
+      /^\/detail-product\/[^\/]+$/,    // matches /detail-product/:id
     ];
+
     console.log("Getting: ", req.url);
-    if (publicRoutes.includes(req.url)) return next();
+    if (publicRoutePatterns.some((re) => re.test(req.path))) {
+      return next();
+    }
 
     const authHeader = req.headers.authorization as string;
     const token = req.cookies?.rptToken || (authHeader && authHeader.split(' ')[1]);
