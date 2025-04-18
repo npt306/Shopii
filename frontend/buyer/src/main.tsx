@@ -89,6 +89,23 @@ const router = createBrowserRouter(
   }
 );
 
+// 1) pull off the real fetch
+const nativeFetch = window.fetch.bind(window);
+
+// 2) override it once
+window.fetch = async (input, init = {}) => {
+  // always include cookies
+  const res = await nativeFetch(input, { credentials: 'include', ...init });
+
+  // if the server tells us “401 Unauthorized,” send them to login
+  if (res.status === 401) {
+    // hard-reload to clear any bad state + show the login page
+    window.location.href = '/login';
+  }
+
+  return res;
+};
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AuthProvider>
