@@ -24,7 +24,7 @@ export class KeycloakMiddleware implements NestMiddleware {
     const publicDynamicPatterns: RegExp[] = [
       // /^\/order\/[^\/]+$/,          // /order/:id
       // /^\/cart\/[^\/]+$/,           // /cart/:id
-      /^\/detail-product\/[^\/]+$/, // /detail-product/:id
+      /^\/api\/product\/detail\/[^\/]+$/,  // matches /api/product/detail/:id
     ];
 
     console.log('Getting:', req.url);
