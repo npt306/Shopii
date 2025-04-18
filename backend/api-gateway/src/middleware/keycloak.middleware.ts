@@ -27,10 +27,10 @@ export class KeycloakMiddleware implements NestMiddleware {
       /^\/detail-product\/[^\/]+$/, // /detail-product/:id
     ];
 
-    console.log('Getting:', req.path);
+    console.log('Getting:', req.url);
     if (
-      publicStaticRoutes.includes(req.path) ||
-      publicDynamicPatterns.some((re) => re.test(req.path))
+      publicStaticRoutes.includes(req.url) ||
+      publicDynamicPatterns.some((re) => re.test(req.url))
     ) {
       return next();
     }
