@@ -8,25 +8,30 @@ export class KeycloakMiddleware implements NestMiddleware {
       return next();
     }
 
-    const publicRoutePatterns: RegExp[] = [
-      // static user‑auth routes
-      /^\/Users\/login$/,
-      /^\/Users\/register$/,
-      /^\/Users\/register-shop$/,
-      /^\/Users\/login-admin$/,
-      /^\/Users\/verify-otp$/,
-      /^\/Users\/auth\/exchange-token$/,
-      /^\/Users\/send-verification-email$/,
-      /^\/Users\/me$/,
-      /^\/Users\/refresh_token$/,
-
-      /^\/api\/product\/list$/,
-      // dynamic routes
-      /^\/detail-product\/[^\/]+$/,    // matches /detail-product/:id
+    const publicStaticRoutes = [
+      '/Users/login',
+      '/Users/register',
+      '/Users/register-shop',
+      '/Users/login-admin',
+      '/Users/verify-otp',
+      '/Users/auth/exchange-token',
+      '/Users/send-verification-email',
+      '/Users/me',
+      '/Users/refresh_token',
+      '/api/product/list',
     ];
 
-    console.log("Getting: ", req.url);
-    if (publicRoutePatterns.some((re) => re.test(req.path))) {
+    const publicDynamicPatterns: RegExp[] = [
+      // /^\/order\/[^\/]+$/,          // /order/:id
+      // /^\/cart\/[^\/]+$/,           // /cart/:id
+      /^\/detail-product\/[^\/]+$/, // /detail-product/:id
+    ];
+
+    console.log('Getting:', req.path);
+    if (
+      publicStaticRoutes.includes(req.path) ||
+      publicDynamicPatterns.some((re) => re.test(req.path))
+    ) {
       return next();
     }
 
