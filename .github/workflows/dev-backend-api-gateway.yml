@@ -59,5 +59,4 @@ jobs:
             -e PAYMENT_SERVICE_URL=http://34.58.241.34:3007 \
             -e ACCOUNTS_SERVICE_URL=http://34.58.241.34:3008 \
             -e SEARCH_SERVICE_URL=http://34.58.241.34:3009 \
-            -e ACCOUNTS_SERVICE_GRPC_URL=http://34.58.241.34:5000 \
             ${{ secrets.DOCKERHUB_USERNAME }}/backend-api-gateway:latest
