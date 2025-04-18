@@ -99,7 +99,7 @@ export const LoginPage: React.FC = () => {
     } catch (error) {
       const err = error as Error;
       console.log(error);
-      setError("Your account has been banned.");
+      setError("Something is wrong, please try again later.");
     } finally {
       setLoading(false);
     }

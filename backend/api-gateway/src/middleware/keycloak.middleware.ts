@@ -19,12 +19,18 @@ export class KeycloakMiddleware implements NestMiddleware {
       '/Users/me',
       '/Users/refresh_token',
       '/api/product/list',
+      '/order/carts/add-to-cart',
+      '/order/carts/delete-from-cart',
+      '/order/carts/update-cart',
+      '/order/checkout/create-order'
     ];
 
     const publicDynamicPatterns: RegExp[] = [
-      /^\/order\/carts\/[^\/]+$/,                // /order/carts/:id
-      /^\/order\/carts\/basic\/[^\/]+$/,         // /order/carts/basic/:id
-      /^\/api\/product\/detail\/[^\/]+$/,  // matches /api/product/detail/:id
+      /^\/order\/carts\/[^\/]+$/,                   // /order/carts/:customerId
+      /^\/order\/carts\/basic\/[^\/]+$/,            // /order/carts/basic/:customerId
+      /^\/order\/carts\/delete-all-cart\/[^\/]+$/,  // /order/carts/delete-all-cart/:customerId
+      /^\/order\/checkout\/user-orders\/[^\/]+$/,   // /order/checkout/user-orders/:userId
+      /^\/api\/product\/detail\/[^\/]+$/,           // /api/product/detail/:id
     ];
 
     console.log('Getting:', req.url);
