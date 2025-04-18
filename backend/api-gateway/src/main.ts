@@ -24,7 +24,11 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   app.use(cookieParser());
   app.use(new KeycloakMiddleware().use);
-  app.enableCors();
+  app.enableCors({
+  origin: '*', 
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  credentials: false  
+});
 
   await app.register(multiPart, {
     limits: {
