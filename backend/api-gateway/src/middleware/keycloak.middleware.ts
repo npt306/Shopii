@@ -20,6 +20,7 @@ export class KeycloakMiddleware implements NestMiddleware {
       /^\/Users\/me$/,
       /^\/Users\/refresh_token$/,
 
+      /^\/api\/product\/list$/,
       // dynamic routes
       /^\/detail-product\/[^\/]+$/,    // matches /detail-product/:id
     ];
