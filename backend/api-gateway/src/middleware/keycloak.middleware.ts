@@ -18,6 +18,7 @@ export class KeycloakMiddleware implements NestMiddleware {
       '/Users/send-verification-email',
       '/Users/me',
       '/Users/refresh_token',
+      '/api/product/list',
     ];
     console.log("Getting: ", req.url);
     if (publicRoutes.includes(req.url)) return next();
