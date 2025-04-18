@@ -1,9 +1,10 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateOrderDto, OrderData } from './dto/create-order.dto';
 import { OrderEntity } from './entities/order.entity';
 import { OrderItemEntity } from './entities/orderItem.entity';
+import { PaymentMethod, PaymentStatus, OrderStatus } from '../common/enums';
 
 @Injectable()
 export class OrderService {
@@ -20,6 +21,7 @@ export class OrderService {
     userId: string,
     ordersData: OrderData[],
     shippingAddress: string,
+    paymentMethod: string,
   ) {
     try {
       // Create a new order for each shop
@@ -31,9 +33,9 @@ export class OrderService {
         newOrder.shopName = shopOrder.shopName;
         newOrder.message = shopOrder.message;
         newOrder.totalPrice = shopOrder.totalPrice;
-        newOrder.paymentMethod = 'COD';
-        newOrder.paymentStatus = shopOrder.isPaid;
-        newOrder.orderStatus = 'Pending';
+        newOrder.paymentMethod = paymentMethod;
+        newOrder.paymentStatus = paymentMethod === PaymentMethod.COD ? PaymentStatus.PENDING : PaymentStatus.PENDING;
+        newOrder.orderStatus = paymentMethod === PaymentMethod.COD ? OrderStatus.PROCESSING : OrderStatus.PENDING_PAYMENT;
         newOrder.addressShipping = shippingAddress;
 
         // Save the order to get the orderId
@@ -120,5 +122,24 @@ export class OrderService {
         error: error.message,
       };
     }
+  }
+
+  async updatePaymentStatus(orderId: number, status: PaymentStatus): Promise<OrderEntity> {
+    this.logger.log(`Updating payment status for order ${orderId} to ${status}`);
+    const order = await this.orderRepository.findOne({ where: { orderId } });
+
+    if (!order) {
+      this.logger.error(`Order with ID ${orderId} not found for payment status update.`);
+      throw new NotFoundException(`Order with ID ${orderId} not found`);
+    }
+
+    order.paymentStatus = status;
+    if (status === PaymentStatus.PAID && order.paymentMethod === PaymentMethod.VNPAY) {
+        order.orderStatus = OrderStatus.PROCESSING;
+    } else if (status === PaymentStatus.FAILED) {
+        order.orderStatus = OrderStatus.CANCELLED;
+    }
+
+    return this.orderRepository.save(order);
   }
 }

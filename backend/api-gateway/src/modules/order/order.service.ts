@@ -117,13 +117,16 @@ export class OrderService {
 
   async createOrder(
     userId: string,
+    paymentMethod: string,
     orderData: any,
     shippingAddress: string,
   ): Promise<any> {
     try {
+      this.logger.log(`Gateway: Forwarding createOrder request for user ${userId} with method ${paymentMethod}`);
       const response = await firstValueFrom(
         this.httpService.post('/checkout/create-order', {
           userId,
+          paymentMethod,
           orderData,
           shippingAddress,
         }),
@@ -131,6 +134,18 @@ export class OrderService {
       return response.data;
     } catch (error) {
       this.handleHttpError(error as AxiosError, 'createOrder');
+    }
+  }
+
+  async updatePaymentStatus(orderId: number, status: string): Promise<any> {
+    try {
+      this.logger.log(`Gateway: Forwarding updatePaymentStatus request for order ${orderId} to status ${status}`);
+      const response = await firstValueFrom(
+        this.httpService.patch(`/checkout/orders/${orderId}/payment-status`, { status }),
+      );
+      return response.data;
+    } catch (error: any) {
+      this.handleHttpError(error as AxiosError, `updatePaymentStatus for order ${orderId}`);
     }
   }
 }

@@ -17,6 +17,7 @@ import { useCart } from "../context/cartContext";
 
 import { Address } from "../types/address";
 import { OrderData } from "../types/orderData";
+import { PaymentMethod } from "../types/order";
 
 import { VoucherShopeeModal } from "../components/features/voucherShopeeModal";
 import { AddressListInOrderModal } from "../components/features/addressListInOrder";
@@ -37,9 +38,7 @@ export const OrderPage = () => {
   const [openVoucherModal, setOpenVoucherModal] = useState(false);
   const [openShopVoucherModal, setShopVoucherModal] = useState(false);
 
-  const [paymentMethodChoice, setPaymentMethodChoice] = useState<Number | null>(
-    1
-  );
+  const [paymentMethodChoice, setPaymentMethodChoice] = useState<number>(1);
   const [paymentChoiceModal, setPaymentChoiceModal] = useState(false);
 
   const [orderData, setOrderData] = useState<OrderData[]>([]);
@@ -71,7 +70,7 @@ export const OrderPage = () => {
     }
   }, []);
 
-  const [selectedAddress, setSelectedAddress] = useState<Address>();
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [selectedUpdateAddress, setSelectedUpdateAddress] =
     useState<Address | null>(null);
 
@@ -134,6 +133,11 @@ export const OrderPage = () => {
   }, [id, isAddressDefault]);
 
   const handleCheckOut = async () => {
+    if (!selectedAddress) {
+      toast.error("Vui lòng chọn địa chỉ nhận hàng.");
+      return;
+    }
+
     let shippingAddress = `${selectedAddress?.SpecificAddress}, ${selectedAddress?.Ward}, ${selectedAddress?.District}, ${selectedAddress?.Province}`;
     console.log("User ID: ", id);
     console.log("Check out: ", orderData);
@@ -176,6 +180,34 @@ export const OrderPage = () => {
         position: "top-right",
         autoClose: 1500,
       });
+    }
+  };
+
+  const handlePlaceOrder = async () => {
+    if (!selectedAddress) {
+      toast.error("Vui lòng chọn địa chỉ nhận hàng.");
+      return;
+    }
+
+    const shippingAddress = `${selectedAddress.SpecificAddress}, ${selectedAddress.Ward}, ${selectedAddress.District}, ${selectedAddress.Province}`;
+    const paymentMethodString = paymentMethodChoice === 0 ? PaymentMethod.VNPAY : PaymentMethod.COD;
+
+    if (paymentMethodChoice === 1) { // COD
+      await handleCheckOut(); 
+    } else if (paymentMethodChoice === 0) { // VNPay
+      try {
+        const primaryOrderId = "ORDER" + Date.now();
+        const paymentPayload = {
+          orderId: primaryOrderId,
+          amount: totalOrderPrice,
+          orderInfo: `Thanh toan don hang ${primaryOrderId}`,
+        };
+        const paymentResponse = await axios.post(`${EnvValue.API_GATEWAY_URL}/api/payment/create-payment-url`, paymentPayload);
+        window.location.href = paymentResponse.data.paymentUrl;
+      } catch (error) {
+        console.error("Error initiating VNPay payment:", error);
+        toast.error("Không thể tạo yêu cầu thanh toán VNPay. Vui lòng thử lại.");
+      }
     }
   };
 
@@ -730,7 +762,7 @@ export const OrderPage = () => {
                     <div className="">Thanh toán khi nhận hàng</div>
                     <button
                       onClick={() => setPaymentChoiceModal(true)}
-                      className="!text-sky-700 cursor-pointer !ml-[110px] !uppercase"
+                      className="!text-sky-700 cursor-pointer !ml-[110px] !uppercase bg-white"
                     >
                       Thay đổi
                     </button>
@@ -756,7 +788,7 @@ export const OrderPage = () => {
             <div className="total-total-bg px-2">
               <div className="order-button-out">
                 <button
-                  onClick={() => handleCheckOut()}
+                  onClick={handlePlaceOrder}
                   className="bg-[#ee4d2d] !text-white"
                 >
                   <p className="text-[0.9rem] px-20 ">Đặt hàng</p>
@@ -918,6 +950,51 @@ export const OrderPage = () => {
             </div>
           </div>
         </>
+      )}
+      {/* Payment Method Choice Modal */}
+      {paymentChoiceModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 className="text-lg font-semibold mb-4 text-black">Chọn phương thức thanh toán</h2>
+            <div className="flex flex-col gap-4">
+              {/* VNPay Option */}
+              <label
+                className={`flex items-center p-3 border rounded cursor-pointer ${paymentMethodChoice === 0 ? 'border-orange-500 bg-orange-50' : 'border-gray-300'}`}
+                onClick={() => setPaymentMethodChoice(0)}
+              >
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value={0}
+                  checked={paymentMethodChoice === 0}
+                  onChange={() => setPaymentMethodChoice(0)}
+                  className="mr-3 custom-radio"
+                />
+                <span className="text-black">VNPay</span>
+              </label>
+
+              {/* COD Option */}
+              <label
+                className={`flex items-center p-3 border rounded cursor-pointer ${paymentMethodChoice === 1 ? 'border-orange-500 bg-orange-50' : 'border-gray-300'}`}
+                onClick={() => setPaymentMethodChoice(1)}
+              >
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value={1}
+                  checked={paymentMethodChoice === 1}
+                  onChange={() => setPaymentMethodChoice(1)}
+                  className="mr-3 custom-radio"
+                />
+                <span className="text-black">Thanh toán khi nhận hàng (COD)</span>
+              </label>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button className="px-4 py-2 border rounded text-black bg-gray-200 hover:bg-gray-300" onClick={() => setPaymentChoiceModal(false)}>Hủy</button>
+              <button className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600" onClick={() => setPaymentChoiceModal(false)}>Xác nhận</button>
+            </div>
+          </div>
+        </div>
       )}
       <Footer></Footer>
     </div>

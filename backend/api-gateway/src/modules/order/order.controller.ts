@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, UseGuards, Patch, ParseIntPipe, HttpCode, HttpStatus } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { OrderService } from './order.service';
 import { PermissionsGuard } from 'src/guard/permission.guard';
@@ -84,10 +84,12 @@ export class OrderController {
       id: string;
       orderData: any;
       shippingAddress: string;
+      paymentMethod: string;
     },
   ): Promise<any> {
     return this.orderService.createOrder(
       payload.id,
+      payload.paymentMethod,
       payload.orderData,
       payload.shippingAddress,
     );
@@ -108,5 +110,14 @@ export class OrderController {
       console.error(error);
       throw error;
     }
+  }
+
+  @Patch('/orders/:orderId/payment-status')
+  @HttpCode(HttpStatus.OK)
+  updatePaymentStatus(
+    @Param('orderId', ParseIntPipe) orderId: number,
+    @Body() payload: { status: string },
+  ) {
+    return this.orderService.updatePaymentStatus(orderId, payload.status);
   }
 }

@@ -16,6 +16,7 @@ import { CreatePaymentDto } from './dto/create-payment.dto';
 import { VnpayReturnDto } from './dto/vnpay-return.dto';
 import { VnpayIpnDto } from './dto/vnpay-ipn.dto';
 import { AddBankAccountDto } from './dto/add-bank-account.dto';
+import { OrderStatus as ExternalOrderStatus, PaymentStatus as ExternalPaymentStatus } from '../../../../order-service/src/common/enums'; // Adjust path if needed
 import { sortObject } from '../utils/sortObject';
 
 @Injectable()
@@ -220,7 +221,7 @@ export class PaymentService {
         await this.paymentTransactionRepository.save(transaction);
 
         // Notify Order Service asynchronously (don't wait for it to respond to VNPay)
-        this.notifyOrderService(transaction.orderId, finalStatus)
+        this.notifyOrderService(transaction.orderId, finalStatus, transaction.amount)
             .catch(err => this.logger.error(`Failed to notify order service for order ${transaction.orderId} after IPN: ${err.message}`, err.stack));
 
         return { RspCode: '00', Message: 'Success' };
@@ -398,23 +399,29 @@ export class PaymentService {
         return true;
    }
 
-   private async notifyOrderService(orderId: string, paymentStatus: PaymentStatus) {
+   private async notifyOrderService(orderId: string, paymentStatus: PaymentStatus, amount: number) {
     if (!this.orderServiceUrl) {
         this.logger.warn(`Order Service URL not configured. Skipping notification for order ${orderId}.`);
         return;
     }
-    const endpoint = `${this.orderServiceUrl}/orders/${orderId}/payment-status`;
-    const payload = { status: paymentStatus === PaymentStatus.SUCCESS ? 'Paid' : 'Failed' };
+    // Assuming the orderId from VNPay TxnRef might have a timestamp suffix like ORDER123_103045
+    // We need to extract the base order ID (e.g., ORDER123)
+    const baseOrderId = orderId.split('_')[0];
+    const endpoint = `${this.orderServiceUrl}/orders/${baseOrderId}/payment-status`; // Use baseOrderId
+    const payload = {
+        status: paymentStatus === PaymentStatus.SUCCESS ? ExternalPaymentStatus.PAID : ExternalPaymentStatus.FAILED,
+        amount: amount // Optionally send amount if needed by order service
+    };
 
     try {
-        this.logger.log(`Notifying Order Service at ${endpoint} for order ${orderId} with status ${payload.status}`);
+        this.logger.log(`Notifying Order Service at ${endpoint} for order ${baseOrderId} with status ${payload.status}`);
         await firstValueFrom(
             this.httpService.patch(endpoint, payload, { timeout: 5000 })
         );
-        this.logger.log(`Successfully notified Order Service for order ${orderId}.`);
+        this.logger.log(`Successfully notified Order Service for order ${baseOrderId}.`);
     } catch (error) {
          const axiosError = error as AxiosError;
-        this.logger.error(`Failed to notify Order Service for order ${orderId}. Status: ${axiosError.response?.status}, Error: ${axiosError.message}`, axiosError.stack);
+        this.logger.error(`Failed to notify Order Service for order ${baseOrderId}. Status: ${axiosError.response?.status}, Error: ${axiosError.message}`, axiosError.stack);
         // maybe retry logic here
     }
 }

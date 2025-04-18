@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { OrderItemEntity } from './orderItem.entity';
+import { PaymentMethod, PaymentStatus, OrderStatus } from '../../common/enums';
 
 @Entity('Orders')
 export class OrderEntity {
@@ -21,14 +22,23 @@ export class OrderEntity {
   @Column('integer', { name: 'TotalPrice' })
   totalPrice: number;
 
-  @Column('text', { name: 'PaymentMethod' })
-  paymentMethod: string;
+  @Column({
+    type: 'enum',
+    enum: PaymentMethod,
+    name: 'PaymentMethod',
+  })
+  paymentMethod: PaymentMethod;
 
-  @Column({ default: false, name: 'PaymentStatus' })
-  paymentStatus: boolean;
+  @Column({
+    type: 'enum',
+    enum: PaymentStatus,
+    default: PaymentStatus.PENDING,
+    name: 'PaymentStatus',
+  })
+  paymentStatus: PaymentStatus;
 
-  @Column({ type: 'text', name: 'OrderStatus' })
-  orderStatus: string;
+  @Column({ type: 'enum', enum: OrderStatus, name: 'OrderStatus' })
+  orderStatus: OrderStatus;
 
   @Column({ type: 'text', nullable: true, name: 'AddressShipping' })
   addressShipping: string;
