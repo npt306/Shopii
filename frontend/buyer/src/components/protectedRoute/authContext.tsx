@@ -19,7 +19,7 @@ interface AuthContextType {
       try {
         // 34.58.241.34
         // localhost
-        const response = await fetch('http://localhost:3003/Users/verify-token', {
+        const response = await fetch(`${EnvValue.AUTH_SERVICE_URL}/Users/verify-token`, {
           credentials: 'include',
         });
         const data = await response.json();

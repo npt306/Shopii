@@ -29,7 +29,7 @@ const FinalizeRegister: React.FC<FinalizeRegisterProps> = ({ finalData, onSubmit
     localStorage.clear();
     // http://34.58.241.34:8000
     // http://localhost:8000
-    window.location.href = `${EnvValue.BUYER_URL}/login`;
+    window.location.href = `http://34.58.241.34:8000/login`;
   };
 
   return (
