@@ -99,20 +99,6 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
       return false;
     }
 
-    // Validate Date of Birth (Must be at least 18 years old)
-    // if (DoB) {
-    //   const birthDate = new Date(DoB);
-    //   const today = new Date();
-    //   const age = today.getFullYear() - birthDate.getFullYear();
-    //   if (
-    //     age < 18 ||
-    //     (age === 18 && today < new Date(birthDate.setFullYear(birthDate.getFullYear() + 18)))
-    //   ) {
-    //     toast.error("Bạn phải ít nhất 18 tuổi.");
-    //     return false;
-    //   }
-    // }
-
     return true;
   };
   const handleSubmit = async () => {
@@ -155,6 +141,15 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
             avatarFormData,
             { headers: { "Content-Type": "multipart/form-data" } }
           );
+          console.log(avatarResponse.data, "AVATARTTTTTTTT");
+          const updatedUserProfile = {
+            ...JSON.parse(localStorage.getItem("userProfile") || "{}"), // Get current profile
+            avatar: avatarResponse.data,
+          };
+          localStorage.setItem(
+            "userProfile",
+            JSON.stringify(updatedUserProfile)
+          );
           if (avatarResponse) setChangeAvatar(false);
         }
 
@@ -163,7 +158,7 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
         // }
       } catch (error) {
         console.error("Error updating user:", error);
-        toast.error("Profile can't update!");
+        toast.error("Không thể cập nhật hồ sơ");
       }
     }
   };
@@ -302,8 +297,8 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
                     <div
                       className="avatar border border-gray-200"
                       style={{
-                        backgroundImage: `url(${
-                          formData.Avatar ||
+                        backgroundImage: `url(${ changeAvatar ? 
+                          formData.Avatar :
                           "https://storage.googleapis.com/shopii-image/user_avatar/c4f96264-90f0-4dda-a6bb-ebe4b502a9a7_avatar_default.png"
                         })`,
                       }}
