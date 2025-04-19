@@ -284,7 +284,7 @@ const UserDetails: React.FC<UserProfileModalProps> = ({ user, onClose, onUserUpd
 
       {/* Delete Confirmation Dialog */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 z-50 flex justify-center items-center bg-opacity-60 backdrop-blur-sm p-4">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
             <h3 className="text-xl font-bold mb-4">Confirm Deletion</h3>
             <p className="mb-4">
@@ -314,7 +314,7 @@ const UserDetails: React.FC<UserProfileModalProps> = ({ user, onClose, onUserUpd
 
       {/* Ban Confirmation Dialog */}
       {showBanConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 z-50 flex justify-center items-center bg-opacity-60 backdrop-blur-sm p-4">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
             <h3 className="text-xl font-bold mb-4">
               {isUserBanned ? 'Confirm Unbanning' : 'Confirm Banning'}
