@@ -15,6 +15,8 @@ import { AdminProductListDto } from './dto/admin-product-list.dto';
 import { ProductStatus } from '../common/productStatus.enum';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
+import { Logger } from '@nestjs/common';
+
 interface CategoryWithChildren extends Categories {
   children?: CategoryWithChildren[];
 }
@@ -23,6 +25,7 @@ interface CategoryWithChildren extends Categories {
 export class ProductService {
   storage: Storage;
   private bucket: Bucket;
+  private readonly logger = new Logger(ProductService.name);
 
   constructor(
     @InjectRepository(Product)
@@ -581,14 +584,26 @@ export class ProductService {
 
 
   async deleteProduct(id: number, reason: string): Promise<void> {
-    const product = await this.productRepository.findOneBy({ ProductID: id });
-    if (!product) {
+    this.logger.log(`Attempting hard delete for Product ID: ${id}. Reason: ${reason}`);
+
+    // Check if the product exists before attempting to delete
+    const productExists = await this.productRepository.findOneBy({ ProductID: id });
+    if (!productExists) {
+      this.logger.warn(`Product with ID ${id} not found for deletion.`);
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
 
-    // Step 1: Soft delete
-    await this.productRepository.softDelete(id);
-    console.log(`Product ${id} deleted. Reason: ${reason}`);
+    // Perform hard delete using the repository's delete method
+    // The cascades defined in the entities will handle related records.
+    const deleteResult = await this.productRepository.delete(id);
+
+    if (deleteResult.affected === 0) {
+        // This case might happen in a race condition or if the product was deleted between the check and the delete operation.
+        this.logger.warn(`Hard delete affected 0 rows for Product ID: ${id}. It might have been deleted already.`);
+        throw new NotFoundException(`Product with ID ${id} could not be deleted or was already deleted.`);
+    }
+
+    this.logger.log(`Product ID: ${id} hard deleted successfully. Reason: ${reason}`);
 
     try {
       const esResponse = await fetch(`http://localhost:3000/api/search/${id}`, {
