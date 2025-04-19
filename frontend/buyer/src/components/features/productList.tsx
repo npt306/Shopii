@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { EnvValue } from "../../env-value/envValue";
 import { formatPrice } from "../../helpers/utility/formatPrice";
+import { useAuth } from '../protectedRoute/authContext';
 
 type Product = {
   id: number;
@@ -28,10 +29,22 @@ const fetchProductData = async (
 export const ProductDisplay = () => {
   const [product_list, setProductList] = useState<Product[]>([]);
   const navigate = useNavigate();
+  const { isAuthenticated, loading, verifyAuth } = useAuth();
 
   useEffect(() => {
     fetchProductData(setProductList);
   }, []);
+
+  const handleClick = async (id: number) => {
+    if (loading) return;                // still checking from mount
+    await verifyAuth();                 // re‑hit the verify‑token endpoint
+    if (!isAuthenticated) {
+      localStorage.clear();
+      navigate('/login', { replace: true });
+    } else {
+      navigate(`/detail-product/${id}`);
+    }
+  };
 
   return (
     <div className="relative my-5 flex flex-col items-center">
@@ -40,7 +53,7 @@ export const ProductDisplay = () => {
           <div
             key={product.id}
             className="relative group"
-            onClick={() => navigate(`/detail-product/${product.id}`)}
+            onClick={() => handleClick(product.id)}
           >
             <div className="bg-white shadow-md flex flex-col h-full justify-between relative transition-all duration-300 ease-in-out border-2 border-transparent hover:border-orange-500 cursor-pointer">
               <div className="flex flex-col justify-start flex-grow">

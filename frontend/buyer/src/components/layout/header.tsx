@@ -11,6 +11,7 @@ import avatarDefault from "../../assets/avatar_default.png";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/authStore"; // Adjust the path to where your store is defined
 import { userService } from "../../services/userService";
+import { ProtectedExternalLink } from "../protectedRoute/protectedLink";
 
 export const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,12 +27,20 @@ export const Header = () => {
     <div className="flex flex-col bg-[#ee4d2d] text-white">
       <div className="mx-30 py-3 flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <a
+          {/* <a
             href={`${import.meta.env.VITE_SELLER_URL}/portal/settings/shop/profile/`}
             className="cursor-pointer hover:opacity-80"
           >
             Kênh người bán
-          </a>
+          </a> */}
+
+          <ProtectedExternalLink
+            to={`${import.meta.env.VITE_SELLER_URL}/portal/settings/shop/profile/`}
+            // to={`http://localhost:8001/portal/settings/shop/profile/`}
+            className="cursor-pointer hover:opacity-80"
+          >
+            Kênh người bán
+          </ProtectedExternalLink>
           <div>Dowload app</div>
           <div className="flex items-center gap-2">
             <p>Kết nối</p>
@@ -99,7 +108,7 @@ export const Header = () => {
                   onClick={() => setIsOpen(!isOpen)}
                 >
                   <img
-                    src={JSON.parse(localStorage.getItem("userProfile")).avatar || avatarDefault}
+                    src={JSON.parse(localStorage.getItem("userProfile") || "{}").avatar || avatarDefault}
                     alt="Avatar"
                     className="w-7 h-7 rounded-full"
                   />
@@ -110,10 +119,21 @@ export const Header = () => {
                   <div className="absolute right-0 mt-2 w-40 bg-white text-black shadow-lg rounded-lg z-50">
                     <ul className="py-2">
                       <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                        <a href="/user">Tài khoản của tôi</a>
+                        {/* <a href="/user">Tài khoản của tôi</a> */}
+                        <ProtectedExternalLink
+                          to={`/user`}
+                          className="cursor-pointer hover:opacity-80"
+                        >
+                          Tài khoản của tôi
+                        </ProtectedExternalLink>
                       </li>
                       <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                        Đơn mua
+                        <ProtectedExternalLink
+                          to={`/home`}
+                          className="cursor-pointer hover:opacity-80"
+                        >
+                          Đơn mua
+                        </ProtectedExternalLink>
                       </li>
                       <li
                         className="px-4 py-2 text-red-500 hover:bg-gray-100 cursor-pointer"

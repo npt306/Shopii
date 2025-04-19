@@ -62,7 +62,7 @@ export const SearchProductPage = () => {
             }
             const data = await response.json();
             const transformedResults = data.$.map((item: any) => ({
-                id: item._source.id,
+                id: item._source.ProductID,
                 Name: item._source.Name,
                 Images: item._source.Images || [],
                 Price: item._source.Price || 699000,

@@ -43,9 +43,6 @@ const GeneralInformation = () => {
     reader.readAsDataURL(file); // Đọc ảnh dưới dạng URL
   };
 
-
-
-
   return (
     <div className="p-6 bg-white">
       {/* Header */}
@@ -74,14 +71,14 @@ const GeneralInformation = () => {
                 <input
                   type="text"
                   id="shopName"
-                  value={shopName}
+                  value={shopName || ""}
                   onChange={(e) => setShopName(e.target.value)}
                   className="py-1 px-3 bg-white border border-gray-300 rounded w-full text-black text-sm pr-12" // Thêm padding phải để đủ chỗ hiển thị số ký tự
                   maxLength={20} // Giới hạn tên shop tối đa 20 ký tự
                 />
                 {/* Hiển thị số ký tự đã nhập bên trong input */}
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
-                  {shopName.length}/20
+                  {(shopName?.length || 0)}/20
                 </div>
               </div>
             ) : (

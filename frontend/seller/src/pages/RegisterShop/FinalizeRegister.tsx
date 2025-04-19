@@ -1,6 +1,8 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { CheckCircle } from "lucide-react";
+import axios from "axios";
+import { EnvValue } from "../../env-value/envValue";
 
 interface FinalizeRegisterData {
   shopId?: string;
@@ -19,12 +21,15 @@ const FinalizeRegister: React.FC<FinalizeRegisterProps> = ({ finalData, onSubmit
   // Retrieve shopId either from finalData prop or from location.state
   const shopId = finalData?.shopId || (location.state as { shopId?: string })?.shopId;
 
-  const handleAddProduct = () => {
+  const handleAddProduct = async () => {
     // Optionally pass the final data up before navigating
     if (onSubmit) {
       onSubmit({ shopId });
     }
-    navigate("/portal/product/new");
+    localStorage.clear();
+    // http://34.58.241.34:8000
+    // http://localhost:8000
+    window.location.href = `${EnvValue.BUYER_URL}/login`;
   };
 
   return (
@@ -37,7 +42,7 @@ const FinalizeRegister: React.FC<FinalizeRegisterProps> = ({ finalData, onSubmit
       {/* Success Message */}
       <h1 className="text-xl font-semibold text-gray-700">Đăng ký thành công</h1>
       <p className="text-gray-600 mt-2">
-        Hãy đăng bán sản phẩm đầu tiên để khởi động hành trình bán hàng cùng Shopee nhé!
+        Hãy đăng nhập để bắt đầu sử dụng dịch vụ của chúng tôi.
       </p>
 
       {/* Shop ID (if available) */}
@@ -50,7 +55,7 @@ const FinalizeRegister: React.FC<FinalizeRegisterProps> = ({ finalData, onSubmit
         onClick={handleAddProduct}
         className="mt-6 bg-orange-500 text-white px-6 py-2 rounded-md hover:bg-orange-600"
       >
-        Thêm sản phẩm
+        Go to login
       </button>
     </div>
   );
