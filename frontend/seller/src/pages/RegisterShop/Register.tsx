@@ -21,6 +21,7 @@ interface FormData {
 }
 
 const ShopRegister = () => {
+  const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState<Step>('shopInformation');
   const [formData, setFormData] = useState<FormData>({
     shopInformation: {
@@ -54,21 +55,32 @@ const ShopRegister = () => {
     setCurrentStep('finalize');
   };
 
-  // Final submission: Gather and process all data
   const handleFinalSubmit = async () => {
     try {
-      console.log(formData);
+      setIsLoading(true);
       axios.defaults.withCredentials = true;
-      // const response = await axios.post('http://localhost:3003/Users/register-shop', formData);
       const response = await axios.post(`${EnvValue.AUTH_SERVICE_URL}/Users/register-shop`, formData);
       console.log('Response from server:', response.data);
-      // Handle success
+  
+      const shopId = response.data?.shopId; // Assuming shopId is returned in response
+      // Go to finalize with shopId & loading state
+      setFormData(prev => ({
+        ...prev,
+        shopInformation: prev.shopInformation,
+        taxRegister: prev.taxRegister,
+      }));
+      setCurrentStep('finalize');
+  
+      // pass data to FinalizeRegister through props
+      setFinalizeData({ shopId, isLoading: false }); // loading done after response
     } catch (error: any) {
-      console.log(error);
       console.error('Error submitting form:', error.response?.data || error.message);
-      // Handle error
+    } finally {
+      setIsLoading(false); // Ensure loading ends
     }
   };
+  
+  const [finalizeData, setFinalizeData] = useState<{ shopId?: string; isLoading?: boolean }>({});
 
   // Compute steps with statuses based on currentStep
   const steps = [
@@ -182,8 +194,8 @@ const ShopRegister = () => {
             onPreviousStep={() => setCurrentStep('shopInformation')}
           />
         );
-      case 'finalize':
-        return <FinalizeRegister onSubmit={handleFinalSubmit} />;
+        case 'finalize':
+          return <FinalizeRegister finalData={finalizeData} onSubmit={handleFinalSubmit} />;
       default:
         return null;
     }
