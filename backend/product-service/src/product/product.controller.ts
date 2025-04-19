@@ -25,6 +25,11 @@ import { DeleteProductDto } from './dto/delete-product.dto';
 export class ProductController {
   constructor(private readonly productService: ProductService) { }
 
+  @Get('/shop-info/:productId')
+  async getShopInfo(@Param('productId') id: number): Promise<any | null> {
+    return this.productService.getShopInfo(id);
+  }
+  
   @Get(':id')
   async findOne(@Param('id') id: number): Promise<Product | null> {
     return this.productService.findOne(id);
