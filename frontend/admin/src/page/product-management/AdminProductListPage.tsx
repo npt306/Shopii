@@ -519,7 +519,7 @@ export const AdminProductListPage = () => {
 
       {/* Delete Modal */}
        {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-60 p-4"
+        <div className="fixed inset-0 z-50 flex justify-center items-center bg-opacity-60 backdrop-blur-sm p-4"
         role="dialog"
         aria-modal="true"
         aria-labelledby="deleteModalHeading">
