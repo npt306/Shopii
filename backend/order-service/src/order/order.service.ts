@@ -71,6 +71,7 @@ export class OrderService {
           orderItem.type_2 = product.type_2 || '';
           orderItem.quantity = product.quantity;
           orderItem.price = product.price;
+          orderItem.name = product.name;
           orderItem.order = savedOrder;
           return orderItem;
         });

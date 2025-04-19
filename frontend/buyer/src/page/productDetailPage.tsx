@@ -20,6 +20,7 @@ import { RatingStars } from "../helpers/utility/calculateRatingStars";
 import { formatPrice } from "../helpers/utility/formatPrice";
 
 import { Account } from "../types/account";
+import { ShopInfo } from "../types/shopInfo";
 
 import { useCart } from "../context/cartContext";
 import { EnvValue } from "../env-value/envValue";
@@ -37,6 +38,28 @@ export const ProductDetailPage = () => {
   const [stateVoucherShopDialog, setStateVoucherShopDialog] = useState(false);
   const [liked, setLiked] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
+
+  const [shopInfo, setShopInfo] = useState<ShopInfo>();
+
+  // fetch shop info
+  useEffect(() => {
+    const fetchShopInfo = async () => {
+      try {
+        const response = await axios.get(
+          // `http://localhost:3000/api/product/shop-info/${id}`
+          `${EnvValue.API_GATEWAY_URL}/api/product/shop-info/${id}`
+        );
+        setShopInfo(response.data);
+        // console.log(response.data);
+      } catch (error) {
+        console.error("Error fetching shop info:", error);
+      }
+    };
+
+    if (id) {
+      fetchShopInfo();
+    }
+  }, [id]);
 
   // set quantity selector
   const [quantity, setQuantity] = useState(1);
@@ -567,14 +590,14 @@ export const ProductDetailPage = () => {
           <div className="w-2/5">
             <div className="flex flex-row items-center justify-start">
               <img
-                src="https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lp09rsokn9e6e7@resize_w450_nl.webp"
+                src="https://static.vecteezy.com/system/resources/thumbnails/023/177/445/small_2x/mall-logo-is-marketing-shopping-sales-business-and-company-logo-on-white-background-illustration-vector.jpg"
                 alt="Shop Avatar"
                 className="w-25 h-25 object-cover p-3 rounded-full"
               />
               <div className="flex flex-col justify-items-start">
-                <div id="shop_name">okmua.com.vn</div>
+                <div id="shop_name">{shopInfo?.ShopName}</div>
                 <div className="text-gray-500 text-xs">
-                  Online 13 phút trước
+                  Online 15 phút trước
                 </div>
                 <div className="flex flex-row gap-2 mt-2">
                   <div className="border border-[#ee4d2d] px-3 h-10 flex items-center justify-center text-[#ee4d2d] bg-orange-100 cursor-pointer hover:bg-orange-200 transition">
@@ -600,19 +623,19 @@ export const ProductDetailPage = () => {
             <div className="flex-1 p-3 text-center">
               <div className="flex flex-col">
                 <label className="text-gray-500">Đánh giá:</label>
-                <p className="text-[#ee4d2d]">87.7k</p>
+                <p className="text-[#ee4d2d]">0</p>
               </div>
             </div>
             <div className="flex-1 p-3 text-center">
               <div className="flex flex-col">
                 <label className="text-gray-500">Sản phẩm:</label>
-                <p className="text-[#ee4d2d]">77</p>
+                <p className="text-[#ee4d2d]">{shopInfo?.total_products}</p>
               </div>
             </div>
             <div className="flex-1 p-3 text-center">
               <div className="flex flex-col">
                 <label className="text-gray-500">Người theo dõi:</label>
-                <p className="text-[#ee4d2d]">40.3k</p>
+                <p className="text-[#ee4d2d]">{shopInfo?.Followers}</p>
               </div>
             </div>
           </div>
