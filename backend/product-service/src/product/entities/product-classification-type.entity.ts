@@ -12,7 +12,9 @@ export class ProductClassificationType {
   @Column({ nullable: true })
   Level: number;
 
-  @ManyToOne(() => Product, (product) => product.classifications)
+  @ManyToOne(() => Product, (product) => product.classifications, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'ProductID' })
   product: Product;
 }
