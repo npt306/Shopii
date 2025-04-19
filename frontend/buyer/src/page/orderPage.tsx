@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
 import { EnvValue } from "../env-value/envValue";
 
@@ -47,9 +47,9 @@ export const OrderPage = () => {
   const { updateCart } = useCart();
 
   // auto-scroll to top
-  // useEffect(() => {
-  //   window.scrollTo({ top: 0, behavior: "smooth" });
-  // }, []);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   useEffect(() => {
     // console.log("Order data: ", orderData);
@@ -140,14 +140,21 @@ export const OrderPage = () => {
     }
 
     const shippingAddress = `${selectedAddress.SpecificAddress}, ${selectedAddress.Ward}, ${selectedAddress.District}, ${selectedAddress.Province}`;
-    const paymentMethodString = paymentMethodChoice === 0 ? 'VNPay' : 'COD';
+    const paymentMethodString = paymentMethodChoice === 0 ? "VNPay" : "COD";
     const checkoutSessionId = uuidv4();
 
-    if (paymentMethodChoice === 1) { // COD
+    if (paymentMethodChoice === 1) {
+      // COD
       try {
         await axios.post(
           `${EnvValue.API_GATEWAY_URL}/order/checkout/create-order`,
-          { userId: id, orderData, shippingAddress, paymentMethod: paymentMethodString, checkoutSessionId }
+          {
+            userId: id,
+            orderData,
+            shippingAddress,
+            paymentMethod: paymentMethodString,
+            checkoutSessionId,
+          }
         );
         const deletePromises = [];
         for (const shop of orderData) {
@@ -170,22 +177,31 @@ export const OrderPage = () => {
         setTimeout(() => {
           navigate("/home");
         }, 1500);
-
       } catch (error) {
         console.error("Error creating COD order:", error);
         toast.error("Không thể tạo đơn hàng COD. Vui lòng thử lại.");
       }
-    } else if (paymentMethodChoice === 0) { // VNPay
+    } else if (paymentMethodChoice === 0) {
+      // VNPay
       try {
         // Create order first to get order IDs associated with the session
         const createOrderRes = await axios.post(
           `${EnvValue.API_GATEWAY_URL}/order/checkout/create-order`,
-          { userId: id, orderData, shippingAddress, paymentMethod: paymentMethodString, checkoutSessionId }
+          {
+            userId: id,
+            orderData,
+            shippingAddress,
+            paymentMethod: paymentMethodString,
+            checkoutSessionId,
+          }
         );
 
         // Check if order creation was successful before proceeding to payment
         if (!createOrderRes.data || !createOrderRes.data.success) {
-             throw new Error(createOrderRes.data.message || "Không thể tạo đơn hàng trên hệ thống.");
+          throw new Error(
+            createOrderRes.data.message ||
+              "Không thể tạo đơn hàng trên hệ thống."
+          );
         }
 
         const paymentPayload = {
@@ -193,7 +209,10 @@ export const OrderPage = () => {
           amount: totalOrderPrice,
           orderInfo: `Thanh toan cho phien checkout ${checkoutSessionId}`,
         };
-        const paymentResponse = await axios.post(`${EnvValue.API_GATEWAY_URL}/api/payment/create-payment-url`, paymentPayload);
+        const paymentResponse = await axios.post(
+          `${EnvValue.API_GATEWAY_URL}/api/payment/create-payment-url`,
+          paymentPayload
+        );
 
         const deletePromises = [];
         for (const shop of orderData) {
@@ -212,10 +231,12 @@ export const OrderPage = () => {
 
         // Redirect to VNPay
         window.location.href = paymentResponse.data.paymentUrl;
-
       } catch (error: any) {
         console.error("Error initiating VNPay payment:", error);
-        const errorMsg = error.response?.data?.message || error.message || "Không thể tạo yêu cầu thanh toán VNPay. Vui lòng thử lại.";
+        const errorMsg =
+          error.response?.data?.message ||
+          error.message ||
+          "Không thể tạo yêu cầu thanh toán VNPay. Vui lòng thử lại.";
         toast.error(errorMsg);
       }
     }
@@ -965,11 +986,17 @@ export const OrderPage = () => {
       {paymentChoiceModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h2 className="text-lg font-semibold mb-4 text-black">Chọn phương thức thanh toán</h2>
+            <h2 className="text-lg font-semibold mb-4 text-black">
+              Chọn phương thức thanh toán
+            </h2>
             <div className="flex flex-col gap-4">
               {/* VNPay Option */}
               <label
-                className={`flex items-center p-3 border rounded cursor-pointer ${paymentMethodChoice === 0 ? 'border-orange-500 bg-orange-50' : 'border-gray-300'}`}
+                className={`flex items-center p-3 border rounded cursor-pointer ${
+                  paymentMethodChoice === 0
+                    ? "border-orange-500 bg-orange-50"
+                    : "border-gray-300"
+                }`}
                 onClick={() => setPaymentMethodChoice(0)}
               >
                 <input
@@ -985,7 +1012,11 @@ export const OrderPage = () => {
 
               {/* COD Option */}
               <label
-                className={`flex items-center p-3 border rounded cursor-pointer ${paymentMethodChoice === 1 ? 'border-orange-500 bg-orange-50' : 'border-gray-300'}`}
+                className={`flex items-center p-3 border rounded cursor-pointer ${
+                  paymentMethodChoice === 1
+                    ? "border-orange-500 bg-orange-50"
+                    : "border-gray-300"
+                }`}
                 onClick={() => setPaymentMethodChoice(1)}
               >
                 <input
@@ -996,12 +1027,24 @@ export const OrderPage = () => {
                   onChange={() => setPaymentMethodChoice(1)}
                   className="mr-3 custom-radio"
                 />
-                <span className="text-black">Thanh toán khi nhận hàng (COD)</span>
+                <span className="text-black">
+                  Thanh toán khi nhận hàng (COD)
+                </span>
               </label>
             </div>
             <div className="mt-6 flex justify-end gap-3">
-              <button className="px-4 py-2 border rounded text-black bg-gray-200 hover:bg-gray-300" onClick={() => setPaymentChoiceModal(false)}>Hủy</button>
-              <button className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600" onClick={() => setPaymentChoiceModal(false)}>Xác nhận</button>
+              <button
+                className="px-4 py-2 border rounded text-black bg-gray-200 hover:bg-gray-300"
+                onClick={() => setPaymentChoiceModal(false)}
+              >
+                Hủy
+              </button>
+              <button
+                className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
+                onClick={() => setPaymentChoiceModal(false)}
+              >
+                Xác nhận
+              </button>
             </div>
           </div>
         </div>
