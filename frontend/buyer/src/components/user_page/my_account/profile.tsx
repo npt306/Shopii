@@ -297,8 +297,8 @@ export const Profile: React.FC<ProfileProps> = ({ userId }) => {
                     <div
                       className="avatar border border-gray-200"
                       style={{
-                        backgroundImage: `url(${ changeAvatar ? 
-                          formData.Avatar :
+                        backgroundImage: `url(${ 
+                          formData.Avatar ||
                           "https://storage.googleapis.com/shopii-image/user_avatar/c4f96264-90f0-4dda-a6bb-ebe4b502a9a7_avatar_default.png"
                         })`,
                       }}

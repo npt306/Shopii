@@ -204,7 +204,7 @@ export const LoginPage: React.FC = () => {
                 <div className="flex items-center justify-between mt-3 mb-4 font-normal">
                   <div className="text-2xl">Đăng nhập</div>
                   <img
-                    src="../assets/psw-noti.png"
+                    src="src/assets/psw-noti.png"
                     width="160"
                     height="50"
                     alt="Password notification"
@@ -256,7 +256,7 @@ export const LoginPage: React.FC = () => {
                 <div className="flex items-center justify-between mt-3 mb-4 font-normal">
                   <div className="text-2xl">Đăng nhập</div>
                   <img
-                    src="../assets/QR-noti.png"
+                    src="src/assets/QR-noti.png"
                     width="166"
                     height="58"
                     alt="QR notification"
@@ -313,7 +313,7 @@ export const LoginPage: React.FC = () => {
                     {/* QR Login */}
                     <Form.Group className="mb-3 flex flex-col justify-center items-center">
                       <img
-                        src="../assets/login-qr.png"
+                        src="src/assets/login-qr.png"
                         width="180"
                         className="mb-1"
                         alt="QR code"

@@ -174,7 +174,7 @@ export const Addressesupdate = ({ accountId }: { accountId: number }) => {
                           </button>
                           {!address.isDefault && (
                             <button
-                              className="buttons-style"
+                              className="buttons-style !text-orange-600"
                               onClick={() => deleteAddress(address.id)}
                             >
                               Xóa
