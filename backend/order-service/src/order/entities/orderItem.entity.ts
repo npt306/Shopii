@@ -33,6 +33,9 @@ export class OrderItemEntity {
   @Column('integer', { name: 'Price' })
   price: number;
 
+  @Column('text', { nullable: true, name: 'Name' })
+  name: string;
+
   @ManyToOne(() => OrderEntity, (order) => order.orderItems, {
     onDelete: 'CASCADE',
   })

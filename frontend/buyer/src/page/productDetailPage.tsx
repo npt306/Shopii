@@ -20,15 +20,10 @@ import { RatingStars } from "../helpers/utility/calculateRatingStars";
 import { formatPrice } from "../helpers/utility/formatPrice";
 
 import { Account } from "../types/account";
+import { ShopInfo } from "../types/shopInfo";
 
 import { useCart } from "../context/cartContext";
 import { EnvValue } from "../env-value/envValue";
-
-type ShopInfo = {
-  ShopName: string;
-  Followers: number;
-  total_products: number;
-};
 
 export const ProductDetailPage = () => {
   const res: Account = localStorage.getItem("userProfile")
