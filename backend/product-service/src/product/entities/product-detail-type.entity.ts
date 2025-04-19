@@ -32,11 +32,17 @@ export class ProductDetailType {
   @Column()
   Quantity: number;
 
-  @OneToOne(() => ProductDimensions)
+  @OneToOne(() => ProductDimensions, {
+    cascade: true,
+    eager: true,
+    onDelete: 'CASCADE'
+  })
   @JoinColumn({ name: 'Dimension' })
   Dimension: ProductDimensions;
 
-  @ManyToOne(() => Product, (product) => product.details)
+  @ManyToOne(() => Product, (product) => product.details, {
+    onDelete: 'CASCADE'
+  })
   @JoinColumn({ name: 'ProductID' })
   product: Product;
 }

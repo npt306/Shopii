@@ -112,7 +112,7 @@ export const Header = () => {
                     alt="Avatar"
                     className="w-7 h-7 rounded-full"
                   />
-                  <span className="">{auth.user.name}</span>
+                  <span className="">{JSON.parse(localStorage.getItem("userProfile")).username || avatarDefault}</span>
                 </div>
 
                 {isOpen && (
