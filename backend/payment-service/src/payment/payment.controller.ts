@@ -29,10 +29,10 @@ export class PaymentController {
     this.logger.log(`Received create payment request: ${JSON.stringify(createPaymentDto)}`);
     try {
       const paymentUrl = await this.paymentService.createPaymentUrl(createPaymentDto);
-      this.logger.log(`Generated VNPay URL for order ${createPaymentDto.orderId}`);
+      this.logger.log(`Generated VNPay URL for checkout session ${createPaymentDto.checkoutSessionId}`);
       return { paymentUrl };
     } catch (error) {
-      this.logger.error(`Error creating payment URL for order ${createPaymentDto.orderId}: ${error.message}`, error.stack);
+      this.logger.error(`Error creating payment URL for checkout session ${createPaymentDto.checkoutSessionId}: ${error.message}`, error.stack);
       // Ensure error is an instance of Error before accessing message
       const message = error instanceof Error ? error.message : 'Failed to create payment URL';
       throw new BadRequestException(message);

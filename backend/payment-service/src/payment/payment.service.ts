@@ -8,15 +8,20 @@ import * as moment from 'moment-timezone';
 import * as qs from 'qs';
 import * as crypto from 'crypto';
 import { firstValueFrom } from 'rxjs';
-import { AxiosError } from 'axios';
+import { AxiosError, AxiosResponse } from 'axios';
 
-import { PaymentTransaction, PaymentStatus, PaymentPayoutStatus } from './entities/payment-transaction.entity';
 import { SellerBankAccount } from './entities/seller-bank-account.entity';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { VnpayReturnDto } from './dto/vnpay-return.dto';
 import { VnpayIpnDto } from './dto/vnpay-ipn.dto';
 import { AddBankAccountDto } from './dto/add-bank-account.dto';
 import { sortObject } from '../utils/sortObject';
+
+enum PaymentStatus {
+  PENDING = 'Pending',
+  SUCCESS = 'Success',
+  FAILED = 'Failed',
+}
 
 @Injectable()
 export class PaymentService {
@@ -31,8 +36,6 @@ export class PaymentService {
   private readonly orderServiceUrl?: string;
 
   constructor(
-    @InjectRepository(PaymentTransaction)
-    private paymentTransactionRepository: Repository<PaymentTransaction>,
     @InjectRepository(SellerBankAccount)
     private sellerBankAccountRepository: Repository<SellerBankAccount>,
     private configService: ConfigService,
@@ -68,19 +71,19 @@ export class PaymentService {
 
   // --- createPaymentUrl remains the same ---
   async createPaymentUrl(createPaymentDto: CreatePaymentDto): Promise<string> {
-    const { orderId, amount, sellerId, orderInfo = 'Order Payment', bankCode, language = 'vn' } = createPaymentDto;
+    const { checkoutSessionId, amount, sellerId, orderInfo = 'Order Payment', bankCode, language = 'vn' } = createPaymentDto;
 
-    if (!orderId || !amount || amount <= 0) {
-        throw new BadRequestException('Invalid orderId or amount.');
+    if (!checkoutSessionId || !amount || amount <= 0) {
+        throw new BadRequestException('Invalid checkoutSessionId or amount.');
     }
     if (!sellerId) {
-        this.logger.warn(`sellerId missing for order ${orderId}. Payout tracking might be affected.`);
+        this.logger.warn(`sellerId missing for checkout ${checkoutSessionId}. Payout tracking might be affected.`);
     }
 
     process.env.TZ = 'Asia/Ho_Chi_Minh';
     const date = new Date();
     const createDate = moment(date).format('YYYYMMDDHHmmss');
-    const vnp_TxnRef = `${orderId}_${moment(date).format('HHmmss')}`;
+    const vnp_TxnRef = `${checkoutSessionId}_${moment(date).format('HHmmss')}`;
 
     const ipAddr = '127.0.0.1'; // Placeholder IP
 
@@ -102,20 +105,6 @@ export class PaymentService {
     if (bankCode) {
       vnp_Params['vnp_BankCode'] = bankCode;
     }
-
-    const transaction = this.paymentTransactionRepository.create({
-      orderId: String(orderId),
-      sellerId: sellerId,
-      vnp_TxnRef: vnp_TxnRef,
-      amount: amount,
-      status: PaymentStatus.PENDING,
-      payoutStatus: PaymentPayoutStatus.PENDING,
-      vnp_OrderInfo: orderInfo,
-      vnp_IpAddr: ipAddr,
-      vnp_CreateDate: createDate,
-    });
-    await this.paymentTransactionRepository.save(transaction);
-    this.logger.log(`Created pending transaction for TxnRef: ${vnp_TxnRef}, Seller: ${sellerId}`);
 
     vnp_Params = sortObject(vnp_Params);
 
@@ -178,50 +167,30 @@ export class PaymentService {
     const txnRef = vnp_Params['vnp_TxnRef'];
     const rspCode = vnp_Params['vnp_ResponseCode'];
     const amount = Number(vnp_Params['vnp_Amount']) / 100;
+    const checkoutSessionId = txnRef.split('_')[0];
+
+    if (!checkoutSessionId) {
+        this.logger.error(`IPN Invalid Checkout Session ID extracted from TxnRef: ${txnRef}`);
+        return { RspCode: '01', Message: 'Invalid transaction reference' };
+    }
 
     try {
-        const transaction = await this.paymentTransactionRepository.findOne({ where: { vnp_TxnRef: txnRef } });
-
-        if (!transaction) {
-            this.logger.warn(`IPN Order not found for TxnRef: ${txnRef}`);
-            return { RspCode: '01', Message: 'Order not found' };
-        }
-
-        if (Number(transaction.amount) !== amount) {
-            this.logger.warn(`IPN Amount invalid for TxnRef: ${txnRef}. Expected: ${transaction.amount}, Received: ${amount}`);
-            return { RspCode: '04', Message: 'Amount invalid' };
-        }
-
-        if (transaction.status !== PaymentStatus.PENDING) {
-            this.logger.log(`IPN Order already updated for TxnRef: ${txnRef}. Status: ${transaction.status}`);
-            return { RspCode: '00', Message: 'Order already confirmed' };
-        }
 
         let finalStatus: PaymentStatus;
+        let orderUpdateStatus: string;
+
         if (rspCode === '00') {
-            transaction.status = PaymentStatus.SUCCESS;
-            transaction.payoutStatus = PaymentPayoutStatus.PENDING;
             finalStatus = PaymentStatus.SUCCESS;
+            orderUpdateStatus = 'Paid';
             this.logger.log(`IPN Payment SUCCESS for TxnRef: ${txnRef}`);
         } else {
-            transaction.status = PaymentStatus.FAILED;
-            transaction.payoutStatus = PaymentPayoutStatus.NOT_APPLICABLE;
             finalStatus = PaymentStatus.FAILED;
+            orderUpdateStatus = 'Failed';
             this.logger.warn(`IPN Payment FAILED for TxnRef: ${txnRef}. RspCode: ${rspCode}`);
         }
-        // Store VNPay details regardless of success/failure
-        transaction.vnp_TransactionNo = vnp_Params['vnp_TransactionNo'];
-        transaction.vnp_BankCode = vnp_Params['vnp_BankCode'];
-        transaction.vnp_CardType = vnp_Params['vnp_CardType'];
-        transaction.vnp_PayDate = vnp_Params['vnp_PayDate'];
-        transaction.vnp_ResponseCode = rspCode;
-        transaction.vnp_TransactionStatus = vnp_Params['vnp_TransactionStatus'];
 
-        await this.paymentTransactionRepository.save(transaction);
-
-        // Notify Order Service asynchronously (don't wait for it to respond to VNPay)
-        this.notifyOrderService(transaction.orderId, finalStatus)
-            .catch(err => this.logger.error(`Failed to notify order service for order ${transaction.orderId} after IPN: ${err.message}`, err.stack));
+        this.notifyOrderService(checkoutSessionId, orderUpdateStatus, amount)
+             .catch(err => this.logger.error(`Failed to notify order service for session ${checkoutSessionId} after IPN: ${err.message}`, err.stack));
 
         return { RspCode: '00', Message: 'Success' };
 
@@ -290,7 +259,8 @@ export class PaymentService {
   @Cron(process.env.PAYOUT_CRON_SCHEDULE || '0 0 1,15 * *')
   async handleScheduledPayouts() {
     this.logger.log(`Running scheduled payouts cron job at ${new Date().toISOString()}`);
-
+    this.logger.warn('Payout logic needs reimplementation as PaymentTransactions table is removed.');
+    /*
     const transactionsToPayout = await this.paymentTransactionRepository.find({
       where: {
         status: PaymentStatus.SUCCESS,
@@ -307,63 +277,49 @@ export class PaymentService {
     const payoutsBySeller = transactionsToPayout.reduce((acc, tx) => {
       const sellerId = tx.sellerId;
       if (!sellerId) {
-          this.logger.warn(`Transaction ${tx.id} (TxnRef: ${tx.vnp_TxnRef}) missing sellerId, skipping payout.`);
-          return acc;
+        this.logger.warn(`Transaction ${tx.vnp_TxnRef} missing sellerId, skipping payout.`);
+        return acc;
       }
       if (!acc[sellerId]) {
         acc[sellerId] = { totalAmount: 0, transactions: [] };
       }
-      acc[sellerId].totalAmount += Number(tx.amount);
+      acc[sellerId].totalAmount += tx.amount;
       acc[sellerId].transactions.push(tx);
       return acc;
-    }, {} as Record<number, { totalAmount: number; transactions: PaymentTransaction[]}>);
+    }, {} as { [sellerId: number]: { totalAmount: number, transactions: PaymentTransaction[] } });
 
     for (const sellerIdStr in payoutsBySeller) {
-        const sellerId = parseInt(sellerIdStr, 10);
+        const sellerId = parseInt(sellerIdStr);
         const payoutData = payoutsBySeller[sellerId];
-        const transactionIds = payoutData.transactions.map(tx => tx.id);
+        this.logger.log(`Processing payout for Seller ${sellerId}, Amount: ${payoutData.totalAmount}`);
 
-        try {
-            await this.paymentTransactionRepository.update(
-                { id: In(transactionIds) },
-                { payoutStatus: PaymentPayoutStatus.PROCESSING }
-            );
-            this.logger.log(`Marked ${transactionIds.length} transactions as PROCESSING for Seller ${sellerId}.`);
+        const bankAccount = await this.findDefaultBankAccount(sellerId);
+        if (!bankAccount) {
+            this.logger.error(`No default bank account found for Seller ${sellerId}. Payout skipped.`);
+            // Optionally update transactions to reflect skipped payout
+            continue;
+        }
 
-            const bankAccount = await this.findDefaultBankAccount(sellerId);
+        const payoutSuccess = await this.simulatePayout(sellerId, bankAccount.accountNumber, bankAccount.bankName, payoutData.totalAmount);
 
-            if (!bankAccount) {
-                this.logger.warn(`Seller ${sellerId} has no default bank account configured. Payout failed.`);
-                await this.paymentTransactionRepository.update(
-                    { id: In(transactionIds) },
-                    { payoutStatus: PaymentPayoutStatus.FAILED }
-                );
-                continue;
+        if (payoutSuccess) {
+            this.logger.log(`Simulated Payout SUCCESS for Seller ${sellerId}`);
+            for (const tx of payoutData.transactions) {
+                tx.payoutStatus = PaymentPayoutStatus.COMPLETED;
+                tx.payoutDate = new Date();
+                await this.paymentTransactionRepository.save(tx);
             }
-
-            this.logger.log(`Processing payout for Seller ${sellerId}: Amount ₫${payoutData.totalAmount} to account ${bankAccount.accountNumber} (${bankAccount.bankName})`);
-
-            const payoutSuccess = await this.simulatePayoutApiCall(sellerId, payoutData.totalAmount, bankAccount);
-
-            if (payoutSuccess) {
-                await this.paymentTransactionRepository.update(
-                    { id: In(transactionIds) },
-                    { payoutStatus: PaymentPayoutStatus.COMPLETED, payoutDate: new Date() }
-                );
-                this.logger.log(`Payout COMPLETED for ${transactionIds.length} transactions for Seller ${sellerId}.`);
-            } else {
-                 throw new Error('Simulated Payout API call failed');
+        } else {
+            this.logger.error(`Simulated Payout FAILED for Seller ${sellerId}`);
+            // Optionally update transactions to reflect failed payout
+            for (const tx of payoutData.transactions) {
+                tx.payoutStatus = PaymentPayoutStatus.FAILED;
+                await this.paymentTransactionRepository.save(tx);
             }
-
-        } catch (error) {
-            this.logger.error(`Payout FAILED for Seller ${sellerId}: ${error.message}`, error.stack);
-            await this.paymentTransactionRepository.update(
-                { id: In(transactionIds), payoutStatus: PaymentPayoutStatus.PROCESSING },
-                { payoutStatus: PaymentPayoutStatus.FAILED }
-            );
         }
     }
     this.logger.log('Finished scheduled payouts cron job.');
+    */
   }
 
    private async findDefaultBankAccount(sellerId: number): Promise<SellerBankAccount | null> {
@@ -398,24 +354,25 @@ export class PaymentService {
         return true;
    }
 
-   private async notifyOrderService(orderId: string, paymentStatus: PaymentStatus) {
+   private async notifyOrderService(sessionId: string, paymentStatusString: string, amount: number) {
     if (!this.orderServiceUrl) {
-        this.logger.warn(`Order Service URL not configured. Skipping notification for order ${orderId}.`);
+        this.logger.warn(`Order Service URL not configured. Skipping notification for session ${sessionId}.`);
         return;
     }
-    const endpoint = `${this.orderServiceUrl}/orders/${orderId}/payment-status`;
-    const payload = { status: paymentStatus === PaymentStatus.SUCCESS ? 'Paid' : 'Failed' };
+    const endpoint = `${this.orderServiceUrl}/checkout/sessions/${sessionId}/payment-status`;
+    const payload = {
+        status: paymentStatusString
+    };
 
     try {
-        this.logger.log(`Notifying Order Service at ${endpoint} for order ${orderId} with status ${payload.status}`);
-        await firstValueFrom(
+        this.logger.log(`Notifying Order Service at ${endpoint} for session ${sessionId} with status ${payload.status}`);
+        const response: AxiosResponse = await firstValueFrom(
             this.httpService.patch(endpoint, payload, { timeout: 5000 })
         );
-        this.logger.log(`Successfully notified Order Service for order ${orderId}.`);
+        this.logger.log(`Successfully notified Order Service for session ${sessionId}. Response: ${response.status}`);
     } catch (error) {
          const axiosError = error as AxiosError;
-        this.logger.error(`Failed to notify Order Service for order ${orderId}. Status: ${axiosError.response?.status}, Error: ${axiosError.message}`, axiosError.stack);
-        // maybe retry logic here
+        this.logger.error(`Failed to notify Order Service for session ${sessionId}. Status: ${axiosError.response?.status}, Error: ${axiosError.message}`, axiosError.stack);
     }
 }
 

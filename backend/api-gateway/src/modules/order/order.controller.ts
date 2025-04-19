@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Param, Body } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, Patch, ParseIntPipe } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { OrderService } from './order.service';
 
@@ -79,15 +79,19 @@ export class OrderController {
   async createOrder(
     @Body()
     payload: {
-      id: string;
+      userId: string;
+      checkoutSessionId: string;
       orderData: any;
       shippingAddress: string;
+      paymentMethod: string;
     },
   ): Promise<any> {
     return this.orderService.createOrder(
-      payload.id,
+      payload.userId,
+      payload.paymentMethod,
       payload.orderData,
       payload.shippingAddress,
+      payload.checkoutSessionId,
     );
   }
 
@@ -106,5 +110,21 @@ export class OrderController {
       console.error(error);
       throw error;
     }
+  }
+
+  @Patch('/orders/:orderId/payment-status')
+  async updatePaymentStatus(
+    @Param('orderId', ParseIntPipe) orderId: number,
+    @Body() payload: { status: string },
+  ) {
+    return this.orderService.updatePaymentStatus(orderId, payload.status);
+  }
+
+  @Patch('/sessions/:sessionId/payment-status')
+  async updatePaymentStatusBySessionId(
+    @Param('sessionId') sessionId: string,
+    @Body() payload: { status: string },
+  ) {
+    return this.orderService.updatePaymentStatusBySessionId(sessionId, payload.status);
   }
 }

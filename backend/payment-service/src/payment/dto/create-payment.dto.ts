@@ -1,10 +1,9 @@
-import { IsNotEmpty, IsNumber, IsString, IsOptional, Min, MaxLength, IsIn, IsInt } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsOptional, Min, MaxLength,IsInt, IsIn, IsUUID } from 'class-validator';
 
 export class CreatePaymentDto {
   @IsNotEmpty()
   @IsString()
-  @MaxLength(50)
-  orderId: string;
+  checkoutSessionId: string;
 
   @IsNotEmpty()
   @IsNumber()
