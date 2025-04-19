@@ -23,8 +23,8 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     ? user.realm_access.roles.includes("seller")
     : false;
 
-  console.log('User roles:', user.realm_access?.roles);
-  console.log('Has seller role:', hasSellerRole);
+  // console.log('User roles:', user.realm_access?.roles);
+  // console.log('Has seller role:', hasSellerRole);
 
   if (!hasSellerRole) {
     return <Navigate to="/portal/register" replace state={{ from: location }} />;

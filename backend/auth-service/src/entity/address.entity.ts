@@ -16,7 +16,7 @@ export class Address {
     AddressId: number;
 
     @Column({ length: 100 })
-    Fullname: string;
+    FullName: string;
 
     @Column({ length: 15 })
     PhoneNumber: string;
@@ -47,5 +47,11 @@ export class Address {
     AccountId: number;
 
     @Column({ default: false })
-    IsDefault: boolean;
+    isDefault: boolean;
+
+    @Column({ default: false })
+    isDelivery: boolean;
+
+    @Column({ default: false })
+    isShipping: boolean;
 }

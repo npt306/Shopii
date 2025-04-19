@@ -1,4 +1,6 @@
 import logoShopee from "../../assets/logo_shopee_1.png";
+import { useAuth } from '../protectedRoute/authContext';
+import { useNavigate } from "react-router-dom";
 
 interface Product {
     id: number;
@@ -12,6 +14,21 @@ interface SearchProductDisplayProps {
 }
 
 export const SearchProductDisplay = ({ products }: SearchProductDisplayProps) => {
+    const { isAuthenticated, loading, verifyAuth } = useAuth();
+    const navigate = useNavigate();
+
+    const handleClick = async (id: number) => {
+        console.log('handleClick', id);
+        if (loading) return;                // still checking from mount
+        await verifyAuth();                 // re‑hit the verify‑token endpoint
+        if (!isAuthenticated) {
+            localStorage.clear();
+            navigate('/login', { replace: true });
+        } else {
+            navigate(`/detail-product/${id}`);
+        }
+    };
+
     return (
         <div className="relative my-5">
             <div className="grid grid-cols-[repeat(auto-fill,minmax(188px,2fr))] gap-1">
@@ -19,6 +36,7 @@ export const SearchProductDisplay = ({ products }: SearchProductDisplayProps) =>
                     <div
                         key={product.id}
                         className="bg-white shadow-md p-3 flex flex-col h-full justify-between group relative transition-all duration-300 ease-in-out border-2 border-transparent hover:border-orange-500 cursor-pointer"
+                        onClick={() => handleClick(product.id)}
                     >
                         <div className="flex flex-col justify-start flex-grow">
                             <div className="flex items-center justify-center">

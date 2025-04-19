@@ -16,13 +16,15 @@ import { ProductDetailPage } from "./page/productDetailPage.tsx";
 import { UserPage } from "./page/userPage.tsx";
 import { OrderPage } from "./page/orderPage.tsx";
 
-import PaymentCallbackPage from "./page/paymentCallbackPage.tsx";
 import CallbackPage from "./page/callback.tsx";
 import { store, persistor } from "./redux/authStore.ts";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 
 import { CartProvider } from "./context/cartContext.tsx";
+
+import { AuthProvider } from './components/protectedRoute/authContext.tsx';
+import { ProtectedRoute } from './components/protectedRoute/protectedRoute.tsx';
 
 const router = createBrowserRouter(
   [
@@ -38,37 +40,41 @@ const router = createBrowserRouter(
       path: "/callback",
       element: <CallbackPage />,
     },
+
     {
       path: "/home",
       element: <HomePage />,
     },
+
     {
       path: "/search",
       element: <SearchProductPage />,
     },
+
     {
-      path: "/detail-product/:id",
-      element: <ProductDetailPage />,
-    },
-    {
-      path: "/user",
-      element: <UserPage />,
-    },
-    {
-      path: "/user/:id",
-      element: <UserPage />,
-    },
-    {
-      path: "/cart/:id",
-      element: <CartPage />,
-    },
-    {
-      path: "/order/:id",
-      element: <OrderPage />,
-    },
-    {
-      path: "/payment/callback",
-      element: <PaymentCallbackPage />,
+      element: <ProtectedRoute />,
+      children: [
+        {
+          path: "/detail-product/:id",
+          element: <ProductDetailPage />,
+        },
+        {
+          path: "/user",
+          element: <UserPage />,
+        },
+        {
+          path: "/user/:id",
+          element: <UserPage />,
+        },
+        {
+          path: "/cart/:id",
+          element: <CartPage />,
+        },
+        {
+          path: "/order/:id",
+          element: <OrderPage />,
+        },
+      ]
     },
   ],
   {
@@ -80,12 +86,14 @@ const router = createBrowserRouter(
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
-        <CartProvider>
-          <RouterProvider router={router} />
-        </CartProvider>
-      </PersistGate>
-    </Provider>
+    <AuthProvider>
+      <Provider store={store}>
+        <PersistGate loading={null} persistor={persistor}>
+          <CartProvider>
+            <RouterProvider router={router} />
+          </CartProvider>
+        </PersistGate>
+      </Provider>
+    </AuthProvider>
   </StrictMode>
 );
