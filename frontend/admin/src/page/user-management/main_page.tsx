@@ -138,6 +138,8 @@ export const UserManagement: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
+        //empty body
+        body: JSON.stringify({}),
       });
 
       if (!response.ok) {
@@ -380,7 +382,7 @@ export const UserManagement: React.FC = () => {
 
             {/* Delete confirmation modal */}
             {showDeleteConfirm && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
+              <div className="fixed inset-0 z-50 flex justify-center items-center bg-opacity-60 backdrop-blur-sm p-4">
                 <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
                   <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mx-auto mb-4">
                     <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -426,7 +428,7 @@ export const UserManagement: React.FC = () => {
 
             {/* Ban/Unban confirmation modal */}
             {showBanConfirm && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
+              <div className="fixed inset-0 z-50 flex justify-center items-center bg-opacity-60 backdrop-blur-sm p-4">
                 <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
                   <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-100 mx-auto mb-4">
                     <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
