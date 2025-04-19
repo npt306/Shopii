@@ -16,6 +16,7 @@ import { ProductDetailPage } from "./page/productDetailPage.tsx";
 import { UserPage } from "./page/userPage.tsx";
 import { OrderPage } from "./page/orderPage.tsx";
 
+import PaymentCallbackPage from "./page/paymentCallbackPage.tsx";
 import CallbackPage from "./page/callback.tsx";
 import { store, persistor } from "./redux/authStore.ts";
 import { Provider } from "react-redux";
@@ -64,6 +65,10 @@ const router = createBrowserRouter(
     {
       path: "/order/:id",
       element: <OrderPage />,
+    },
+    {
+      path: "/payment/callback",
+      element: <PaymentCallbackPage />,
     },
   ],
   {

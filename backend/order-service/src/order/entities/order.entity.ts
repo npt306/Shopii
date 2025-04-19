@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, Index } from 'typeorm';
 import { OrderItemEntity } from './orderItem.entity';
 
 @Entity('Orders')
@@ -24,11 +24,15 @@ export class OrderEntity {
   @Column('text', { name: 'PaymentMethod' })
   paymentMethod: string;
 
-  @Column({ default: false, name: 'PaymentStatus' })
+  @Column('boolean', { name: 'PaymentStatus', default: false })
   paymentStatus: boolean;
 
-  @Column({ type: 'text', name: 'OrderStatus' })
+  @Column('text', { name: 'OrderStatus' })
   orderStatus: string;
+
+  @Index()
+  @Column({ type: 'varchar', length: 50, nullable: true, name: 'CheckoutSessionID' })
+  checkoutSessionId?: string;
 
   @Column({ type: 'text', nullable: true, name: 'AddressShipping' })
   addressShipping: string;

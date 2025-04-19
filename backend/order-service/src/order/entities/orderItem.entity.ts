@@ -30,7 +30,7 @@ export class OrderItemEntity {
   @Column({ name: 'Quantity' })
   quantity: number;
 
-  @Column({ name: 'Price' })
+  @Column('integer', { name: 'Price' })
   price: number;
 
   @ManyToOne(() => OrderEntity, (order) => order.orderItems, {

@@ -5,7 +5,6 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PaymentModule } from './payment/payment.module';
-import { PaymentTransaction } from './payment/entities/payment-transaction.entity';
 import { SellerBankAccount } from './payment/entities/seller-bank-account.entity';
 import { join } from 'path';
 
@@ -25,7 +24,7 @@ import { join } from 'path';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [PaymentTransaction, SellerBankAccount],
+        entities: [SellerBankAccount],
         synchronize: false, 
         logging: process.env.NODE_ENV !== 'production',
       }),

@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   ValidateNested,
+  IsEnum,
   IsNumber,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -50,6 +51,9 @@ export class OrderData {
   @IsBoolean()
   isPaid: boolean;
 
+  @IsString()
+  paymentMethod: string;
+  
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ProductOrderData)
