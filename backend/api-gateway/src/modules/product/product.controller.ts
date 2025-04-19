@@ -26,6 +26,23 @@ import * as concat from 'concat-stream';
 export class ProductController {
   constructor(private readonly httpService: HttpService) { }
 
+  @Get('/shop-info/:productId')
+  async getShopInfo(@Param('productId') id: number) {
+    try {
+      const response = await this.httpService
+        .get(`${process.env.PRODUCT_SERVICE_URL}/product/shop-info/${id}`)
+        .toPromise();
+      if (response && response.data) {
+        return response.data;
+      } else {
+        throw new Error('No response from the server');
+      }
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+  
   // Existing endpoints
   @Get('/detail/:id')
   async getProductDetail(@Param('id') id: number) {

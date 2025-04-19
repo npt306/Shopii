@@ -19,6 +19,12 @@ interface CategoryWithChildren extends Categories {
   children?: CategoryWithChildren[];
 }
 
+interface ShopInfo {
+  ShopName: string;
+  Followers: number;
+  total_products_same_seller: number;
+}
+
 @Injectable()
 export class ProductService {
   storage: Storage;
@@ -60,6 +66,26 @@ export class ProductService {
     this.bucket = this.storage.bucket(bucketName);
   }
 
+  async getShopInfo(id: number): Promise<ShopInfo | null> {
+    const shopInfo = await this.productRepository.query(
+      `
+        SELECT s."ShopName", s."Followers", COUNT(p2."ProductID") AS total_products
+        FROM 
+            public."Products" p1
+        JOIN 
+            public."Sellers" s ON p1."SellerID" = s.id
+        JOIN 
+            public."Products" p2 ON s.id = p2."SellerID"
+        WHERE 
+            p1."ProductID" = $1
+        GROUP BY 
+            s."ShopName", s."Followers";`,
+      [id],
+    );
+
+    return shopInfo[0] ?? null;
+  }
+  
   async findOne(id: number): Promise<Product | null> {
     return this.productRepository.findOneBy({ ProductID: id });
   }
