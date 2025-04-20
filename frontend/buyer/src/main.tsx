@@ -17,6 +17,7 @@ import { UserPage } from "./page/userPage.tsx";
 import { OrderPage } from "./page/orderPage.tsx";
 
 import CallbackPage from "./page/callback.tsx";
+import PaymentCallbackPage from "./page/paymentCallbackPage.tsx";
 import { store, persistor } from "./redux/authStore.ts";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
@@ -45,7 +46,10 @@ const router = createBrowserRouter(
       path: "/home",
       element: <HomePage />,
     },
-
+    {
+      path: "/payment/callback",
+      element: <PaymentCallbackPage />,
+    },
     {
       path: "/search",
       element: <SearchProductPage />,
