@@ -1074,7 +1074,7 @@ export const OrderPage = () => {
                 onClick={() => setPaymentChoiceModal(false)}
                 className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors"
               >
-                Xác nhận
+                <span className="text-white">Xác nhận</span>
               </button>
             </div>
           </div>

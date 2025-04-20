@@ -136,14 +136,6 @@ export const Header = () => {
                           Tài khoản của tôi
                         </ProtectedExternalLink>
                       </li>
-                      <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                        <ProtectedExternalLink
-                          to={`/home`}
-                          className="cursor-pointer hover:opacity-80"
-                        >
-                          Đơn mua
-                        </ProtectedExternalLink>
-                      </li>
                       <li
                         className="px-4 py-2 text-red-500 hover:bg-gray-100 cursor-pointer"
                         onClick={async () => {
