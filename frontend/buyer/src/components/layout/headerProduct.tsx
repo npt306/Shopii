@@ -16,6 +16,7 @@ import { BasicItem } from "../../types/basicCart";
 
 import { mockProducts } from "./mockdata/product_data";
 import { EnvValue } from "../../env-value/envValue";
+import { useAuth } from '../protectedRoute/authContext';
 export const HeaderProduct = () => {
   const [isVisible, setIsVisible] = useState(false);
   const { cartData, numberItem, loading, res, updateCart } = useCart();
@@ -23,6 +24,7 @@ export const HeaderProduct = () => {
   const [suggestions, setSuggestions] = useState<Array<{ id: number; Name: string }>>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestionRef = useRef<HTMLDivElement>(null);
+  const { isAuthenticated, verifyAuth } = useAuth();
   let navigate = useNavigate();
 
 
@@ -45,43 +47,43 @@ export const HeaderProduct = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-        if (suggestionRef.current && !suggestionRef.current.contains(event.target as Node)) {
-            setShowSuggestions(false);
-        }
+      if (suggestionRef.current && !suggestionRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSearch = async (value: string , selectedCategory?: string) => {
+  const handleSearch = async (value: string, selectedCategory?: string) => {
     setSearchTerm(value);
     if (value.trim()) {
-        try {
-            console.log("Fetching search results from backend...");
-            let url = `${EnvValue.API_GATEWAY_URL}/api/search?q=${encodeURIComponent(value)}`;
-            if (selectedCategory) {
-                url += `&category=${encodeURIComponent(selectedCategory)}`;
-            }
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            // Transform the Elasticsearch response into an array similar to mockProducts
-            const transformedResults = data.$.map((item: any) => ({
-                id: item._source.id,
-                Name: item._source.Name,
-            }));
-            setSuggestions(transformedResults.slice(0, 10));
-        } catch (error) {
-            console.error("Error fetching search results:", error);
-            setSuggestions([]);
+      try {
+        console.log("Fetching search results from backend...");
+        let url = `${EnvValue.API_GATEWAY_URL}/api/search?q=${encodeURIComponent(value)}`;
+        if (selectedCategory) {
+          url += `&category=${encodeURIComponent(selectedCategory)}`;
         }
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        // Transform the Elasticsearch response into an array similar to mockProducts
+        const transformedResults = data.$.map((item: any) => ({
+          id: item._source.id,
+          Name: item._source.Name,
+        }));
+        setSuggestions(transformedResults.slice(0, 10));
+      } catch (error) {
+        console.error("Error fetching search results:", error);
+        setSuggestions([]);
+      }
     } else {
-        console.log("Attempting to fetch search results from Elasticsearch...");
+      console.log("Attempting to fetch search results from Elasticsearch...");
 
-        setSuggestions(mockProducts.slice(0, 10)); // Show top 10 products when search term is empty
+      setSuggestions(mockProducts.slice(0, 10)); // Show top 10 products when search term is empty
     }
     setShowSuggestions(true);
   };
@@ -98,9 +100,20 @@ export const HeaderProduct = () => {
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
-        navigateToSearchPage(searchTerm);
+      navigateToSearchPage(searchTerm);
     }
-};
+  };
+
+  const handleClickCart = async (id: string) => {
+    if (loading) return;                // still checking from mount
+    await verifyAuth();                 // re‑hit the verify‑token endpoint
+    if (!isAuthenticated) {
+      localStorage.clear();
+      navigate('/login', { replace: true });
+    } else {
+      navigate(`/cart/${res?.accountId}`);
+    }
+  };
 
   return (
     <>
@@ -130,7 +143,7 @@ export const HeaderProduct = () => {
             placeholder="Tìm kiếm"
             className="w-[95%] h-[2.8rem] px-4 py-2 bg-white border border-white rounded-md focus:border-black focus:outline-hidden"
           />
-          <button 
+          <button
             className="absolute w-[4rem] h-[2.3rem] right-14 top-1/2 -translate-y-1/2 bg-[#ee4d2d] px-3 py-2 cursor-pointer flex justify-center items-center rounded-md"
             onClick={() => navigateToSearchPage(searchTerm)}
           >
@@ -139,15 +152,15 @@ export const HeaderProduct = () => {
 
           {showSuggestions && suggestions.length > 0 && (
             <div className="absolute w-full bg-white border border-gray-300 mt-1 rounded-md shadow-lg z-50">
-                {suggestions.map((product) => (
-                    <div
-                        key={product.id}
-                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                        onClick={() => handleSuggestionClick(product.Name)}
-                    >
-                        {product.Name}
-                    </div>
-                ))}
+              {suggestions.map((product) => (
+                <div
+                  key={product.id}
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                  onClick={() => handleSuggestionClick(product.Name)}
+                >
+                  {product.Name}
+                </div>
+              ))}
             </div>
           )}
 
@@ -157,7 +170,8 @@ export const HeaderProduct = () => {
           className="relative cursor-pointer group"
           onMouseEnter={() => setIsVisible(true)}
         >
-          <div onClick={() => navigate(`/cart/${res?.accountId}`)}>
+          {/* <div onClick={() => navigate(`/cart/${res?.accountId}`)}> */}
+          <div onClick={() => handleClickCart(res?.accountId)}>
             <FaShoppingCart size={24} />
             <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
               {numberItem}
