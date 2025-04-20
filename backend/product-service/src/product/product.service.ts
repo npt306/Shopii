@@ -88,7 +88,7 @@ export class ProductService {
 
     return shopInfo[0] ?? null;
   }
-  
+
   async findOne(id: number): Promise<Product | null> {
     return this.productRepository.findOneBy({ ProductID: id });
   }
@@ -289,31 +289,31 @@ export class ProductService {
       await this.productDetailRepository.save(detailEntities);
     }
     // Use fetch to call the external API
-  // try {
+    // try {
 
 
-  //   const productWithId = { 
-  //     ...createProductDto, 
-  //     ProductID: savedProduct.ProductID 
-  //   };
-  //   //const baseUrl = this.configService.get<string>('SEARCH_SERVICE_BASE_URL');
-  //   const response = await fetch(`${process.env.API_GATEWAY_URL}/api/search/index`, {
-  //     method: 'POST',
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //     },
-  //     body: JSON.stringify(productWithId),
-  //   });
+    //   const productWithId = { 
+    //     ...createProductDto, 
+    //     ProductID: savedProduct.ProductID 
+    //   };
+    //   //const baseUrl = this.configService.get<string>('SEARCH_SERVICE_BASE_URL');
+    //   const response = await fetch(`${process.env.API_GATEWAY_URL}/api/search/index`, {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify(productWithId),
+    //   });
 
-  //   if (!response.ok) {
-  //     throw new Error(`Failed to index product: ${response.statusText}`);
-  //   }
+    //   if (!response.ok) {
+    //     throw new Error(`Failed to index product: ${response.statusText}`);
+    //   }
 
-  //   const responseData = await response.json();
-  //   console.log('Product indexed successfully:', responseData);
-  // } catch (error) {
-  //   console.error('Error indexing product:', error.message);
-  // }
+    //   const responseData = await response.json();
+    //   console.log('Product indexed successfully:', responseData);
+    // } catch (error) {
+    //   console.error('Error indexing product:', error.message);
+    // }
 
     return savedProduct;
   }
@@ -347,29 +347,92 @@ export class ProductService {
     }
   }
 
-  async updateProductDetail(detailId: number, updateData: Partial<ProductDetailType>): Promise<ProductDetailType> {
-    const detailToUpdate = await this.productDetailRepository.findOneBy({ ProductDetailTypeID: detailId });
+  async updateProductDetail(
+    detailId: number,
+    updateData: Partial<ProductDetailType>
+  ): Promise<ProductDetailType> {
+    console.log("Bắt đầu hàm updateProductDetail");
+    console.log("Dữ liệu nhận được:", updateData);
+    console.log("Có Dimension không?", updateData.Dimension);
+    console.log("Kiểu của Dimension:", typeof updateData.Dimension);
+
+    const detailToUpdate = await this.productDetailRepository.findOneBy({
+      ProductDetailTypeID: detailId,
+    });
+
     if (!detailToUpdate) {
-      throw new Error('Detail not found');
+      throw new Error("Detail not found");
     }
 
+    // Xử lý cập nhật Dimension nếu có
     if (updateData.Dimension) {
       if (!detailToUpdate.Dimension) {
-        throw new Error('Dimension not found');
+        throw new Error("Dimension not found");
       }
 
-      const dimensionToUpdate = await this.productDimensionsRepository.findOneBy({ ProductDimensionsID: detailToUpdate.Dimension.ProductDimensionsID });
+      const dimensionToUpdate = await this.productDimensionsRepository.findOneBy({
+        ProductDimensionsID: detailToUpdate.Dimension.ProductDimensionsID,
+      });
+      console.log("Dimension nhận được:", dimensionToUpdate);
+
       if (!dimensionToUpdate) {
-        throw new Error('Dimension not found');
+        throw new Error("Dimension not found");
       }
 
-      Object.assign(dimensionToUpdate, updateData.Dimension);
+      console.log("Cập nhật Dimension:", updateData.Dimension);
+
+      // Cập nhật các giá trị Dimension và chuyển đổi kiểu dữ liệu
+      if (updateData.Dimension.Height !== undefined) {
+        dimensionToUpdate.Height = Number(updateData.Dimension.Height);
+      }
+      if (updateData.Dimension.Length !== undefined) {
+        dimensionToUpdate.Length = Number(updateData.Dimension.Length);
+      }
+      if (updateData.Dimension.Weight !== undefined) {
+        dimensionToUpdate.Weight = Number(updateData.Dimension.Weight);
+      }
+      if (updateData.Dimension.Width !== undefined) {
+        dimensionToUpdate.Width = Number(updateData.Dimension.Width);
+      }
+
       await this.productDimensionsRepository.save(dimensionToUpdate);
+      console.log("Dimension đã được cập nhật:", dimensionToUpdate);
+
+      // Cập nhật Dimension trong detailToUpdate
+      detailToUpdate.Dimension = dimensionToUpdate;
+
+      // Xoá Dimension khỏi updateData để không ghi đè lỗi ở phần sau
+      const { Dimension, ...restUpdateData } = updateData;
+      updateData = restUpdateData;
     }
 
-    Object.assign(detailToUpdate, updateData);
-    return this.productDetailRepository.save(detailToUpdate);
+    // Cập nhật các field còn lại nếu có
+    if (updateData.Type_1 !== undefined) {
+      detailToUpdate.Type_1 = updateData.Type_1;
+    }
+    if (updateData.Type_2 !== undefined) {
+      detailToUpdate.Type_2 = updateData.Type_2;
+    }
+    if (updateData.Image !== undefined) {
+      detailToUpdate.Image = updateData.Image;
+    }
+    if (updateData.Price !== undefined) {
+      detailToUpdate.Price = updateData.Price;
+    }
+    if (updateData.Quantity !== undefined) {
+      detailToUpdate.Quantity = updateData.Quantity;
+    }
+
+    console.log("Dữ liệu sau khi cập nhật:", detailToUpdate);
+
+    // Lưu thay đổi và trả về kết quả
+    const updatedDetail = await this.productDetailRepository.save(detailToUpdate);
+    console.log("Dữ liệu đã được lưu:", updatedDetail);
+
+    return updatedDetail;
   }
+
+
 
   async uploadImage(file: Express.Multer.File): Promise<string> {
     const blob = this.bucket.file(`images/${uuidv4()}_${file.originalname}`);
@@ -571,9 +634,9 @@ export class ProductService {
     const approvedProduct = await this.productRepository.save(product);
 
     try {
-      const productWithId = { 
-        ...approvedProduct, 
-        ProductID: approvedProduct.ProductID 
+      const productWithId = {
+        ...approvedProduct,
+        ProductID: approvedProduct.ProductID
       };
       const response = await fetch(`${process.env.API_GATEWAY_URL}/api/search/index`, {
         method: 'POST',
@@ -582,11 +645,11 @@ export class ProductService {
         },
         body: JSON.stringify(productWithId),
       });
-  
+
       if (!response.ok) {
         throw new Error(`Failed to index product: ${response.statusText}`);
       }
-  
+
       const responseData = await response.json();
       console.log('Product indexed successfully:', responseData);
     } catch (error) {
@@ -624,9 +687,9 @@ export class ProductService {
     const deleteResult = await this.productRepository.delete(id);
 
     if (deleteResult.affected === 0) {
-        // This case might happen in a race condition or if the product was deleted between the check and the delete operation.
-        this.logger.warn(`Hard delete affected 0 rows for Product ID: ${id}. It might have been deleted already.`);
-        throw new NotFoundException(`Product with ID ${id} could not be deleted or was already deleted.`);
+      // This case might happen in a race condition or if the product was deleted between the check and the delete operation.
+      this.logger.warn(`Hard delete affected 0 rows for Product ID: ${id}. It might have been deleted already.`);
+      throw new NotFoundException(`Product with ID ${id} could not be deleted or was already deleted.`);
     }
 
     this.logger.log(`Product ID: ${id} hard deleted successfully. Reason: ${reason}`);

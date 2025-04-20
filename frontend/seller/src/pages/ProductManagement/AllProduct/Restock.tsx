@@ -3,20 +3,20 @@ import { Package } from 'lucide-react';
 import { X } from 'lucide-react';
 
 interface Dimension {
-    weight: string;
-    length: string;
-    width: string;
-    height: string;
+    Weight: number;
+    Length: number;
+    Width: number;
+    Height: number;
 }
 
 interface ProductDetail {
-    type_id: number;
-    type_1: string;
-    type_2: string;
-    image: string;
-    price: number;
-    quantity: number;
-    dimension: Dimension;
+    Type_id: number;
+    Type_1: string;
+    Type_2: string;
+    Image: string;
+    Price: number;
+    Quantity: number;
+    Dimension: Dimension;
 }
 
 interface Classification {
@@ -243,17 +243,17 @@ const Restock: React.FC<AllProps> = ({ products: initialProducts }) => {
                                 product.details.map((detail, detailIndex) => (
                                     <tr key={`${product.name}-${detailIndex}`} className="border-b hover:bg-gray-50">
                                         <td className="p-3 border text-black">
-                                            {`${product.name} - ${detail.type_1}${detail.type_2 ? ` - ${detail.type_2}` : ''}`}
+                                            {`${product.name} - ${detail.Type_1}${detail.Type_2 ? ` - ${detail.Type_2}` : ''}`}
                                         </td>
                                         <td className="p-3 border text-black">
                                             {product.categories.join(' - ')}
                                         </td>
-                                        <td className="p-3 border text-black">{detail.price.toLocaleString()} VND</td>
-                                        <td className="p-3 border text-black">{detail.quantity}</td>
+                                        <td className="p-3 border text-black">{detail.Price.toLocaleString()} VND</td>
+                                        <td className="p-3 border text-black">{detail.Quantity}</td>
                                         <td className="p-3 border text-black">
-                                            {detail.quantity <= 10 ? (
+                                            {detail.Quantity <= 10 ? (
                                                 <span className="text-red-500 font-medium">Cần nhập thêm hàng</span>
-                                            ) : detail.quantity <= 20 ? (
+                                            ) : detail.Quantity <= 20 ? (
                                                 <span className="text-yellow-500 font-medium">Sắp hết hàng</span>
                                             ) : (
                                                 <span className="text-green-500">Đủ hàng</span>
