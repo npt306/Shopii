@@ -633,6 +633,30 @@ export class ProductService {
 
     const approvedProduct = await this.productRepository.save(product);
 
+<<<<<<< HEAD
+    try {
+      const productWithId = {
+        ...approvedProduct,
+        ProductID: approvedProduct.ProductID
+      };
+      const response = await fetch(`${process.env.API_GATEWAY_URL}/api/search/index`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(productWithId),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to index product: ${response.statusText}`);
+      }
+
+      const responseData = await response.json();
+      console.log('Product indexed successfully:', responseData);
+    } catch (error) {
+      console.error('Error indexing product:', error.message);
+    }
+=======
     // try {
     //   const productWithId = {
     //     ...approvedProduct,
@@ -655,6 +679,7 @@ export class ProductService {
     // } catch (error) {
     //   console.error('Error indexing product:', error.message);
     // }
+>>>>>>> 980f1eaf9dd76b3cdb249b70256dced9fe6ee4e1
 
     return approvedProduct;
 
