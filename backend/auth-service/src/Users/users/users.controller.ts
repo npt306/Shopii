@@ -76,6 +76,14 @@ export class UserController {
     @Res({ passthrough: true }) res: Response
   ) {
     try {
+      //check if account has been banned
+      const status: boolean = await this.usersService.checkAccountStatus(loginDto.username);
+      if (status === false) {
+        return {
+          message: 'banned',
+        }
+      }
+
       const result = await this.usersService.loginAndExchange(
         loginDto.username,
         loginDto.password,
@@ -252,10 +260,21 @@ export class UserController {
 
         const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
 
+        const email = payload.email || payload.preferred_username;
+        if (!email) {
+          return { isAuthenticated: false, message: 'Email not found in token' };
+        }
+        // Check if the user is banned
+        const isBanned = await this.usersService.checkAccountStatus(email);
+        if (!isBanned) {
+          console.log("banned")
+          return { message: 'banned' };
+        }
+
         // Check token expiration
         const currentTime = Math.floor(Date.now() / 1000);
         if (payload.exp && payload.exp < currentTime) {
-            return { isAuthenticated: false, message: 'Token expired' };
+          return { isAuthenticated: false, message: 'Token expired' };
         }
 
         // Token exists and is valid
