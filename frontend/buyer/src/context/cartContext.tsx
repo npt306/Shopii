@@ -24,18 +24,20 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     : null;
 
   const updateCart = async () => {
-    console.log("update basic cart.");
-    try {
-      setLoading(true);
-      const response = await axios.get<BasicCart>(
-        `${EnvValue.API_GATEWAY_URL}/order/carts/basic/${res?.accountId}`
-      );
-      setCartData(response.data.res);
-      setNumberItem(response.data.numberItem);
-    } catch (error) {
-      console.error("Error fetching product detail:", error);
-    } finally {
-      setLoading(false);
+    if (res) {
+      console.log("update basic cart.");
+      try {
+        setLoading(true);
+        const response = await axios.get<BasicCart>(
+          `${EnvValue.API_GATEWAY_URL}/order/carts/basic/${res?.accountId}`
+        );
+        setCartData(response.data.res);
+        setNumberItem(response.data.numberItem);
+      } catch (error) {
+        console.error("Error fetching product detail:", error);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
