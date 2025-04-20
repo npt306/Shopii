@@ -32,14 +32,14 @@ export const SearchProductLayout = ({ children, onFilterChange  }: SearchProduct
           <Header />
 
           <div className="flex flex-1 w-full mx-auto my-5">
-              <div className="w-1/5 bg-gray-100 pl-30">
+              <div className="w-3/10 bg-gray-100 pl-30">
                   <FilterSidebar 
                       onFilterChange={onFilterChange}
                       availableCategories={availableCategories}
                   />
               </div>
 
-              <div className="w-4/5 bg-gray-100 overflow-auto px-20">
+              <div className="w-7/10 bg-gray-100 overflow-auto pl-0 pr-20">
                   <FilterTop></FilterTop>
                   {children}
               </div>
