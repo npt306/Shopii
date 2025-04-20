@@ -28,7 +28,7 @@ export class AdminOtpVerifyDto {
 
 
 @Controller('Users')
-@UseGuards(PermissionsGuard)
+// @UseGuards(PermissionsGuard)
 export class UserController {
   constructor(private readonly usersService: UsersService) { }
 
@@ -40,13 +40,15 @@ export class UserController {
       throw new UnauthorizedException('Authentication required');
     }
 
+    // await this.usersService.refreshToken(refreshToken);
     return this.usersService.createOrUpdateSeller(data, accessToken, refreshToken);
   }
 
   @Post('refresh_token')
-  async refreshToken(@Body() body: { refresh_token: string }) {
+  async refreshToken(@Req() req: Request) {
     try {
-      const result = await this.usersService.refreshToken(body.refresh_token);
+      const refreshToken = req.cookies['refreshToken'];
+      const result = await this.usersService.refreshToken(refreshToken);
       return result;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
@@ -74,6 +76,14 @@ export class UserController {
     @Res({ passthrough: true }) res: Response
   ) {
     try {
+      //check if account has been banned
+      const status: boolean = await this.usersService.checkAccountStatus(loginDto.username);
+      if (status === false) {
+        return {
+          message: 'banned',
+        }
+      }
+
       const result = await this.usersService.loginAndExchange(
         loginDto.username,
         loginDto.password,
@@ -225,6 +235,59 @@ export class UserController {
       };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
+    }
+  }
+
+  @Get('verify-token')
+  async verifyToken(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    try {
+      const accessToken = req.cookies['accessToken'];
+
+      // Check if token exists
+      if (!accessToken) {
+        return {
+          isAuthenticated: false,
+          message: 'No authentication token found'
+        };
+      }
+
+      // Validate the token by decoding and checking expiration
+      try {
+        const tokenParts = accessToken.split('.');
+        if (tokenParts.length !== 3) {
+          return { isAuthenticated: false, message: 'Invalid token format' };
+        }
+
+        const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
+
+        const email = payload.email || payload.preferred_username;
+        if (!email) {
+          return { isAuthenticated: false, message: 'Email not found in token' };
+        }
+        // Check if the user is banned
+        const isBanned = await this.usersService.checkAccountStatus(email);
+        if (!isBanned) {
+          console.log("banned")
+          return { message: 'banned' };
+        }
+
+        // Check token expiration
+        const currentTime = Math.floor(Date.now() / 1000);
+        if (payload.exp && payload.exp < currentTime) {
+          return { isAuthenticated: false, message: 'Token expired' };
+        }
+
+        // Token exists and is valid
+        return {
+          isAuthenticated: true,
+          message: 'Token is valid',
+        };
+
+      } catch (error) {
+        return { isAuthenticated: false, message: 'Error validating token' };
+      }
+    } catch (error) {
+      throw new HttpException('Token verification failed', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

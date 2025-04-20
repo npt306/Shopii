@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronRightIcon, ChevronDownIcon } from "@heroicons/react/20/solid";
 import { Link } from "react-router-dom";
+import { ProtectedLink } from "./hook/protectedLink";
 
 const LeftSidebar = () => {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
@@ -11,7 +12,6 @@ const LeftSidebar = () => {
 
   return (
     <aside className="w-48 bg-white shadow-md border-r border-gray-200">
-
       {/* Danh sách nhóm menu */}
       <ul className="mt-4">
         {/* Nhóm menu: Quản lý đơn hàng */}
@@ -33,19 +33,19 @@ const LeftSidebar = () => {
           {openMenu === "orderManagement" && (
             <ul className="pl-8">
               <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
-                <Link to="/portal/sale/order">Tất cả</Link>
+                <ProtectedLink to="/portal/sale/order">Tất cả</ProtectedLink>
               </li>
               <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
-                <Link to="/portal/sale/bulkShipping/ShippingInfo">Giao hàng loạt</Link>
+                <ProtectedLink to="/portal/sale/bulkShipping/ShippingInfo">Giao hàng loạt</ProtectedLink>
               </li>
               <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
-                <Link to="/portal/sale/OrderDelivery/PickUpGood">Bàn giao đơn hàng</Link>
+                <ProtectedLink to="/portal/sale/OrderDelivery/PickUpGood">Bàn giao đơn hàng</ProtectedLink>
               </li>
               <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
-                <Link to="/portal/sale/ReturnRefundCancel/">Đơn Trả hàng/ Hoàn tiền hoặc Đơn hủy</Link>
+                <ProtectedLink to="/portal/sale/ReturnRefundCancel/">Đơn Trả hàng/ Hoàn tiền hoặc Đơn hủy</ProtectedLink>
               </li>
               <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
-                <Link to="/portal/sale/DeliverySetting/">Cài đặt vận chuyển</Link>
+                <ProtectedLink to="/portal/sale/DeliverySetting/">Cài đặt vận chuyển</ProtectedLink>
               </li>
             </ul>
           )}
@@ -70,10 +70,10 @@ const LeftSidebar = () => {
           {openMenu === "productManagement" && (
             <ul className="pl-8">
               <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
-                <Link to="/portal/product/list">Tất cả sản phẩm</Link>
+                <ProtectedLink to="/portal/product/list">Tất cả sản phẩm</ProtectedLink>
               </li>
               <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
-                <Link to="/portal/product/new">Thêm sản phẩm</Link>
+                <ProtectedLink to="/portal/product/new">Thêm sản phẩm</ProtectedLink>
               </li>
             </ul>
           )}
@@ -97,17 +97,33 @@ const LeftSidebar = () => {
           {/* Menu con */}
           {openMenu === "marketingChannel" && (
             <ul className="pl-8">
-              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">Kênh Marketing</li>
-              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">Đấu giá rẻ vô địch</li>
-              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">Quảng cáo Shopee</li>
-              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">Tăng đơn cùng KOL</li>
-              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">Live & Video</li>
-              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">Khuyến mãi của Shop</li>
-              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">Flash Sale của Shop</li>
               <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
-               <Link to="/portal/marketing/vouchers"> Mã giảm giá của Shop</Link>
+                Kênh Marketing
               </li>
-              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">Chương trình Shopee</li>
+              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
+                Đấu giá rẻ vô địch
+              </li>
+              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
+                Quảng cáo Shopee
+              </li>
+              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
+                Tăng đơn cùng KOL
+              </li>
+              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
+                Live & Video
+              </li>
+              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
+                Khuyến mãi của Shop
+              </li>
+              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
+                Flash Sale của Shop
+              </li>
+              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
+                <ProtectedLink to="/portal/marketing/vouchers"> Mã giảm giá của Shop</ProtectedLink>
+              </li>
+              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
+                Chương trình Shopee
+              </li>
             </ul>
           )}
         </li>
@@ -130,8 +146,12 @@ const LeftSidebar = () => {
           {/* Menu con */}
           {openMenu === "customerCare" && (
             <ul className="pl-8">
-              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">Quản lý Chat</li>
-              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">Quản lý đánh giá</li>
+              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
+                Quản lý Chat
+              </li>
+              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
+                Quản lý đánh giá
+              </li>
             </ul>
           )}
         </li>
@@ -155,13 +175,13 @@ const LeftSidebar = () => {
           {openMenu === "finance" && (
             <ul className="pl-8">
               <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
-                <Link to="/portal/finance/revenue">Doanh thu</Link>
+                <ProtectedLink to="/portal/finance/revenue">Doanh thu</ProtectedLink>
               </li>
               <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
-                <Link to="/portal/finance/balance">Số dư TK Shopii</Link>
+                <ProtectedLink to="/portal/finance/balance">Số dư TK Shopii</ProtectedLink>
               </li>
               <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
-                <Link to="/portal/finance/cards">Tài Khoản Ngân Hàng</Link>
+                <ProtectedLink to="/portal/finance/cards">Tài Khoản Ngân Hàng</ProtectedLink>
               </li>
             </ul>
           )}
@@ -185,11 +205,16 @@ const LeftSidebar = () => {
           {/* Menu con */}
           {openMenu === "data" && (
             <ul className="pl-8">
-              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">Phân tích bán hàng</li>
-              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">Hiệu quả hoạt động</li>
+              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
+                Phân tích bán hàng
+              </li>
+              <li className="py-2 text-gray-800 text-sm hover:text-orange-600 cursor-pointer">
+                Hiệu quả hoạt động
+              </li>
             </ul>
           )}
         </li>
+
         {/* Nhóm menu: Quản lý Shop */}
         <li>
           <div
@@ -209,21 +234,19 @@ const LeftSidebar = () => {
           {openMenu === "shopManagement" && (
             <ul className="pl-8">
               <li className="py-2">
-                <Link to="/portal/settings/shop/profile/"
-                  className="text-sm text-gray-600 hover:text-orange-600 cursor-pointer">
+                <ProtectedLink to="/portal/settings/shop/profile/" className="text-sm text-gray-600 hover:text-orange-600 cursor-pointer">
                   Hồ sơ Shop
-                </Link>
+                </ProtectedLink>
               </li>
               <li className="py-2">
-                <Link to="/portal/decoration/"
-                  className="text-sm text-gray-600 hover:text-orange-600 cursor-pointer">
+                <ProtectedLink to="/portal/decoration/" className="text-sm text-gray-600 hover:text-orange-600 cursor-pointer">
                   Trang trí Shop
-                </Link>
+                </ProtectedLink>
               </li>
               <li className="py-2">
-                <Link to="/portal/all-settings/notification/" className="text-sm text-gray-600 hover:text-orange-600 cursor-pointer">
+                <ProtectedLink to="/portal/all-settings/notification/" className="text-sm text-gray-600 hover:text-orange-600 cursor-pointer">
                   Thiết lập Shop
-                </Link>
+                </ProtectedLink>
               </li>
             </ul>
           )}

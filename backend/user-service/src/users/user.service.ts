@@ -76,8 +76,12 @@ export class UserService {
     const blob = this.bucket.file(
       `user_avatar/${uuidv4()}_${id}_avt`,
     );
-    const blobStream = blob.createWriteStream({ resumable: false });
-
+    const blobStream = blob.createWriteStream({
+      resumable: false,
+      metadata: {
+        contentType: 'image/jpeg' , // Or dynamically detect using `file.mimetype`
+      },
+    });
     const avt_url = await new Promise((resolve, reject) => {
       blobStream
         .on('finish', async () => {

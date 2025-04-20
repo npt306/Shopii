@@ -379,7 +379,7 @@ export class UsersService {
     }
   }
 
-  async addSellerRole(userId: string): Promise<any> {
+  async addSellerRole(userId: string, refreshToken: string): Promise<any> {
     const adminToken = await this.getAdminToken();
     const roleName = 'seller';
 
@@ -411,6 +411,8 @@ export class UsersService {
     } catch (error) {
       throw new HttpException(`Failed to assign role ${roleName} to user`, HttpStatus.BAD_REQUEST);
     }
+
+    await this.refreshToken(refreshToken)
 
     return { message: `Role ${roleName} assigned successfully to user ${userId}` };
   }
@@ -453,10 +455,10 @@ export class UsersService {
       if (data.taxRegister?.businessType) {
         switch (data.taxRegister.businessType) {
           case 'ho-kinh-doanh':
-            sellerType = 'Small Business';
+            sellerType = 'Business';
             break;
           case 'cong-ty':
-            sellerType = 'Company';
+            sellerType = 'Business';
             break;
           default:
             sellerType = 'Individual';
@@ -469,11 +471,13 @@ export class UsersService {
       address.Province = data.shopInformation.address.province;
       address.SpecificAddress = data.shopInformation.address.addressDetail;
       address.PhoneNumber = data.shopInformation.address.phone;
-      address.Fullname = data.shopInformation.address.fullName;
+      address.FullName = data.shopInformation.address.fullName;
     
-      address.IsDefault = true;
+      address.isDefault = false;
       address.CreatedAt = new Date();
       address.UpdatedAt = new Date();
+      address.isDelivery = false;
+      address.isShipping = false;  
     } else {
       // Support original format for backward compatibility
       email = Array.isArray(data.Email) ? data.Email[0] : data.Email;
@@ -504,6 +508,9 @@ export class UsersService {
     if (!account) {
       throw new HttpException('Account not found for your email address', HttpStatus.BAD_REQUEST);
     }
+
+    console.log("Account found:", account);
+    console.log(account.AccountId)
 
     // Use the Account's primary key (AccountId) as the seller's id
     const sellerId = account.AccountId;
@@ -544,16 +551,12 @@ export class UsersService {
     try {
       // Check if the user already has an address
       const existingAddress = await this.addressRepository.findOne({
-        where: { account: { AccountId: addressAccountID }, IsDefault: true }
+        where: { account: { AccountId: addressAccountID }, isDefault: true }
       });
 
-      if (existingAddress) {
-        // Update existing address
-        const updatedAddress = this.addressRepository.merge(existingAddress, address);
-        await this.addressRepository.save(updatedAddress);
-      } else {
+      if (!existingAddress) {
         // Create new address
-        address.account.AccountId = addressAccountID;
+        address.AccountId = addressAccountID;
         await this.addressRepository.save(address);
       }
     } catch (error) {
@@ -568,10 +571,11 @@ export class UsersService {
 
       // Add the seller role to the user in Keycloak using admin token
       // We still need admin token for role assignment
-      await this.addSellerRole(userId);
+      await this.addSellerRole(userId, refreshToken);
 
       //refresh token to update role
-      this.refreshToken(refreshToken);
+      await this.refreshToken(refreshToken);
+      console.log("token refreshed");
 
       return {
         message: seller ? 'Seller updated successfully' : 'Seller created successfully',
@@ -776,19 +780,19 @@ export class UsersService {
   async logout(refreshToken: string, res?: any): Promise<any> {
     try {
       // 1. Invalidate the session at Keycloak
-      const keycloakLogoutUrl = `${this.keycloakBaseUrl}/realms/${this.realm}/protocol/openid-connect/logout`;
-      const params = new URLSearchParams();
-      params.append('client_id', this.clientId);
-      if (this.clientSecret) {
-        params.append('client_secret', this.clientSecret);
-      }
-      params.append('refresh_token', refreshToken);
+      // const keycloakLogoutUrl = `${this.keycloakBaseUrl}/realms/${this.realm}/protocol/openid-connect/logout`;
+      // const params = new URLSearchParams();
+      // params.append('client_id', this.clientId);
+      // if (this.clientSecret) {
+      //   params.append('client_secret', this.clientSecret);
+      // }
+      // params.append('refresh_token', refreshToken);
 
-      await firstValueFrom(
-        this.httpService.post(keycloakLogoutUrl, params.toString(), {
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        })
-      );
+      // await firstValueFrom(
+      //   this.httpService.post(keycloakLogoutUrl, params.toString(), {
+      //     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      //   })
+      // );
 
       // 2. Clear cookies if response object is provided
       if (res) {
@@ -820,4 +824,55 @@ export class UsersService {
       throw new HttpException('Failed to logout', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+    //false if banned and vice versa
+    async checkAccountStatus(email: string): Promise<boolean> {
+      try {
+        const account = await this.accountRepository.findOne({
+          where: { Email: email },
+        })
+  
+        if(!account) {
+          throw new HttpException('Account not found', HttpStatus.NOT_FOUND);
+        }
+  
+        //Check status
+        //banned
+        if(account.Status !== 'active') {
+          return false;
+        }
+  
+        return true;
+      }
+      catch (error) {
+        console.error('Error checking account status:', error);
+        throw new HttpException('Failed to check account status', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    }
+  
+    async isSeller(email: string): Promise<boolean> {
+      try {
+        const account = await this.accountRepository.findOne({
+          where: { Email: email },
+        })
+  
+        if(!account) {
+          throw new HttpException('Account not found', HttpStatus.NOT_FOUND);
+        }
+  
+        const seller = await this.sellerRepository.findOne({
+          where: { id: account.AccountId },
+        })
+  
+        if(!seller) {
+          return false;
+        }
+  
+        return true;
+      }
+      catch (error) {
+        console.error('Error checking account status:', error);
+        throw new HttpException('Failed to check account status', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    }
 }

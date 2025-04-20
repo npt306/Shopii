@@ -123,7 +123,7 @@ export const AdminLoginPage = () => {
           </a>
         </Col>
         <Col className="text-center">
-          <h1 className="">ĐĂNG NHẬP CỦA ADMIN</h1>
+          <h1 className=""></h1>
         </Col>
       </Row>
 

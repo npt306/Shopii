@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import { EnvValue } from "../../env-value/envValue";
-
+import "../../css/user/addresses.css";
 interface Address {
   id: number;
   fullName: string;
@@ -44,6 +44,49 @@ export const AddAddressModal = ({
   const [districtOptions, setDistrictOptions] = useState<any[]>([]);
   const [wardOptions, setWardOptions] = useState<any[]>([]);
 
+  const customSelectStyles = {
+    control: (base, state) => ({
+      ...base,
+      color: "#1f2937", // text-neutral-800
+      flex: 1,
+      height: "38px",
+      width: "100%",
+      borderRadius: "0px",
+      borderColor: state.isFocused ? "#ee4d2d" : "#d1d5db", // <-- custom orange on focus
+      boxShadow: state.isFocused ? "0 0 0 1px #ee4d2d" : "none", // <-- this adds the focus glow
+      outline: "none",
+      "&:hover": {
+        borderColor: "#ee4d2d",
+      },
+    }),
+    placeholder: (base) => ({
+      ...base,
+      color: "#9ca3af", // gray-400
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isSelected
+        ? "#ee4d2d"
+        : state.isFocused
+        ? "#ee4d2dad"
+        : "#fff",
+      color: state.isSelected || state.isFocused ? "#fff" : "#1f2937", // text-neutral-800
+      cursor: "pointer",
+      "&:active": {
+        backgroundColor: "#ee4d2d", // <- force orange on click selection too
+        color: "#fff",
+      },
+    }),
+
+    singleValue: (base) => ({
+      ...base,
+      color: "#1f2937",
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999,
+    }),
+  };
   // Fetch provinces dynamically on mount
   useEffect(() => {
     const fetchProvinces = async () => {
@@ -204,48 +247,55 @@ export const AddAddressModal = ({
 
   return (
     <div className="fixed inset-0 backdrop-brightness-50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-        >
-          ✕
-        </button>
-        <h2 className="text-xl font-semibold mb-4">
-          {editAddress ? "Cập nhật Địa Chỉ" : "Thêm Địa Chỉ"}
-        </h2>
+      <div className="bg-white hadow-lg p-6 w-125 max-w-md relative">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-medium flex items-center">
+            {editAddress ? "Cập nhật Địa Chỉ" : "Thêm Địa Chỉ"}
+          </h2>
+          <button
+            onClick={onClose}
+            className=" items-center text-gray-500 hover:text-gray-700"
+          >
+            ✕
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Họ và Tên:
-            </label>
-            <input
-              name="FullName"
-              value={formData.FullName}
-              onChange={(e) =>
-                setFormData({ ...formData, FullName: e.target.value })
-              }
-              required
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"
-            />
+          <div className="flex justify-between">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Họ và Tên
+              </label>
+              <input
+                name="FullName"
+                value={formData.FullName}
+                placeholder="Họ và Tên"
+                onChange={(e) =>
+                  setFormData({ ...formData, FullName: e.target.value })
+                }
+                required
+                className="text-neutral-800 flex-1 h-9.5 outline-[none] w-full mt-1 block border border-gray-300 p-2.5 focus:ring-orange-500 focus:border-orange-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Số Điện Thoại
+              </label>
+              <input
+                name="PhoneNumber"
+                value={formData.PhoneNumber}
+                onChange={(e) =>
+                  setFormData({ ...formData, PhoneNumber: e.target.value })
+                }
+                placeholder="Số Điện Thoại"
+                required
+                className="text-neutral-800 flex-1 h-9.5 outline-[none] w-full mt-1 block border border-gray-300 p-2.5 focus:ring-orange-500 focus:border-orange-500"
+              />
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Số Điện Thoại:
-            </label>
-            <input
-              name="PhoneNumber"
-              value={formData.PhoneNumber}
-              onChange={(e) =>
-                setFormData({ ...formData, PhoneNumber: e.target.value })
-              }
-              required
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Tỉnh/Thành Phố:
+              Tỉnh/Thành Phố
             </label>
             <Select
               options={provinceOptions}
@@ -259,11 +309,12 @@ export const AddAddressModal = ({
                   (option) => option.label === formData.Province
                 ) || null
               }
+              styles={customSelectStyles}
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Quận/Huyện:
+              Quận/Huyện
             </label>
             <Select
               options={districtOptions}
@@ -278,11 +329,12 @@ export const AddAddressModal = ({
                   (option) => option.label === formData.District
                 ) || null
               }
+              styles={customSelectStyles}
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Phường/Xã:
+              Phường/Xã
             </label>
             <Select
               options={wardOptions}
@@ -296,34 +348,40 @@ export const AddAddressModal = ({
                 wardOptions.find((option) => option.label === formData.Ward) ||
                 null
               }
+              styles={customSelectStyles}
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Địa Chỉ Cụ Thể:
+              Địa Chỉ Cụ Thể
             </label>
             <input
               name="SpecificAddress"
+              placeholder="Địa Chỉ Cụ Thể"
               value={formData.SpecificAddress}
               onChange={(e) =>
                 setFormData({ ...formData, SpecificAddress: e.target.value })
               }
               required
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500"
+              className=" text-neutral-800 flex-1 h-9.5 outline-[none] w-full mt-1 block border border-gray-300 p-2.5 focus:ring-orange-500 focus:border-orange-500"
             />
           </div>
           {error && <p className="text-red-500 text-sm">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-orange-500 text-white py-2 rounded-md hover:bg-orange-600 disabled:bg-gray-300"
-          >
-            {loading
-              ? "Saving..."
-              : editAddress
-              ? "Update Address"
-              : "Save Address"}
-          </button>
+          <div className="flex items-center justify-end gap-2">
+            <button
+              onClick={onClose}
+              className="min-w-35 p-2.5  items-center text-gray-500 hover:text-gray-700"
+            >
+              Trở lại
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="min-w-35 p-2.5 bg-orange-600 !text-white py-2 hover:bg-orange-500 disabled:bg-gray-300"
+            >
+              {loading ? "Đang lưu..." : "Hoàn thành"}
+            </button>
+          </div>
         </form>
       </div>
     </div>
