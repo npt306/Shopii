@@ -135,6 +135,7 @@ export class ProductController {
     @Param('id', ParseIntPipe) id: number,
     @Body() deleteProductDto: DeleteProductDto,
   ) {
+    console.log('Delete Product ID:', id);
     return this.productService.deleteProduct(id, deleteProductDto.reason);
   }
 }
