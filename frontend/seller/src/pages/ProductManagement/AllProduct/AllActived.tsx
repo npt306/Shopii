@@ -7,20 +7,20 @@ import { EnvValue } from '../../../env-value/envValue'
 
 
 interface Dimension {
-  Weight: number;
-  Length: number;
-  Width: number;
-  Height: number;
+  weight: string;
+  length: string;
+  width: string;
+  height: string;
 }
 
 interface ProductDetail {
-  Type_id: number;
-  Type_1: string;
-  Type_2: string;
-  Image: string;
-  Price: number;
-  Quantity: number;
-  Dimension: Dimension;
+  type_id: number;
+  type_1: string;
+  type_2: string;
+  image: string;
+  price: number;
+  quantity: number;
+  dimension: Dimension;
 }
 
 interface Classification {
@@ -119,8 +119,7 @@ const AllActived: React.FC<AllProps> = ({ products: initialProducts }) => {
 
   const handleSave = async (productName: string | null, productId: number, detailId: number, updatedData: Partial<ProductDetail>) => {
     try {
-      console.log("formData gửi đi:", updatedData);
-      const response = await fetch(`http://localhost:3001/product/detail/${detailId}`, {
+      const response = await fetch(`${EnvValue.API_GATEWAY_URL}/api/product/detail/${detailId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -128,17 +127,9 @@ const AllActived: React.FC<AllProps> = ({ products: initialProducts }) => {
         body: JSON.stringify(updatedData),
       });
 
-      // Read the response body once and store it in a variable
-      const responseData = await response.json();
-      console.log("Response status:", response.status);
-      console.log("Response data:", responseData);
-
       if (!response.ok) {
-        console.error(`Failed to update. Status: ${response.status}, Error: ${responseData}`);
         throw new Error(`Failed to update detail ${detailId} of product ${productName}`);
       }
-
-      console.log("Updated detail:", responseData);
 
       setProducts(prevProducts => {
         return prevProducts.map(product => {
@@ -146,7 +137,7 @@ const AllActived: React.FC<AllProps> = ({ products: initialProducts }) => {
             return {
               ...product,
               details: product.details.map(detail =>
-                detail.Type_id === detailId ? { ...detail, ...updatedData } : detail
+                detail.type_id === detailId ? { ...detail, ...updatedData } : detail
               )
             };
           }
@@ -158,7 +149,6 @@ const AllActived: React.FC<AllProps> = ({ products: initialProducts }) => {
       console.error(`Error updating detail ${detailId} of product ${productId}:`, error);
     }
   };
-
 
   useEffect(() => {
     setProducts(initialProducts);
@@ -182,7 +172,7 @@ const AllActived: React.FC<AllProps> = ({ products: initialProducts }) => {
             // Lọc bỏ detail có type_id tương ứng
             return {
               ...product,
-              details: product.details.filter(detail => detail.Type_id !== typeId)
+              details: product.details.filter(detail => detail.type_id !== typeId)
             };
           }
           return product;
@@ -506,15 +496,14 @@ const AllActived: React.FC<AllProps> = ({ products: initialProducts }) => {
                   <tr key={`${product.name}-${detailIndex}`} className="border-b hover:bg-gray-50">
                     <td className="p-3 border text-black"></td>
                     <td className="p-3 border text-black">
-                      {`${product.name} - ${detail.Type_1}${detail.Type_2 ? ` - ${detail.Type_2}` : ''}`}
+                      {`${product.name} - ${detail.type_1}${detail.type_2 ? ` - ${detail.type_2}` : ''}`}
                     </td>
                     <td className="p-3 border text-black">
                       {product.categories.join(' - ')}
                     </td>
-                    <td className="p-3 border text-black">{product.soldQuantity || 0}</td>
-                    <td className="p-3 border text-black">{detail.Price ? detail.Price.toLocaleString() : 0} VND</td>
-                    <td className="p-3 border text-black">{detail.Quantity || 0}</td>
-
+                    <td className="p-3 border text-black">{product.soldQuantity}</td>
+                    <td className="p-3 border text-black">{detail.price.toLocaleString()} VND</td>
+                    <td className="p-3 border text-black">{detail.quantity}</td>
                     <td className="p-3 border text-black">
                       <div className="flex flex-col">
                         <div className="mb-2 text-black">
@@ -538,10 +527,10 @@ const AllActived: React.FC<AllProps> = ({ products: initialProducts }) => {
                             </span>
                           )}
                         </div>
-                        {detail.Image && (
+                        {detail.image && (
                           <img
-                            src={detail.Image}
-                            alt={`${product.name} - ${detail.Type_1}`}
+                            src={detail.image}
+                            alt={`${product.name} - ${detail.type_1}`}
                             className="w-24 h-24 object-cover bg-gray-200"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
@@ -554,7 +543,7 @@ const AllActived: React.FC<AllProps> = ({ products: initialProducts }) => {
                     <td className="p-3 border text-black">
                       <div className="flex space-x-4">
                         <button
-                          onClick={() => handleEdit(product.name, product.productID, detail.Type_id)}
+                          onClick={() => handleEdit(product.name, product.productID, detail.type_id)}
                           className="bg-white text-black p-1 rounded focus:outline-none"
                           title="Edit"
                           style={{ border: 'none', boxShadow: 'none' }}
@@ -566,7 +555,7 @@ const AllActived: React.FC<AllProps> = ({ products: initialProducts }) => {
                         <button
                           onClick={() => {
                             if (window.confirm("Are you sure you want to delete this item?")) {
-                              handleDelete(product.productID, detail.Type_id);
+                              handleDelete(product.productID, detail.type_id);
                             }
                           }}
                           className="bg-white text-black p-1 rounded focus:outline-none"

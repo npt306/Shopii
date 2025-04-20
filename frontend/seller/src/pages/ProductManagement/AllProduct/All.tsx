@@ -6,20 +6,20 @@ import { toast } from "react-toastify";
 import { EnvValue } from '../../../env-value/envValue'
 
 interface Dimension {
-  Weight: number;
-  Length: number;
-  Width: number;
-  Height: number;
+  weight: string;
+  length: string;
+  width: string;
+  height: string;
 }
 
 interface ProductDetail {
-  Type_id: number;
-  Type_1: string;
-  Type_2: string;
-  Image: string;
-  Price: number;
-  Quantity: number;
-  Dimension: Dimension;
+  type_id: number;
+  type_1: string;
+  type_2: string;
+  image: string;
+  price: number;
+  quantity: number;
+  dimension: Dimension;
 }
 
 interface Classification {
@@ -93,8 +93,6 @@ const All: React.FC<AllProps> = ({ products: initialProducts }) => {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Failed to update. Status: ${response.status}, Error: ${errorText}`);
         throw new Error(`Failed to update detail ${detailId} of product ${productName}`);
       }
 
@@ -104,7 +102,7 @@ const All: React.FC<AllProps> = ({ products: initialProducts }) => {
             return {
               ...product,
               details: product.details.map(detail =>
-                detail.Type_id === detailId ? { ...detail, ...updatedData } : detail
+                detail.type_id === detailId ? { ...detail, ...updatedData } : detail
               )
             };
           }
@@ -139,7 +137,7 @@ const All: React.FC<AllProps> = ({ products: initialProducts }) => {
             // Lọc bỏ detail có type_id tương ứng
             return {
               ...product,
-              details: product.details.filter(detail => detail.Type_id !== typeId)
+              details: product.details.filter(detail => detail.type_id !== typeId)
             };
           }
           return product;
@@ -574,14 +572,14 @@ const All: React.FC<AllProps> = ({ products: initialProducts }) => {
                   <tr key={`${product.name}-${detailIndex}`} className="border-b hover:bg-gray-50">
                     <td className="p-3 border text-black"></td>
                     <td className="p-3 border text-black">
-                      {`${product.name} - ${detail.Type_1}${detail.Type_2 ? ` - ${detail.Type_2}` : ''}`}
+                      {`${product.name} - ${detail.type_1}${detail.type_2 ? ` - ${detail.type_2}` : ''}`}
                     </td>
                     <td className="p-3 border text-black">
                       {product.categories.join(' - ')}
                     </td>
                     <td className="p-3 border text-black">{product.soldQuantity}</td>
-                    <td className="p-3 border text-black">{detail.Price.toLocaleString()} VND</td>
-                    <td className="p-3 border text-black">{detail.Quantity}</td>
+                    <td className="p-3 border text-black">{detail.price.toLocaleString()} VND</td>
+                    <td className="p-3 border text-black">{detail.quantity}</td>
                     <td className="p-3 border text-black">
                       <div className="flex flex-col">
                         <div className="mb-2 text-black">
@@ -605,10 +603,10 @@ const All: React.FC<AllProps> = ({ products: initialProducts }) => {
                             </span>
                           )}
                         </div>
-                        {detail.Image && (
+                        {detail.image && (
                           <img
-                            src={detail.Image}
-                            alt={`${product.name} - ${detail.Type_1}`}
+                            src={detail.image}
+                            alt={`${product.name} - ${detail.type_1}`}
                             className="w-24 h-24 object-cover bg-gray-200"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
@@ -621,7 +619,7 @@ const All: React.FC<AllProps> = ({ products: initialProducts }) => {
                     <td className="p-3 border text-black">
                       <div className="flex space-x-4">
                         <button
-                          onClick={() => handleEdit(product.name, product.productID, detail.Type_id)}
+                          onClick={() => handleEdit(product.name, product.productID, detail.type_id)}
                           className="bg-white text-black p-1 rounded focus:outline-none"
                           title="Edit"
                           style={{ border: 'none', boxShadow: 'none' }}
@@ -633,7 +631,7 @@ const All: React.FC<AllProps> = ({ products: initialProducts }) => {
                         <button
                           onClick={() => {
                             if (window.confirm("Are you sure you want to delete this item?")) {
-                              handleDelete(product.productID, detail.Type_id);
+                              handleDelete(product.productID, detail.type_id);
                             }
                           }}
                           className="bg-white text-black p-1 rounded focus:outline-none"

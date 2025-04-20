@@ -4,20 +4,20 @@ import { toast } from "react-toastify";
 
 // Define type interfaces
 interface Dimension {
-    Weight: number;
-    Length: number;
-    Width: number;
-    Height: number;
+    weight: string;
+    length: string;
+    width: string;
+    height: string;
 }
 
 interface ProductDetail {
-    Type_id: number;
-    Type_1: string;
-    Type_2: string;
-    Price: number;
-    Quantity: number;
-    Dimension: Dimension;
-    Image?: string;
+    type_id: number;
+    type_1: string;
+    type_2: string;
+    price: number;
+    quantity: number;
+    dimension: Dimension;
+    image?: string;
 }
 
 interface Product {
@@ -37,27 +37,27 @@ interface EditModalProps {
 }
 
 interface FormData {
-    Type_1: string;
-    Type_2: string;
-    Image: string;
-    Price: number;
-    Quantity: number;
-    Dimension: Dimension;
+    type_1: string;
+    type_2: string;
+    image: string;
+    price: number;
+    quantity: number;
+    dimension: Dimension;
     [key: string]: any; // Add index signature
 }
 
 const EditProductVariantModal = ({ isOpen, onClose, productName, productId, variantId, products, onSave }: EditModalProps) => {
     const [formData, setFormData] = useState<FormData>({
-        Type_1: '',
-        Type_2: '',
-        Image: '',
-        Price: 0,
-        Quantity: 0,
-        Dimension: {
-            Weight: 0,
-            Length: 0,
-            Width: 0,
-            Height: 0
+        type_1: '',
+        type_2: '',
+        image: '',
+        price: 0,
+        quantity: 0,
+        dimension: {
+            weight: '0',
+            length: '0',
+            width: '0',
+            height: '0'
         }
     });
 
@@ -112,19 +112,19 @@ const EditProductVariantModal = ({ isOpen, onClose, productName, productId, vari
         if (isOpen && productId && variantId) {
             const product = products.find(p => p.productID === productId);
             if (product) {
-                const detail = product.details.find(d => d.Type_id === variantId);
+                const detail = product.details.find(d => d.type_id === variantId);
                 if (detail) {
                     setFormData({
-                        Type_1: detail.Type_1 || '',
-                        Type_2: detail.Type_2 || '',
-                        Image: detail.Image || '',
-                        Price: detail.Price || 0,
-                        Quantity: detail.Quantity || 0,
-                        Dimension: {
-                            Weight: detail.Dimension?.Weight || 0,
-                            Length: detail.Dimension?.Length || 0,
-                            Width: detail.Dimension?.Width || 0,
-                            Height: detail.Dimension?.Height || 0
+                        type_1: detail.type_1 || '',
+                        type_2: detail.type_2 || '',
+                        image: detail.image || '',
+                        price: detail.price || 0,
+                        quantity: detail.quantity || 0,
+                        dimension: {
+                            weight: detail.dimension?.weight || '0',
+                            length: detail.dimension?.length || '0',
+                            width: detail.dimension?.width || '0',
+                            height: detail.dimension?.height || '0'
                         }
                     });
                 }
@@ -151,41 +151,15 @@ const EditProductVariantModal = ({ isOpen, onClose, productName, productId, vari
         }
     };
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (productId && variantId) {
-            try {
-                console.log("formData gửi đi:", formData);
-                await onSave(productName, productId, variantId, {
-                    Type_1: formData.Type_1,
-                    Type_2: formData.Type_2,
-                    Image: formData.Image,
-                    Price: formData.Price,
-                    Quantity: formData.Quantity,
-                    Dimension: {
-                        Weight: formData.Dimension.Weight,
-                        Length: formData.Dimension.Length,
-                        Width: formData.Dimension.Width,
-                        Height: formData.Dimension.Height,
-                    },
-                });
-                toast.success("Sửa sản phẩm thành công!", {
-                    autoClose: 2000
-                });
-            } catch (error) {
-                console.error("Lỗi khi lưu:", error);
-                toast.error("Sửa sản phẩm thất bại. Vui lòng thử lại!", {
-                    autoClose: 2000
-                });
-                // Không đóng modal để người dùng có thể sửa lại
-            }
-        } else {
-            toast.error("Thiếu thông tin sản phẩm hoặc biến thể!", {
-                autoClose: 2000
-            });
+            onSave(productName, productId, variantId, formData);
         }
         onClose();
-
+        toast.success("Sửa sản phẩm thành công!", {
+            autoClose: 2000 // 2 seconds delay before auto-closing
+        });
     };
 
     if (!isOpen) return null;
@@ -288,23 +262,23 @@ const EditProductVariantModal = ({ isOpen, onClose, productName, productId, vari
 
                     <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label htmlFor="Type_1" className="block text-sm font-medium text-gray-700 mb-1">Type 1</label>
+                            <label htmlFor="type_1" className="block text-sm font-medium text-gray-700 mb-1">Type 1</label>
                             <input
-                                id="Type_1"
-                                name="Type_1"
+                                id="type_1"
+                                name="type_1"
                                 type="text"
-                                value={formData.Type_1}
+                                value={formData.type_1}
                                 onChange={handleChange}
                                 className="w-full border border-gray-300 rounded p-2 bg-white text-black"
                             />
                         </div>
                         <div>
-                            <label htmlFor="Type_2" className="block text-sm font-medium text-gray-700 mb-1">Type 2</label>
+                            <label htmlFor="type_2" className="block text-sm font-medium text-gray-700 mb-1">Type 2</label>
                             <input
-                                id="Type_2"
-                                name="Type_2"
+                                id="type_2"
+                                name="type_2"
                                 type="text"
-                                value={formData.Type_2}
+                                value={formData.type_2}
                                 onChange={handleChange}
                                 className="w-full border border-gray-300 rounded p-2 bg-white text-black"
                             />
@@ -313,25 +287,25 @@ const EditProductVariantModal = ({ isOpen, onClose, productName, productId, vari
 
                     <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label htmlFor="Price" className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                            <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">Price</label>
                             <input
-                                id="Price"
-                                name="Price"
+                                id="price"
+                                name="price"
                                 type="number"
                                 min="0"
-                                value={formData.Price}
+                                value={formData.price}
                                 onChange={handleChange}
                                 className="w-full border border-gray-300 rounded p-2 bg-white text-black"
                             />
                         </div>
                         <div>
-                            <label htmlFor="Quantity" className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                            <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
                             <input
-                                id="Quantity"
-                                name="Quantity"
+                                id="quantity"
+                                name="quantity"
                                 type="number"
                                 min="0"
-                                value={formData.Quantity}
+                                value={formData.quantity}
                                 onChange={handleChange}
                                 className="w-full border border-gray-300 rounded p-2 bg-white text-black"
                             />
@@ -342,45 +316,45 @@ const EditProductVariantModal = ({ isOpen, onClose, productName, productId, vari
                         <h4 className="font-medium text-sm mb-2">Dimension</h4>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label htmlFor="Dimension.Weight" className="block text-sm text-gray-700 mb-1">Weight</label>
+                                <label htmlFor="dimension.weight" className="block text-sm text-gray-700 mb-1">Weight</label>
                                 <input
-                                    id="Dimension.Weight"
-                                    name="Dimension.Weight"
+                                    id="dimension.weight"
+                                    name="dimension.weight"
                                     type="text"
-                                    value={formData.Dimension.Weight}
+                                    value={formData.dimension.weight}
                                     onChange={handleChange}
                                     className="w-full border border-gray-300 rounded p-2 bg-white text-black"
                                 />
                             </div>
                             <div>
-                                <label htmlFor="Dimension.Length" className="block text-sm text-gray-700 mb-1">Length</label>
+                                <label htmlFor="dimension.length" className="block text-sm text-gray-700 mb-1">Length</label>
                                 <input
-                                    id="Dimension.Length"
-                                    name="Dimension.Length"
+                                    id="dimension.length"
+                                    name="dimension.length"
                                     type="text"
-                                    value={formData.Dimension.Length}
+                                    value={formData.dimension.length}
                                     onChange={handleChange}
                                     className="w-full border border-gray-300 rounded p-2 bg-white text-black"
                                 />
                             </div>
                             <div>
-                                <label htmlFor="Dimension.Width" className="block text-sm text-gray-700 mb-1">Width</label>
+                                <label htmlFor="dimension.width" className="block text-sm text-gray-700 mb-1">Width</label>
                                 <input
-                                    id="Dimension.Width"
-                                    name="Dimension.Width"
+                                    id="dimension.width"
+                                    name="dimension.width"
                                     type="text"
-                                    value={formData.Dimension.Width}
+                                    value={formData.dimension.width}
                                     onChange={handleChange}
                                     className="w-full border border-gray-300 rounded p-2 bg-white text-black"
                                 />
                             </div>
                             <div>
-                                <label htmlFor="Dimension.Height" className="block text-sm text-gray-700 mb-1">Height</label>
+                                <label htmlFor="dimension.height" className="block text-sm text-gray-700 mb-1">Height</label>
                                 <input
-                                    id="Dimension.Height"
-                                    name="Dimension.Height"
+                                    id="dimension.height"
+                                    name="dimension.height"
                                     type="text"
-                                    value={formData.Dimension.Height}
+                                    value={formData.dimension.height}
                                     onChange={handleChange}
                                     className="w-full border border-gray-300 rounded p-2 bg-white text-black"
                                 />

@@ -339,7 +339,6 @@ function App() {
             }
           />
         </Routes>
-        <ToastContainer position="bottom-right" autoClose={3000} />
       </MainLayout>
     </BrowserRouter>
   );

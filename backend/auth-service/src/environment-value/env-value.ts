@@ -2,8 +2,8 @@ export class EnvValue {
     // domain_test: "localhost",
     // domain_deployed: "34.58.241.34",
     // public static domain = "34.58.241.34";
-    // public static domain = process.env.DOMAIN || '127.11.0.1';
-    public static domain = '34.58.241.34';
+    public static domain = process.env.DOMAIN || '127.11.0.1';
+    // public static domain = 'localhost';
     public static port = process.env.PORT || '3003';
 
     public static readonly USER_URL = process.env.USER_URL || 'http://127.11.0.1:8000';

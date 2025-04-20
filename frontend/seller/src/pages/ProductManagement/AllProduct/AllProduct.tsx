@@ -18,20 +18,20 @@ import { EnvValue } from '../../../env-value/envValue'
 
 
 interface Dimension {
-    Weight: number;
-    Length: number;
-    Width: number;
-    Height: number;
+    weight: string;
+    length: string;
+    width: string;
+    height: string;
 }
 
 interface ProductDetail {
-    Type_id: number;
-    Type_1: string;
-    Type_2: string;
-    Image: string;
-    Price: number;
-    Quantity: number;
-    Dimension: Dimension;
+    type_id: number;
+    type_1: string;
+    type_2: string;
+    image: string;
+    price: number;
+    quantity: number;
+    dimension: Dimension;
 }
 
 interface Classification {
@@ -236,8 +236,8 @@ const AllProduct = () => {
                 product.name.toLowerCase().includes(searchLower) ||
                 // Search by type_1 and type_2 in product details
                 product.details.some(detail =>
-                    (detail.Type_1 && detail.Type_1.toLowerCase().includes(searchLower)) ||
-                    (detail.Type_2 && detail.Type_2.toLowerCase().includes(searchLower))
+                    (detail.type_1 && detail.type_1.toLowerCase().includes(searchLower)) ||
+                    (detail.type_2 && detail.type_2.toLowerCase().includes(searchLower))
                 )
             );
         }
@@ -443,7 +443,7 @@ const AllProduct = () => {
                                     setSelectedType("not");
                                     let result = [...products];
                                     result = result.filter(product =>
-                                        product.details.some(detail => detail.Quantity === 0)
+                                        product.details.some(detail => detail.quantity === 0)
                                     );
                                     setFilteredProducts(result);
                                 }}
@@ -456,7 +456,7 @@ const AllProduct = () => {
                                     setSelectedType("notyet");
                                     let result = [...products];
                                     result = result.filter(product =>
-                                        product.details.some(detail => detail.Quantity > 0 && detail.Quantity <= 20)
+                                        product.details.some(detail => detail.quantity > 0 && detail.quantity <= 20)
                                     );
                                     setFilteredProducts(result);
                                 }}
