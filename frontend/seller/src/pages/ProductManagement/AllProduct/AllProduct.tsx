@@ -126,7 +126,8 @@ const AllProduct = () => {
         const sellerInfo = JSON.parse(sellerInfoStr);
         const sellerId = sellerInfo.id;
         try {
-            const response = await axios.get<Product[]>(`${EnvValue.API_GATEWAY_URL}/api/product/seller/${sellerId}`);
+            const response = await axios.get<Product[]>(`${EnvValue.API_GATEWAY_URL}/api/product/seller/${sellerId}`,
+                { withCredentials: true });
             setProducts(response.data);
             setFilteredProducts(response.data);
             setLoading(false);
@@ -142,7 +143,8 @@ const AllProduct = () => {
 
     const fetchCategories = async () => {
         try {
-            const response = await axios.get(`${EnvValue.API_GATEWAY_URL}/api/categories/names`);
+            const response = await axios.get(`${EnvValue.API_GATEWAY_URL}/api/categories/names`,
+                { withCredentials: true });
             return response.data;
         } catch (error) {
             console.error('Error fetching categories:', error);

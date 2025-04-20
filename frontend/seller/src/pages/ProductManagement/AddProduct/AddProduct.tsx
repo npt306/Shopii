@@ -833,6 +833,7 @@ const AddProduct = () => {
             try {
                 const response = await axios.post(`${EnvValue.API_GATEWAY_URL}/api/product/uploadIMG`, formData, {
                     headers: { "Content-Type": "multipart/form-data" },
+                    withCredentials: true,
                 });
                 return response.data.url; // Trả về URL từ server
             } catch (error) {

@@ -28,6 +28,7 @@ import { VoucherManagement } from "../components/user_page/vouchers/voucher_mana
 // Others
 import { Purchase } from "../components/user_page/purchase.tsx";
 import { ShopeeCoin } from "../components/user_page/shopee_coin.tsx";
+
 import { Addressesupdate } from "../components/user_page/my_account/addresses.tsx";
 
 export const UserPage = () => {
@@ -37,7 +38,7 @@ export const UserPage = () => {
     Email: string;
     Avatar: string | null;
   }>({
-    AccountId: 9,
+    AccountId: 34,
     Username: "username",
     Email: "user@example.com",
     Avatar:
@@ -45,7 +46,7 @@ export const UserPage = () => {
   });
 
   const [activeComponent, setActiveComponent] = useState<React.ReactNode>(null);
-
+  
   useEffect(() => {
     const fetchUserDetail = async () => {
       const storedItems = localStorage.getItem("userProfile");
@@ -199,7 +200,7 @@ export const UserPage = () => {
               <div
                 className="stardust-dropdown"
                 onClick={() => {
-                  setActiveComponent(<Purchase />);
+                  setActiveComponent(<Purchase userId={userData.AccountId}/>);
                   document.title = "Đơn mua";
                 }}
               >

@@ -23,7 +23,9 @@ export class UserController {
   }
 
   @Post('update-avatar/:id')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', {
+    limits: { fileSize: 50 * 1024 * 1024 } // 50 MB
+  }))
   async updateAvatar(
     @Param('id', ParseIntPipe) id: number,
     @UploadedFile() file: Express.Multer.File,

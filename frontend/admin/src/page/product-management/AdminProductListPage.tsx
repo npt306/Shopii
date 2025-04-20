@@ -471,7 +471,7 @@ export const AdminProductListPage = () => {
 
       {/* Block Modal */}
       {showBlockModal && (
-        <div className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-60 p-4"
+        <div className="fixed inset-0 z-50 flex justify-center items-center bg-opacity-60 backdrop-blur-sm p-4"
         role="dialog"
         aria-modal="true"
         aria-labelledby="blockModalHeading">
@@ -503,7 +503,7 @@ export const AdminProductListPage = () => {
                     type="button"
                     onClick={confirmBlock}
                     disabled={!blockReason || isProcessing}
-                    className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+                    className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-red-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
                >
                  {isProcessing ? (
                    <>
@@ -519,7 +519,7 @@ export const AdminProductListPage = () => {
 
       {/* Delete Modal */}
        {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-60 p-4"
+        <div className="fixed inset-0 z-50 flex justify-center items-center bg-opacity-60 backdrop-blur-sm p-4"
         role="dialog"
         aria-modal="true"
         aria-labelledby="deleteModalHeading">

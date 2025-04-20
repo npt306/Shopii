@@ -436,7 +436,7 @@ export const VoucherListPage = () => {
 
       {/* Delete Confirmation Modal (remains the same) */}
        {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-60 p-4">
+        <div className="fixed inset-0 z-50 flex justify-center items-center bg-opacity-60 backdrop-blur-sm p-4">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
              <div className="flex justify-between items-center border-b pb-3 mb-4">
                 <h3 className="text-lg font-semibold text-gray-800">Xác nhận xóa</h3>
@@ -450,7 +450,7 @@ export const VoucherListPage = () => {
                <button
                     onClick={confirmDelete}
                     disabled={isProcessing}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium disabled:opacity-50 inline-flex items-center"
+                    className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-red-700 text-sm font-medium disabled:opacity-50 inline-flex items-center"
                 >
                  {isProcessing ? (
                    <>
