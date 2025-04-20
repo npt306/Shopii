@@ -35,7 +35,9 @@ export const Header = () => {
           </a> */}
 
           <ProtectedExternalLink
-            to={`${import.meta.env.VITE_SELLER_URL}/portal/settings/shop/profile/`}
+            to={`${
+              import.meta.env.VITE_SELLER_URL
+            }/portal/settings/shop/profile/`}
             // to={`http://localhost:8001/portal/settings/shop/profile/`}
             className="cursor-pointer hover:opacity-80"
           >
@@ -76,8 +78,9 @@ export const Header = () => {
               <span>{language}</span>
               <FaChevronDown
                 size={12}
-                className={`transition-transform duration-300 ${isLanguageOpen ? "rotate-180" : ""
-                  }`}
+                className={`transition-transform duration-300 ${
+                  isLanguageOpen ? "rotate-180" : ""
+                }`}
               />
             </div>
 
@@ -108,11 +111,17 @@ export const Header = () => {
                   onClick={() => setIsOpen(!isOpen)}
                 >
                   <img
-                    src={JSON.parse(localStorage.getItem("userProfile") || "{}").avatar || avatarDefault}
+                    src={
+                      JSON.parse(localStorage.getItem("userProfile") || "{}")
+                        .avatar || avatarDefault
+                    }
                     alt="Avatar"
                     className="w-7 h-7 rounded-full"
                   />
-                  <span className="">{JSON.parse(localStorage.getItem("userProfile")).username || avatarDefault}</span>
+                  <span className="">
+                    {JSON.parse(localStorage.getItem("userProfile") || "null")
+                      ?.username || auth.user.name}
+                  </span>
                 </div>
 
                 {isOpen && (
