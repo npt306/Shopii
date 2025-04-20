@@ -7,6 +7,7 @@ export class SearchController {
 
   @Post('index')
   async indexDocument(@Body() document: ProductDocument) {
+    
     return await this.searchService.indexDocument(document);
   }
 
@@ -26,10 +27,10 @@ export class SearchController {
       return await this.searchService.search(query, Categories, page, minPrice, maxPrice);
   }
 
-  // @Delete(':id')
-  //   async delete(@Param('id') id: string) {
-  //     return await this.searchService.deleteDocument(id);
-  //   }
+  @Delete(':id')
+    async delete(@Param('id') id: string) {
+      return await this.searchService.deleteByProductID(id);
+    }
 
   @Post('delete-by-query')
   async deleteByQuery(@Body() body: any) {

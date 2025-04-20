@@ -37,6 +37,7 @@ import {
     }
     @Delete(':id')
     async delete(@Param('id') id: string) {
+      console.log('Deleting document with ID:', id); // Log the ID being deleted
       return await this.searchService.deleteDocument(id);
     }
   }
