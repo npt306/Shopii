@@ -6,38 +6,42 @@ interface ProtectedExternalLinkProps extends AnchorHTMLAttributes<HTMLAnchorElem
   to: string;
 }
 
-export function ProtectedExternalLink({ to, children, ...rest }: ProtectedExternalLinkProps) {
-  const { verifyAuth } = useAuth();
+export function ProtectedExternalLink({
+  to,
+  children,
+  ...rest
+}: ProtectedExternalLinkProps) {
+  const { isAuthenticated, loading, verifyAuth } = useAuth();
   const navigate = useNavigate();
 
   const handleClick = async (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // Always prevent default so we can decide what to do
     e.preventDefault();
 
-    const { status, isAuthenticated } = await verifyAuth();
-
-    if (status === 'banned') {
-      localStorage.clear();
-      navigate('/login', {
-        replace: true,
-        state: { error: 'Your account has been banned.' },
-      });
-      return;
+    // If we’re already mid‑check, wait for it to finish
+    if (loading) {
+      await verifyAuth();
+    } else {
+      // otherwise trigger a fresh re‑check
+      await verifyAuth();
     }
 
     if (!isAuthenticated) {
+      // Not logged in → clear stale state & send to login
       localStorage.clear();
-      navigate('/login', {
-        replace: true,
-        state: { error: 'You must log in to access this link.' },
-      });
-      return;
+      navigate('/login', { replace: true });
+    } else {
+      // Logged in → manually fire the external navigation
+      window.location.href = to;
     }
-
-    window.location.href = to;
   };
 
   return (
-    <a href={to} onClick={handleClick} {...rest}>
+    <a
+      href={to}
+      onClick={handleClick}
+      {...rest}
+    >
       {children}
     </a>
   );

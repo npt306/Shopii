@@ -4,7 +4,6 @@ import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { v4 as uuidv4 } from "uuid";
-import { X, CreditCard, Truck } from "lucide-react";
 
 import { EnvValue } from "../env-value/envValue";
 
@@ -985,96 +984,66 @@ export const OrderPage = () => {
       )}
       {/* Payment Method Choice Modal */}
       {paymentChoiceModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div className="flex items-center justify-between p-5 border-b">
-              <h2 className="text-xl font-semibold text-gray-800">
-                Chọn phương thức thanh toán
-              </h2>
-              <button
-                onClick={() => setPaymentChoiceModal(false)}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="p-5 space-y-3">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 className="text-lg font-semibold mb-4 text-black">
+              Chọn phương thức thanh toán
+            </h2>
+            <div className="flex flex-col gap-4">
               {/* VNPay Option */}
               <label
-                className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                className={`flex items-center p-3 border rounded cursor-pointer ${
                   paymentMethodChoice === 0
                     ? "border-orange-500 bg-orange-50"
-                    : "border-gray-200 hover:border-gray-300"
+                    : "border-gray-300"
                 }`}
                 onClick={() => setPaymentMethodChoice(0)}
               >
-                <div className="relative flex items-center justify-center mr-3">
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    id="vnpay"
-                    value="0"
-                    checked={paymentMethodChoice === 0}
-                    onChange={() => setPaymentMethodChoice(0)}
-                    className="appearance-none h-5 w-5 border-2 border-gray-300 rounded-full checked:border-orange-500 checked:border-[5px] transition-all"
-                  />
-                </div>
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center">
-                    <div className="bg-blue-600 text-white p-2 rounded-md mr-3">
-                      <CreditCard className="h-5 w-5" />
-                    </div>
-                    <span className="font-medium text-gray-800">VNPay</span>
-                  </div>
-                </div>
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value={0}
+                  checked={paymentMethodChoice === 0}
+                  onChange={() => setPaymentMethodChoice(0)}
+                  className="mr-3 custom-radio"
+                />
+                <span className="text-black">VNPay</span>
               </label>
 
               {/* COD Option */}
               <label
-                className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                className={`flex items-center p-3 border rounded cursor-pointer ${
                   paymentMethodChoice === 1
                     ? "border-orange-500 bg-orange-50"
-                    : "border-gray-200 hover:border-gray-300"
+                    : "border-gray-300"
                 }`}
                 onClick={() => setPaymentMethodChoice(1)}
               >
-                <div className="relative flex items-center justify-center mr-3">
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    id="cod"
-                    value="1"
-                    checked={paymentMethodChoice === 1}
-                    onChange={() => setPaymentMethodChoice(1)}
-                    className="appearance-none h-5 w-5 border-2 border-gray-300 rounded-full checked:border-orange-500 checked:border-[5px] transition-all"
-                  />
-                </div>
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center">
-                    <div className="bg-green-600 text-white p-2 rounded-md mr-3">
-                      <Truck className="h-5 w-5" />
-                    </div>
-                    <span className="font-medium text-gray-800">
-                      Thanh toán khi nhận hàng (COD)
-                    </span>
-                  </div>
-                </div>
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value={1}
+                  checked={paymentMethodChoice === 1}
+                  onChange={() => setPaymentMethodChoice(1)}
+                  className="mr-3 custom-radio"
+                />
+                <span className="text-black">
+                  Thanh toán khi nhận hàng (COD)
+                </span>
               </label>
             </div>
-
-            <div className="p-5 bg-gray-50 flex justify-end gap-3">
+            <div className="mt-6 flex justify-end gap-3">
               <button
+                className="px-4 py-2 border rounded text-black bg-gray-200 hover:bg-gray-300"
                 onClick={() => setPaymentChoiceModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors"
               >
                 Hủy
               </button>
               <button
+                className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
                 onClick={() => setPaymentChoiceModal(false)}
-                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors"
               >
-                <span className="text-white">Xác nhận</span>
+                Xác nhận
               </button>
             </div>
           </div>

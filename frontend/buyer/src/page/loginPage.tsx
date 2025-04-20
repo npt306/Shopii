@@ -16,7 +16,6 @@ import { userService } from "../services/userService";
 import { UserDto } from "../interfaces/user";
 import { TbEyeClosed } from "react-icons/tb";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
-import { useLocation } from "react-router-dom";
 
 interface FormData {
   username: string;
@@ -39,7 +38,6 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const location = useLocation();
 
   // Handle form input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -67,12 +65,6 @@ export const LoginPage: React.FC = () => {
 
       // Call the login service that now sets httpOnly cookies on success
       const result = await userService.login(username, password);
-
-      //if account has been banned 
-      if(result.message === "banned") {
-        setError("Your account has been banned.");
-        return;
-      }
 
       console.log(result);
 
@@ -152,21 +144,15 @@ export const LoginPage: React.FC = () => {
   };
 
   useEffect(() => {
-    // Check if redirected with error
-    if (location.state?.error) {
-      setError(location.state.error);
-      // Clear history state so it doesn’t persist on refresh
-      window.history.replaceState({}, document.title);
-    }
-  
     // Dynamically import Bootstrap CSS only when LoginPage is mounted
     const bootstrapLink = document.createElement("link");
     bootstrapLink.rel = "stylesheet";
     bootstrapLink.href =
       "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css";
     document.head.appendChild(bootstrapLink);
-  
+
     return () => {
+      // Remove Bootstrap CSS when the component unmounts
       document.head.removeChild(bootstrapLink);
     };
   }, []);

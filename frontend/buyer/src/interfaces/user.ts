@@ -18,7 +18,6 @@ export interface LoginResponse {
         sellerInfo: any;
         userInfo: any;
     };
-    message: string;
 }
 
 export interface RegisterResponse {
