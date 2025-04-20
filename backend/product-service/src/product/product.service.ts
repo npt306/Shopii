@@ -289,31 +289,31 @@ export class ProductService {
       await this.productDetailRepository.save(detailEntities);
     }
     // Use fetch to call the external API
-    try {
+    // try {
 
 
-      const productWithId = {
-        ...createProductDto,
-        ProductID: savedProduct.ProductID
-      };
-      //const baseUrl = this.configService.get<string>('SEARCH_SERVICE_BASE_URL');
-      const response = await fetch(`${process.env.API_GATEWAY_URL}/api/search/index`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(productWithId),
-      });
+    //   const productWithId = { 
+    //     ...createProductDto, 
+    //     ProductID: savedProduct.ProductID 
+    //   };
+    //   //const baseUrl = this.configService.get<string>('SEARCH_SERVICE_BASE_URL');
+    //   const response = await fetch(`${process.env.API_GATEWAY_URL}/api/search/index`, {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify(productWithId),
+    //   });
 
-      if (!response.ok) {
-        throw new Error(`Failed to index product: ${response.statusText}`);
-      }
+    //   if (!response.ok) {
+    //     throw new Error(`Failed to index product: ${response.statusText}`);
+    //   }
 
-      const responseData = await response.json();
-      console.log('Product indexed successfully:', responseData);
-    } catch (error) {
-      console.error('Error indexing product:', error.message);
-    }
+    //   const responseData = await response.json();
+    //   console.log('Product indexed successfully:', responseData);
+    // } catch (error) {
+    //   console.error('Error indexing product:', error.message);
+    // }
 
     return savedProduct;
   }
@@ -633,7 +633,6 @@ export class ProductService {
 
     const approvedProduct = await this.productRepository.save(product);
 
-<<<<<<< HEAD
     try {
       const productWithId = {
         ...approvedProduct,
@@ -656,30 +655,6 @@ export class ProductService {
     } catch (error) {
       console.error('Error indexing product:', error.message);
     }
-=======
-    // try {
-    //   const productWithId = {
-    //     ...approvedProduct,
-    //     ProductID: approvedProduct.ProductID
-    //   };
-    //   const response = await fetch(`${process.env.API_GATEWAY_URL}/api/search/index`, {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify(productWithId),
-    //   });
-
-    //   if (!response.ok) {
-    //     throw new Error(`Failed to index product: ${response.statusText}`);
-    //   }
-
-    //   const responseData = await response.json();
-    //   console.log('Product indexed successfully:', responseData);
-    // } catch (error) {
-    //   console.error('Error indexing product:', error.message);
-    // }
->>>>>>> 980f1eaf9dd76b3cdb249b70256dced9fe6ee4e1
 
     return approvedProduct;
 
@@ -720,7 +695,7 @@ export class ProductService {
     this.logger.log(`Product ID: ${id} hard deleted successfully. Reason: ${reason}`);
 
     try {
-      const esResponse = await fetch(`${process.env.API_GATEWAY_URL}/api/search/${id}`, {
+      const esResponse = await fetch(`http://localhost:3000/api/search/${id}`, {
         method: 'DELETE',
       });
 
@@ -733,6 +708,9 @@ export class ProductService {
     } catch (err) {
       console.error(`Error deleting product from Elasticsearch: ${err.message}`);
     }
+
+
+
   }
 
 }

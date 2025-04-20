@@ -1,5 +1,4 @@
 import { FaFilter, FaStar, FaRegStar } from 'react-icons/fa';
-import { CiFilter } from "react-icons/ci";
 import { useState } from 'react';
 const ratings = [
     { stars: 5, label: "" },
@@ -66,22 +65,22 @@ export const FilterSidebar = ({ onFilterChange, availableCategories }: FilterSid
         <>
             <div className="flex flex-col items-start justify-center">
                 <div className="flex flex-row items-center justify-center">
-                    <CiFilter className="text-black mr-1" />
-                    <p className='font-bold  '>BỘ LỌC TÌM KIẾM</p>
+                    <FaFilter className="text-orange-500 mr-1" />
+                    <p className='font-bold'>BỘ LỌC TÌM KIẾM</p>
                 </div>
                 
                 <div className="mt-3">
                     <p>Theo Danh Mục</p>
                     <div className="flex flex-col mt-1">
                         {availableCategories.map((category, index) => (
-                            <label key={index} className="flex items-center space-x-2 cursor-pointer !mb-0.5">
+                            <label key={index} className="flex items-center space-x-2 cursor-pointer">
                             <input
                                 type="checkbox"
-                                className="w-3 h-3 accent-white !text-orange-600 border-gray-300 shadow-xs"
+                                className="w-4 h-4 accent-white text-orange-500"
                                 checked={selectedCategories.includes(category)}
                                 onChange={() => handleCategoryChange(category)}
                             />
-                            <span className='pl-1'>{category}</span>
+                            <span>{category}</span>
                             </label>
                         ))}
                     </div>
@@ -92,9 +91,9 @@ export const FilterSidebar = ({ onFilterChange, availableCategories }: FilterSid
                     <p>Nơi Bán</p>
                     <div className="flex flex-col mt-1">
                         {["TP Hồ Chí Minh", "TP Hồ Chí Minh", "TP Hồ Chí Minh"].map((item, index) => (
-                            <label key={index} className="flex items-center space-x-2 cursor-pointer !mb-0.5">
-                                <input type="checkbox" className="w-3 h-3 accent-white !text-orange-600 border-gray-300 shadow-xs" />
-                                <span className='pl-1'>{item}</span>
+                            <label key={index} className="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" className="w-4 h-4 accent-white text-orange-500" />
+                                <span>{item}</span>
                             </label>
                         ))}
                     </div>
@@ -105,9 +104,9 @@ export const FilterSidebar = ({ onFilterChange, availableCategories }: FilterSid
                     <p>Đơn Vị Vận Chuyển</p>
                     <div className="flex flex-col mt-1">
                         {["Nhanh", "Hỏa tốc", "Tiết kiệm"].map((item, index) => (
-                            <label key={index} className="flex items-center space-x-2 cursor-pointer !mb-0.5">
-                                <input type="checkbox" className="w-3 h-3 accent-white !text-orange-600 border-gray-300 shadow-xs" />
-                                <span className='pl-1'>{item}</span>
+                            <label key={index} className="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" className="w-4 h-4 accent-white text-orange-500" />
+                                <span>{item}</span>
                             </label>
                         ))}
                     </div>
@@ -118,9 +117,9 @@ export const FilterSidebar = ({ onFilterChange, availableCategories }: FilterSid
                     <p>Thương Hiệu</p>
                     <div className="flex flex-col mt-1">
                         {["HCMUS", "HCMUS", "HCMUS"].map((item, index) => (
-                            <label key={index} className="flex items-center space-x-2 cursor-pointer !mb-0.5">
-                                <input type="checkbox" className="w-3 h-3 accent-white !text-orange-600 border-gray-300 shadow-xs" />
-                                <span className='pl-1'>{item}</span>
+                            <label key={index} className="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" className="w-4 h-4 accent-white text-orange-500" />
+                                <span>{item}</span>
                             </label>
                         ))}
                     </div>
@@ -128,26 +127,26 @@ export const FilterSidebar = ({ onFilterChange, availableCategories }: FilterSid
                 </div>
 
                 <div className="mt-3">
-                    <p className='!mb-0'>Khoảng giá</p>
-                    <div className='flex flex-row items-center justify-center'>
+                    <p>Khoảng giá</p>
+                    <div className='flex flex-row items-center justify-center mt-1'>
                         <input
                             type="text"
-                            placeholder="₫ TỪ"
+                            placeholder="TỪ"
                             value={minPrice}
                             onChange={(e) => setMinPrice(e.target.value)}
-                            className="w-1/2 h-9 px-4 py-2 bg-white border border-gray-300 rounded-xs focus:outline"
+                            className="w-1/2 h-9 px-4 py-2 bg-white border border-gray-300 focus:outline"
                         />
-                        <p className='!my-3 text-3xl px-3 text-gray-300'>-</p>
+                        <p className='mx-3 text-3xl'>-</p>
                         <input
                             type="text"
-                            placeholder="₫ ĐẾN"
+                            placeholder="ĐẾN"
                             value={maxPrice}
                             onChange={(e) => setMaxPrice(e.target.value)}
-                            className="w-1/2 h-9 px-4 py-2 bg-white border border-gray-300 rounded-xs focus:outline"
+                            className="w-1/2 h-9 px-4 py-2 bg-white border border-gray-300 focus:outline"
                         />
                     </div>
                     <button 
-                        className="mt-2 flex justify-center items-center rounded-xs shadow-xs bg-orange-600 w-full mx-auto my-5 py-2 border border-orange-600 !text-white hover:bg-orange-300 transition duration-300 cursor-pointer"
+                        className="mt-2 flex justify-center items-center bg-orange-500 w-full mx-auto my-5 py-2 border border-gray-300 text-white hover:bg-orange-300 transition duration-300 cursor-pointer"
                         onClick={handlePriceApply}
                     >
                         ÁP DỤNG
@@ -159,9 +158,9 @@ export const FilterSidebar = ({ onFilterChange, availableCategories }: FilterSid
                     <p>Loại Shop</p>
                     <div className="flex flex-col mt-1">
                         {["Shopee Mall", "Shopee Mall", "Shopee Mall"].map((item, index) => (
-                            <label key={index} className="flex items-center space-x-2 cursor-pointer !mb-0.5">
-                                <input type="checkbox" className="w-3 h-3 accent-white !text-orange-600 border-gray-300 shadow-xs" />
-                                <span className='pl-1'>{item}</span>
+                            <label key={index} className="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" className="w-4 h-4 accent-white text-orange-500" />
+                                <span>{item}</span>
                             </label>
                         ))}
                     </div>
@@ -172,9 +171,9 @@ export const FilterSidebar = ({ onFilterChange, availableCategories }: FilterSid
                     <p>Tình trạng</p>
                     <div className="flex flex-col mt-1">
                         {["Đã sử dụng", "Mới"].map((item, index) => (
-                            <label key={index} className="flex items-center space-x-2 cursor-pointer !mb-0.5">
-                                <input type="checkbox" className="w-3 h-3 accent-white !text-orange-600 border-gray-300 shadow-xs" />
-                                <span className='pl-1'>{item}</span>
+                            <label key={index} className="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" className="w-4 h-4 accent-white text-orange-500" />
+                                <span>{item}</span>
                             </label>
                         ))}
                     </div>
@@ -185,9 +184,9 @@ export const FilterSidebar = ({ onFilterChange, availableCategories }: FilterSid
                     <p>Các lựa chọn thanh toán</p>
                     <div className="flex flex-col mt-1">
                         {["0% TRẢ GÓP"].map((item, index) => (
-                            <label key={index} className="flex items-center space-x-2 cursor-pointer !mb-0.5">
-                                <input type="checkbox" className="w-3 h-3 accent-white !text-orange-600 border-gray-300 shadow-xs" />
-                                <span className='pl-1'>{item}</span>
+                            <label key={index} className="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" className="w-4 h-4 accent-white text-orange-500" />
+                                <span>{item}</span>
                             </label>
                         ))}
                     </div>
@@ -203,7 +202,7 @@ export const FilterSidebar = ({ onFilterChange, availableCategories }: FilterSid
                                     i < rating.stars ? (
                                         <FaStar key={i} className="text-yellow-500" />
                                     ) : (
-                                        <FaRegStar key={i} className="text-yellow-500" />
+                                        <FaRegStar key={i} className="text-gray-400" />
                                     )
                                 )}
                                 <span className="text-sm">{rating.label}</span>
@@ -217,17 +216,17 @@ export const FilterSidebar = ({ onFilterChange, availableCategories }: FilterSid
                     <p>Dịch Vụ & Khuyến Mãi</p>
                     <div className="flex flex-col mt-1">
                         {["Đang giảm giá", "Gì cũng rẻ", "Hàng có sẵn", "Mua giá bán buôn/ bán sĩ"].map((item, index) => (
-                            <label key={index} className="flex items-center space-x-2 cursor-pointer !mb-0.5">
-                                <input type="checkbox" className="w-3 h-3 accent-white !text-orange-600 border-gray-300 shadow-xs" />
-                                <span className='pl-1'>{item}</span>
+                            <label key={index} className="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" className="w-4 h-4 accent-white text-orange-500" />
+                                <span>{item}</span>
                             </label>
                         ))}
                     </div>
-                    <div className="w-[218px] mt-3"></div>
+                    <div className="w-[218px] border-b-1 border-gray-300 mt-3"></div>
                 </div>
 
                 <button 
-                    className="mb-3 mt-3 flex justify-center items-center rounded-xs shadow-xs bg-orange-600  !w-full mx-auto my-5 py-2 border border-orange-600 !text-white hover:bg-orange-300 transition duration-300 cursor-pointer"
+                    className="mt-3 flex justify-center items-center bg-orange-500 w-full mx-auto my-5 py-2 border border-gray-300 text-white hover:bg-orange-300 transition duration-300 cursor-pointer"
                     onClick={handleClearAll}
                 >
                     XÓA TẤT CẢ
