@@ -22,6 +22,7 @@ export class SearchService {
 
   async indexDocument(document: ProductDocument) {
     try {
+      console.log('Indexing document:', document);
       return await elasticsearchClient.index({
         index: this.index,
         document
@@ -126,50 +127,28 @@ export class SearchService {
 }
 
 
-// async deleteDocument(id: string) {
-//   try {
-//     // Ensure index is defined
-//     if (!this.index) {
-//       throw new Error("Elasticsearch index is not defined");
-//     }
-
-//     // Step 1: Search for documents with the matching ProductID
-//     const searchResponse = await elasticsearchClient.search({
-//       index: this.index,
-//       body: {
-//         query: {
-//           term: {
-//             ProductID: id,
-//           },
-//         },
-//       },
-//     });
-
-//     // Step 2: Check if any documents were found
-//     const hits = searchResponse.hits.hits;
-//     if (hits.length === 0) {
-//       throw new Error(`No document found with ProductID ${id}`);
-//     }
-
-//     // Step 3: Delete each matching document by its _id
-//     // const deletePromises = hits.map((hit) =>
-//     //   elasticsearchClient.delete({
-//     //     index: this.index, // Now guaranteed to be a string
-//     //     id: hit._id,
-//     //   })
-//     // );
-
-//       // Step 4: Execute all delete operations
-//       await Promise.all(deletePromises);
-
-//       return {
-//         message: `Successfully deleted ${hits.length} document(s) with ProductID ${id}`,
-//         deletedCount: hits.length,
-//       };
-//     } catch (error) {
-//       throw new Error(`Failed to delete document(s) with ProductID ${id}: ${error.message}`);
-//     }
-//   }
+async deleteByProductID(productID: string) {
+  try {
+    console.log('Deleting documents for product ID:', productID);
+    const response = await elasticsearchClient.deleteByQuery({
+      index: this.index,
+      query: {
+        term: {
+          ProductID: productID
+        }
+      },
+      refresh: true // This ensures the changes are immediately visible
+    });
+    console.log('Delete response:', response);
+    return {
+      message: `Successfully deleted documents for product ${productID}`,
+      deleted: response.deleted,
+      total: response.total
+    };
+  } catch (error) {
+    throw new Error(`Failed to delete documents for product ${productID}: ${error.message}`);
+  }
+}
 
   async deleteByQuery(query: any) {
     try {

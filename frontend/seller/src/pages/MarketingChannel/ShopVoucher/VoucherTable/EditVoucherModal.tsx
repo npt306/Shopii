@@ -443,7 +443,7 @@ export const EditVoucherModal: React.FC<EditVoucherModalProps> = ({
 
           {/* Hiển thị mã giảm giá */}
           <div className="input-body col-span-7 flex flex-row ">
-            {prevFormData.is_public === true ? (
+            {prevFormData.is_public === true && started  ? (
               <label className="flex items-center">Hiển thị nhiều nơi</label>
             ) : (
               <>

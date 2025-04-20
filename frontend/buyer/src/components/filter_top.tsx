@@ -13,20 +13,21 @@ export const FilterTop = () => {
     return (
         <>
             <div className="flex items-center justify-between w-full bg-gray-200 p-5">
-                <div className="flex gap-2">
-                    <button className="flex justify-center items-center whitespace-nowrap bg-orange-500 w-auto py-2 px-3 border border-gray-300 text-white hover:bg-orange-300 transition duration-300 cursor-pointer">
+                <div className="flex gap-2 items-center">
+                    <div className='text-gray-600'>Sắp xếp theo</div>
+                    <button className="flex justify-center items-center whitespace-nowrap rounded-xs shadow-xs bg-orange-600 w-auto py-2 px-3 border border-orange-600 !text-white hover:bg-orange-300 transition duration-300 cursor-pointer">
                         Liên Quan
                     </button>
-                    <button className="flex justify-center items-center whitespace-nowrap bg-white w-auto py-2 px-3 border border-gray-300 text-black cursor-pointer">
+                    <button className="flex justify-center items-center whitespace-nowrap bg-white w-auto py-2 px-3 border border-white text-black cursor-pointer">
                         Mới Nhất
                     </button>
-                    <button className="flex justify-center items-center whitespace-nowrap bg-white w-auto py-2 px-3 border border-gray-300 text-black cursor-pointer">
+                    <button className="flex justify-center items-center whitespace-nowrap rounded-xs shadow-xs bg-white w-auto py-2 px-3 border border-white text-black cursor-pointer">
                         Bán Chạy
                     </button>
 
                     <div className="relative">
                         <div
-                            className="bg-white flex items-center gap-1 cursor-pointer border border-gray-300 py-2 px-3 w-50 justify-between"
+                            className="bg-white flex items-center gap-1 cursor-pointer border border-white py-2 px-3 w-50 justify-between rounded-xs shadow-xs"
                             onClick={() => setIsLanguageOpen(!isLanguageOpen)}
                         >
                             <span>{language}</span>
@@ -50,8 +51,8 @@ export const FilterTop = () => {
                     </div>
                 </div>
 
-                <div className='flex flex-row justify-center items-center'>
-                    <p className='mr-1'>1/17</p>
+                <div className="flex flex-row justify-center items-center">
+                    <p className="pr-5">1/17</p>
                     <button className="flex justify-center items-center bg-white w-10 mx-auto my-5 py-2 border border-gray-300 text-black shadow-md transition-transform duration-300 hover:scale-120 hover:shadow-lg cursor-pointer">
                         <FaChevronLeft />
                     </button>

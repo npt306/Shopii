@@ -24,8 +24,8 @@ import { PersistGate } from "redux-persist/integration/react";
 
 import { CartProvider } from "./context/cartContext.tsx";
 
-import { AuthProvider } from './components/protectedRoute/authContext.tsx';
-import { ProtectedRoute } from './components/protectedRoute/protectedRoute.tsx';
+import { AuthProvider } from "./components/protectedRoute/authContext.tsx";
+import { ProtectedRoute } from "./components/protectedRoute/protectedRoute.tsx";
 
 const router = createBrowserRouter(
   [
@@ -78,7 +78,7 @@ const router = createBrowserRouter(
           path: "/order/:id",
           element: <OrderPage />,
         },
-      ]
+      ],
     },
   ],
   {

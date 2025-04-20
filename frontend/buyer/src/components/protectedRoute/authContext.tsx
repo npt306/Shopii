@@ -2,55 +2,75 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { EnvValue } from '../../env-value/envValue';
 
 interface AuthContextType {
-    isAuthenticated: boolean;
-    loading: boolean;
-    verifyAuth: () => Promise<void>;    // ← new
-  }
-  
-  const AuthContext = createContext<AuthContextType|undefined>(undefined);
-  
-  export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [loading, setLoading] = useState(true);
-  
-    // factor out the verifyAuth logic so we can call it from useEffect *and* externally
-    const verifyAuth = async () => {
-      setLoading(true);
-      try {
-        // 34.58.241.34
-        // localhost
-        const response = await fetch(`${EnvValue.AUTH_SERVICE_URL}/Users/verify-token`, {
-        // const response = await fetch(`http://localhost:3003/Users/verify-token`, {
-          credentials: 'include',
-        });
-        const data = await response.json();
-        if (response.ok && data.isAuthenticated) {
-          setIsAuthenticated(true);
-        } else {
-          localStorage.clear();
-          setIsAuthenticated(false);
-        }
-      } catch {
-        setIsAuthenticated(false);
-      } finally {
-        setLoading(false);
+  isAuthenticated: boolean;
+  loading: boolean;
+  verifyAuth: () => Promise<VerifyResult>;
+  status: 'ok' | 'banned' | 'unauthenticated';
+}
+
+interface VerifyResult {
+  isAuthenticated: boolean;
+  status: 'ok' | 'banned' | 'unauthenticated';
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<'ok' | 'banned' | 'unauthenticated'>('unauthenticated');
+
+  const verifyAuth = async (): Promise<VerifyResult> => {
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${EnvValue.AUTH_SERVICE_URL}/Users/verify-token`, {
+        credentials: 'include',
+      });
+      const data = await response.json();
+
+      let newStatus: VerifyResult['status'];
+      let newAuth: boolean;
+
+      if (data.message === 'banned') {
+        localStorage.clear();
+        newStatus = 'banned';
+        newAuth = false;
+      } else if (response.ok && data.isAuthenticated) {
+        newStatus = 'ok';
+        newAuth = true;
+      } else {
+        localStorage.clear();
+        newStatus = 'unauthenticated';
+        newAuth = false;
       }
-    };
-  
-    // run once on mount
-    useEffect(() => {
-      verifyAuth();
-    }, []);
-  
-    return (
-      <AuthContext.Provider value={{ isAuthenticated, loading, verifyAuth }}>
-        {children}
-      </AuthContext.Provider>
-    );
+
+      setStatus(newStatus);
+      setIsAuthenticated(newAuth);
+
+      return { status: newStatus, isAuthenticated: newAuth };
+    } catch {
+      setStatus('unauthenticated');
+      setIsAuthenticated(false);
+      return { status: 'unauthenticated', isAuthenticated: false };
+    } finally {
+      setLoading(false);
+    }
   };
-  
-  export const useAuth = () => {
-    const ctx = useContext(AuthContext);
-    if (!ctx) throw new Error('useAuth must be inside AuthProvider');
-    return ctx;
-  };
+
+  useEffect(() => {
+    verifyAuth();
+  }, []);
+
+  return (
+    <AuthContext.Provider value={{ isAuthenticated, loading, verifyAuth, status }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be inside AuthProvider');
+  return ctx;
+};

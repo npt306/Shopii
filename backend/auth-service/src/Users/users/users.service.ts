@@ -309,8 +309,8 @@ export class UsersService {
   async triggerVerificationEmail(userId: string): Promise<void> {
     const adminToken = await this.getAdminToken();
     const clientId = this.clientId;
-    // const redirectUri = EnvValue.redirect_uri; // Adjust accordingly
-    const redirectUri = `http://localhost:8000/login`; // Adjust accordingly
+    const redirectUri = EnvValue.redirect_uri; // Adjust accordingly
+    // const redirectUri = `http://localhost:8000/login`; // Adjust accordingly
     const executeActionsUrl = `${this.keycloakBaseUrl}/admin/realms/${this.realm}/users/${userId}/execute-actions-email?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
     try {
       await firstValueFrom(

@@ -61,14 +61,20 @@ export const SearchProductPage = () => {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
-            const transformedResults = data.$.map((item: any) => ({
-                id: item._source.ProductID,
-                Name: item._source.Name,
-                Images: item._source.Images || [],
-                Price: item._source.Price || 699000,
-                discount: item._source.discount || 7,
-                sales: item._source.sales || 2500
-            }));
+
+            const transformedResults = data.$.map((item: any) => {
+                const firstDetail = item._source.details?.[0] || {}; // tránh lỗi
+                return {
+                    id: item._source.ProductID,
+                    Name: item._source.Name,
+                    Images: item._source.Images || [],
+                    Price: firstDetail.Price || 699000,                                                                                                                                                                                                         
+                    discount: item._source.discount || 7,
+                    sales: item._source.sales || 2500,
+                    Quantity: firstDetail.Quantity || 0
+                };
+            });
+
             setProducts(transformedResults);
             setTotalPages(data.totalPages || 1);
         } catch (error) {

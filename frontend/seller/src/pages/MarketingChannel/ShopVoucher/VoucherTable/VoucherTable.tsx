@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
+import { FaPencilAlt, FaTrash } from "react-icons/fa";
+
+import "../../../../css/sellerVoucher.css";
 import { EnvValue } from "../../../../env-value/envValue";
 import { EditVoucherModal } from "./EditVoucherModal";
-import { FaPencilAlt } from "react-icons/fa";
-import { FaTrash } from "react-icons/fa";
-import "../../../../css/sellerVoucher.css";
 import { SellerVoucher } from "../Shared/Interfaces"; // Adjust the import path as necessary
 import { TabBar } from "./TabBar";
 import { SearchBar } from "./SearchBar";
-import { toast } from "react-toastify";
 import ConfirmModal from "../Shared/ConfirmModal";
 
 export const VoucherTable = () => {
@@ -104,17 +104,19 @@ export const VoucherTable = () => {
       setModalOpen(true); // Open the modal
     }
   };
+
   const onConfirmDelete = (id: number) => () => {
     setDeleteVoucher(id);
     const voucher = vouchers.find((v) => v.id === id);
     if (voucher) {
       if (new Date(voucher.ends_at) < currentDate)
         return toast.info("Không thể xóa voucher đã kết thúc");
-      if(new Date(voucher.starts_at) < currentDate)
+      if (new Date(voucher.starts_at) < currentDate)
         return toast.info("Không thể xóa voucher đang diễn ra");
       setConfirmModalOpen(true);
     } else toast.error("Không tìm thấy voucher");
   };
+
   const handleDelete = () => async () => {
     const id = deleteVoucher;
     const voucher = vouchers.find((v) => v.id === id);
@@ -156,7 +158,10 @@ export const VoucherTable = () => {
       <div className="border border-gray-300 rounded-lg overflow-hidden">
         {/* Header */}
         <div className="grid grid-cols-10 bg-gray-100 text-gray-700 font-semibold p-3 border-b border-gray-300">
-          <div className="col-span-2">Tên Voucher | Mã voucher</div>
+          <div className="col-span-2 grid grid-cols-2">
+            <div>Tên Voucher </div>
+            <div>| Mã voucher</div>
+          </div>
           <div>Loại mã</div>
           <div>Sản phẩm áp dụng</div>
           <div>Người mua mục tiêu</div>
@@ -174,9 +179,14 @@ export const VoucherTable = () => {
               key={voucher.id}
               className="grid grid-cols-10 p-3 border-b border-gray-200 text-sm text-black"
             >
-              <div className="col-span-2">
-                <strong>{voucher.name}</strong> {" | "}
-                <span className="text-gray-500">{voucher.code}</span>
+              <div className="col-span-2  items-center grid grid-cols-2">
+                <div
+                  className="overflow-hidden whitespace-nowrap text-ellipsis"
+                  title={voucher.name}
+                >
+                  <strong>{voucher.name}</strong>
+                </div>
+                <span className="text-gray-500 pr-1">| {voucher.code}</span>
               </div>
               <div>
                 {voucher.voucher_type === "shop_wide"
