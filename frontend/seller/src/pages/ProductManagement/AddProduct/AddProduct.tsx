@@ -1487,13 +1487,13 @@ const AddProduct = () => {
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     <span className="text-red-500">*</span> Mô tả sản phẩm
                                 </label>
-                                <input
-                                    type="text"
+                                <textarea
                                     name="product-description"
                                     value={productDescription}
                                     onChange={(e) => setProductDescription(e.target.value)}
-                                    className="w-full border rounded px-3 py-2 bg-white text-black h-32"
+                                    className="w-full border rounded px-3 py-2 bg-white text-black h-32 resize-none"
                                 />
+
 
                                 {/* Hiển thị số ký tự */}
                                 <div className="text-right text-gray-500 text-xs mt-1">{productDescription.length}/3000</div>
